@@ -3,6 +3,7 @@ import { api, saveSession } from '../../api.js';
 import { el, nowClock, toast } from '../../utils/dom.js';
 import { ClockFace } from '../../components/clock-card.js';
 import { captureLocation } from '../../geolocation.js';
+import { withBase } from '../../config.js';
 
 const siteId = localStorage.getItem('ck_kiosk_site') || '';
 const digital = el('div', { class: 'digital', text: nowClock() });
@@ -40,7 +41,7 @@ const result = el('div', { class: 'center' });
 document.getElementById('app').append(
   el('main', { class: 'kiosk' }, [
     el('div', { class: 'card hero-surface', style: 'padding:2rem;width:min(440px,94vw)' }, [
-      el('img', { src: '/assets/logo/clock-kit-mark.svg', alt: 'Clock-Kit', width: '72', height: '72' }),
+      el('img', { src: withBase('assets/logo/clock-kit-mark.svg'), alt: 'Clock-Kit', width: '72', height: '72' }),
       el('h1', { text: 'CLOCK-KIT' }),
       digital,
       el('div', { class: 'clock-wrap' }, [ClockFace()]),

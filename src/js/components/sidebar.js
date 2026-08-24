@@ -1,10 +1,11 @@
 import { el, href } from '../utils/dom.js';
 import { Auth } from '../auth.js';
+import { withBase } from '../config.js';
 
 export function Sidebar({ title, items, view }) {
   return el('aside', { class: 'sidebar' }, [
     el('div', { class: 'brand' }, [
-      el('img', { src: '/assets/logo/clock-kit-mark.svg', alt: 'Clock-Kit' }),
+      el('img', { src: withBase('assets/logo/clock-kit-mark.svg'), alt: 'Clock-Kit' }),
       el('div', {}, [
         el('strong', { text: 'Clock-Kit' }),
         el('div', { class: 'muted', text: title }),

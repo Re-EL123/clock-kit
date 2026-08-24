@@ -1,21 +1,21 @@
 import { api, currentUser, saveSession } from './api.js';
-import { TOKEN_KEY, USER_KEY } from './config.js';
+import { TOKEN_KEY, USER_KEY, withBase } from './config.js';
 
 const ROLE_HOME = {
-  PLATFORM_ADMIN: '/admin/',
-  ORG_OWNER: '/organisation/',
-  ORG_ADMIN: '/organisation/',
-  ORG_MANAGER: '/organisation/',
-  ORG_VIEWER: '/organisation/',
-  HOST: '/host/',
-  CANDIDATE: '/candidate/',
+  PLATFORM_ADMIN: withBase('admin/'),
+  ORG_OWNER: withBase('organisation/'),
+  ORG_ADMIN: withBase('organisation/'),
+  ORG_MANAGER: withBase('organisation/'),
+  ORG_VIEWER: withBase('organisation/'),
+  HOST: withBase('host/'),
+  CANDIDATE: withBase('candidate/'),
 };
 
 export const Auth = {
   user: currentUser,
 
   home(role) {
-    return ROLE_HOME[role] || '/login.html';
+    return ROLE_HOME[role] || withBase('login.html');
   },
 
   async login(email, password) {
@@ -32,13 +32,13 @@ export const Auth = {
     }
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
-    location.href = '/login.html';
+    location.href = withBase('login.html');
   },
 
   requireRole(...roles) {
     const user = currentUser();
     if (!user || !localStorage.getItem(TOKEN_KEY)) {
-      location.href = '/login.html';
+      location.href = withBase('login.html');
       throw new Error('AUTH_REQUIRED');
     }
     if (roles.length && !roles.includes(user.role)) {

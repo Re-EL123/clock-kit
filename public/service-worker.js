@@ -1,5 +1,8 @@
-const CACHE = 'clock-kit-shell-v1';
-const SHELL = ['/', '/login.html', '/offline.html', '/candidate/', '/assets/logo/clock-kit-mark.svg'];
+const BASE = new URL('./', self.location).pathname;
+const CACHE = 'clock-kit-shell-v2';
+const SHELL = ['', 'login.html', 'offline.html', 'candidate/', 'assets/logo/clock-kit-mark.svg'].map(
+  (path) => `${BASE}${path}`,
+);
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(SHELL)).then(() => self.skipWaiting()));
@@ -19,6 +22,6 @@ self.addEventListener('fetch', (event) => {
         caches.open(CACHE).then((cache) => cache.put(req, copy));
         return res;
       })
-      .catch(() => caches.match(req).then((cached) => cached || caches.match('/offline.html'))),
+      .catch(() => caches.match(req).then((cached) => cached || caches.match(`${BASE}offline.html`))),
   );
 });

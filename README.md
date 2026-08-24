@@ -22,6 +22,12 @@ npm run dev
 
 The browser never receives `SUPABASE_SERVICE_ROLE_KEY`.
 
+## GitHub Pages
+
+Live site: https://re-el123.github.io/clock-kit/
+
+Set repository variables (`VITE_API_URL`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`) so the deployed app can reach the backend. Local `npm run dev` still uses `/`.
+
 ## Design
 
 Hierarchy is **STATUS → ACTION → INFORMATION**. Neumorphic surfaces, Lucide-ready layout, Clock-Kit brand colours from the logo in `public/assets/logo/`.

@@ -1,4 +1,4 @@
-import { config, TOKEN_KEY, REFRESH_KEY, USER_KEY } from './config.js';
+import { config, TOKEN_KEY, REFRESH_KEY, USER_KEY, withBase } from './config.js';
 
 function headers(extra = {}) {
   const token = localStorage.getItem(TOKEN_KEY);
@@ -25,8 +25,8 @@ export async function api(fn, action, { method = 'POST', body, idempotent, idemp
   if (res.status === 401) {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
-    if (!location.pathname.endsWith('/login.html') && !location.pathname.endsWith('/kiosk/')) {
-      location.href = '/login.html';
+    if (!location.pathname.includes('/login.html') && !location.pathname.includes('/kiosk')) {
+      location.href = withBase('login.html');
     }
   }
   if (!json.ok) {

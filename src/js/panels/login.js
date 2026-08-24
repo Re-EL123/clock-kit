@@ -1,6 +1,7 @@
 import '../../css/app.css';
 import { Auth } from '../auth.js';
 import { el, toast } from '../utils/dom.js';
+import { withBase } from '../config.js';
 
 Auth.requireGuest();
 
@@ -10,7 +11,7 @@ const error = el('div', { class: 'form-error' });
 
 document.getElementById('app').append(
   el('div', { class: 'auth-card card' }, [
-    el('img', { src: '/assets/logo/clock-kit-logo.png', alt: 'Clock-Kit', width: '220' }),
+    el('img', { src: withBase('assets/logo/clock-kit-logo.png'), alt: 'Clock-Kit', width: '220' }),
     el('h1', { text: 'Sign in' }),
     el('p', { class: 'muted', text: 'Workforce clocking for host-site teams' }),
     el('form', {

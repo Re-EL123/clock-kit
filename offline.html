@@ -4,14 +4,15 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Offline — Clock-Kit</title>
-    <link rel="stylesheet" href="/src/css/app.css" />
+    <link rel="icon" href="%BASE_URL%assets/logo/clock-kit-mark.svg" />
   </head>
   <body>
     <main class="auth-card card">
       <h1>You’re offline</h1>
       <p class="muted">Clock-Kit will queue permitted clock actions and sync when you reconnect.</p>
       <p class="pending">PENDING SYNC</p>
-      <a class="btn btn-primary" href="/candidate/">Return home</a>
+      <a class="btn btn-primary" href="./candidate/">Return home</a>
     </main>
+    <script type="module" src="/src/js/offline-page.js"></script>
   </body>
 </html>

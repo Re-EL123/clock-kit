@@ -3,9 +3,13 @@ import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = dirname(fileURLToPath(import.meta.url));
+const pagesBase = process.env.GITHUB_PAGES === 'true'
+  ? `/${(process.env.GITHUB_REPOSITORY || 'Re-EL123/clock-kit').split('/')[1]}/`
+  : '/';
 
 export default defineConfig({
   root,
+  base: pagesBase,
   publicDir: 'public',
   server: { port: 5173 },
   build: {

@@ -2,18 +2,19 @@
   "name": "Clock-Kit",
   "short_name": "Clock-Kit",
   "display": "standalone",
-  "start_url": "/candidate/",
+  "start_url": "./candidate/",
+  "scope": "./",
   "background_color": "#E2DDD8",
   "theme_color": "#21396A",
   "icons": [
     {
-      "src": "/assets/logo/clock-kit-logo.png",
+      "src": "./assets/logo/clock-kit-logo.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/assets/logo/clock-kit-mark.svg",
+      "src": "./assets/logo/clock-kit-mark.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"
