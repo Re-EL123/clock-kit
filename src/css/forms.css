@@ -40,3 +40,113 @@ textarea {
   color: var(--ck-red);
   font-size: 0.9rem;
 }
+
+.field-hint {
+  margin: 0.15rem 0 0;
+  font-size: 0.8rem;
+  color: var(--ck-red);
+}
+
+.field-hint:empty {
+  display: none;
+}
+
+.field.is-invalid .input,
+.field.is-invalid select,
+.field.is-invalid textarea,
+.field.is-invalid .addr-box {
+  box-shadow: inset 2px 2px 6px rgba(196, 83, 78, 0.28), inset -2px -2px 6px rgba(255, 255, 255, 0.7);
+}
+
+.field.is-ok .input,
+.field.is-ok select {
+  box-shadow: inset 2px 2px 6px rgba(47, 158, 107, 0.18), inset -2px -2px 6px rgba(255, 255, 255, 0.75);
+}
+
+.addr-picker {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.addr-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.5rem;
+  align-items: start;
+}
+
+.addr-search {
+  position: relative;
+}
+
+.suggest-list {
+  position: absolute;
+  z-index: 20;
+  left: 0;
+  right: 0;
+  top: calc(100% + 0.35rem);
+  margin: 0;
+  padding: 0.35rem;
+  list-style: none;
+  background: var(--ck-light);
+  box-shadow: var(--shadow-raised);
+  border-radius: var(--radius-sm);
+  max-height: 14rem;
+  overflow: auto;
+  animation: rise-in 180ms ease both;
+}
+
+.suggest-item {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  padding: 0.65rem 0.7rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+
+.suggest-item:hover,
+.suggest-item:focus {
+  background: rgba(33, 57, 106, 0.08);
+}
+
+.addr-map-btn {
+  padding: 0.75rem 0.95rem;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .addr-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .addr-map-btn {
+    width: 100%;
+  }
+}
+
+.addr-meta {
+  margin: 0;
+  font-size: 0.82rem;
+}
+
+.map-canvas {
+  height: min(420px, 55vh);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  box-shadow: var(--shadow-inset);
+}
+
+.modal-map {
+  width: min(860px, calc(100vw - 1.5rem));
+}
+
+.site-form .btn-primary {
+  margin-top: 0.2rem;
+}

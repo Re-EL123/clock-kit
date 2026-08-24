@@ -11,6 +11,7 @@ import { isEmail, isPassword } from '../../validators.js';
 import { nationalitySelect } from '../../nationalities.js';
 import { AccountForm } from '../../components/account-form.js';
 import { AlertsPanel } from '../../components/alerts-panel.js';
+import { SiteForm } from '../../components/site-form.js';
 import { formatPublished } from '../../legal-format.js';
 
 const NAV = [
@@ -559,9 +560,48 @@ async function candidatesView() {
 
 async function sites() {
   const data = await api('admin', 'sites', { body: {} });
+  function openEdit(site) {
+    const node = Modal({
+      title: 'Update site',
+      wide: true,
+      onClose: () => node.remove(),
+      children: [
+        SiteForm({
+          hosts: [{ id: site.host_id, name: site.hosts?.name || 'Host' }],
+          site,
+          submitLabel: 'Save changes',
+          onSubmit: async (body) => {
+            await api('admin', 'update-site', {
+              body: {
+                siteId: site.id,
+                name: body.name,
+                address: body.address,
+                latitude: body.latitude,
+                longitude: body.longitude,
+                geofenceMode: body.geofenceMode,
+                geofenceRadiusM: body.geofenceRadiusM,
+              },
+            });
+            toast('Site updated');
+            node.remove();
+            refreshPanel();
+          },
+        }),
+      ],
+    });
+    document.body.append(node);
+  }
   return table(
-    ['Site', 'Host', 'Organisation', 'Geofence', 'Status'],
-    (data.sites || []).map((s) => [s.name, s.hosts?.name || '—', s.organisations?.name || '—', s.geofence_mode, s.status]),
+    ['Site', 'Address', 'Host', 'Organisation', 'Geofence', 'Status', 'Edit'],
+    (data.sites || []).map((s) => [
+      s.name,
+      s.address || '—',
+      s.hosts?.name || '—',
+      s.organisations?.name || '—',
+      s.geofence_mode,
+      s.status,
+      el('button', { class: 'btn', type: 'button', onClick: () => openEdit(s) }, ['Edit']),
+    ]),
   );
 }
 

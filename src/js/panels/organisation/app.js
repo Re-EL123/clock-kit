@@ -10,6 +10,8 @@ import { isEmail, isPassword } from '../../validators.js';
 import { nationalitySelect } from '../../nationalities.js';
 import { AccountForm } from '../../components/account-form.js';
 import { AlertsPanel } from '../../components/alerts-panel.js';
+import { SiteForm } from '../../components/site-form.js';
+import { Modal } from '../../components/modal.js';
 
 const NAV = [
   { view: 'dashboard', label: 'Dashboard' },
@@ -304,57 +306,76 @@ async function hosts() {
 async function sites() {
   const hostsData = await api('organisation', 'hosts', { body: {} });
   const data = await api('organisation', 'sites', { body: {} });
-  const hostSel = el(
-    'select',
-    { class: 'input' },
-    (hostsData.hosts || []).map((h) => el('option', { value: h.id, text: h.name })),
-  );
-  const name = el('input', { class: 'input', placeholder: 'Site name' });
-  const lat = el('input', { class: 'input', placeholder: 'Latitude' });
-  const lng = el('input', { class: 'input', placeholder: 'Longitude' });
-  const mode = el('select', { class: 'input' }, [
-    el('option', { value: 'DISABLED', text: 'Disabled' }),
-    el('option', { value: 'SOFT', text: 'Soft' }),
-    el('option', { value: 'STRICT', text: 'Strict' }),
-  ]);
+  const hostsList = hostsData.hosts || [];
+  const canEdit = can(user.role, 'createSite');
+
+  function openEdit(site) {
+    const node = Modal({
+      title: 'Update site',
+      wide: true,
+      onClose: () => node.remove(),
+      children: [
+        SiteForm({
+          hosts: hostsList,
+          site,
+          submitLabel: 'Save changes',
+          onSubmit: async (body) => {
+            await api('organisation', 'update-site', {
+              body: {
+                siteId: site.id,
+                name: body.name,
+                address: body.address,
+                latitude: body.latitude,
+                longitude: body.longitude,
+                geofenceMode: body.geofenceMode,
+                geofenceRadiusM: body.geofenceRadiusM,
+              },
+            });
+            toast('Site updated');
+            node.remove();
+            refreshPanel();
+          },
+        }),
+      ],
+    });
+    document.body.append(node);
+  }
+
   const list = table(
-    ['Site', 'Mode', 'Status'],
-    (data.sites || []).map((s) => [s.name, s.geofence_mode, s.status]),
+    ['Site', 'Address', 'Mode', 'Status', ...(canEdit ? ['Edit'] : [])],
+    (data.sites || []).map((s) => [
+      s.name,
+      s.address || '—',
+      s.geofence_mode,
+      s.status,
+      canEdit
+        ? el('button', {
+          class: 'btn',
+          type: 'button',
+          onClick: () => openEdit(s),
+        }, ['Edit'])
+        : null,
+    ].filter((cell) => cell !== null)),
   );
-  if (!can(user.role, 'createSite')) {
+  if (!canEdit) {
     return el('div', { class: 'grid' }, [
-      el('p', { class: 'muted', text: 'View only. You cannot create sites.' }),
+      el('p', { class: 'muted', text: 'View only. You cannot create or update sites.' }),
       list,
     ]);
   }
   return el('div', { class: 'grid' }, [
     el('div', { class: 'card', style: 'padding:1rem' }, [
-      el('h2', { text: 'Create site' }),
-      field('Host', hostSel),
-      field('Name', name),
-      field('Latitude', lat),
-      field('Longitude', lng),
-      field('Geofence', mode),
-      el('button', {
-        class: 'btn btn-primary',
-        onClick: async () => {
-          try {
-            await api('organisation', 'create-site', {
-              body: {
-                hostId: hostSel.value,
-                name: name.value,
-                latitude: lat.value ? Number(lat.value) : undefined,
-                longitude: lng.value ? Number(lng.value) : undefined,
-                geofenceMode: mode.value,
-              },
-            });
-            toast('Site created');
-            refreshPanel();
-          } catch (e) {
-            toast(e.message, 'err');
-          }
+      el('h2', { text: 'Add site' }),
+      el('p', { class: 'muted', text: 'Search for the workplace address or pick it on the map. Coordinates are filled in for you.' }),
+      SiteForm({
+        hosts: hostsList,
+        submitLabel: 'Create site',
+        onSubmit: async (body) => {
+          await api('organisation', 'create-site', { body });
+          toast('Site created');
+          refreshPanel();
         },
-      }, ['Create site']),
+      }),
     ]),
     list,
   ]);
