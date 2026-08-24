@@ -1,0 +1,12 @@
+---
+description: Backend Vercel Hobby cap — never request a 13th serverless function
+alwaysApply: true
+---
+
+# Vercel function limit (sibling backend)
+
+`~/clock-kit-backend` is on Vercel Hobby (**max 12** functions). Ship target is **10**.
+
+- Do not add a new `api/*.js` file for a frontend feature
+- Call existing functions with `?action=`
+- Current functions: auth, admin, organisation, clock, attendance, leave, schedule, host, notifications, system

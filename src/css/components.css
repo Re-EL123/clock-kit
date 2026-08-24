@@ -1,0 +1,134 @@
+.stat {
+  padding: 1.1rem 1.2rem;
+}
+
+.stat .label {
+  color: var(--ck-grey);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.stat .value {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--ck-navy);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.chip-working {
+  background: var(--ck-navy);
+  color: #fff;
+}
+.chip-break {
+  background: var(--ck-gold);
+  color: var(--ck-charcoal);
+}
+.chip-danger {
+  background: var(--ck-red);
+  color: #fff;
+}
+.chip-neutral {
+  background: #d8d4cf;
+  color: var(--ck-slate);
+}
+
+.toast {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  padding: 0.9rem 1.1rem;
+  z-index: 50;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(34, 40, 50, 0.35);
+  display: grid;
+  place-items: center;
+  z-index: 40;
+}
+
+.modal {
+  width: min(520px, 92vw);
+  padding: 1.4rem;
+}
+
+.empty {
+  padding: 2rem;
+  text-align: center;
+  color: var(--ck-grey);
+}
+
+.clock-face {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 10px solid var(--ck-navy);
+  position: relative;
+  background: var(--ck-white);
+}
+
+.clock-face::after {
+  content: "";
+  position: absolute;
+  inset: -10px auto auto 50%;
+  width: 50%;
+  height: calc(100% + 20px);
+  border-radius: 0 999px 999px 0;
+  border: 10px solid var(--ck-red);
+  border-left: 0;
+  transform: translateX(-0.5px);
+  pointer-events: none;
+}
+
+.hand {
+  position: absolute;
+  left: 50%;
+  bottom: 50%;
+  transform-origin: bottom center;
+  background: var(--ck-slate);
+  border-radius: 4px;
+}
+
+.hand-hour {
+  width: 6px;
+  height: 26%;
+}
+.hand-minute {
+  width: 4px;
+  height: 36%;
+}
+.hand-second {
+  width: 2px;
+  height: 40%;
+  background: var(--ck-red);
+}
+
+.clock-center {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  background: var(--ck-gold);
+  border-radius: 50%;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+}
+
+.pending {
+  color: var(--ck-gold);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}

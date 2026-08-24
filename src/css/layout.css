@@ -1,0 +1,104 @@
+.shell {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  min-height: 100vh;
+}
+
+.sidebar {
+  padding: 1.4rem 1rem;
+}
+
+.brand {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.brand img {
+  width: 48px;
+  height: 48px;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.7rem 0.9rem;
+  border-radius: 12px;
+  color: var(--ck-slate);
+  margin-bottom: 0.25rem;
+}
+
+.nav-link.active,
+.nav-link:hover {
+  background: rgba(33, 57, 106, 0.08);
+  color: var(--ck-navy);
+}
+
+.main {
+  padding: 1.2rem 1.6rem 2rem;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.2rem;
+}
+
+.grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.grid-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.grid-2 {
+  grid-template-columns: 1fr 1fr;
+}
+
+.candidate-home {
+  max-width: 520px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.clock-wrap {
+  width: min(360px, 90vw);
+  margin: 1rem auto 1.4rem;
+}
+
+.status-block h1 {
+  font-size: 1.1rem;
+  letter-spacing: 0.16em;
+  color: var(--ck-navy);
+}
+
+.digital {
+  font-variant-numeric: tabular-nums;
+  font-size: 3rem;
+  font-weight: 800;
+  color: var(--ck-navy);
+}
+
+.kiosk {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 2rem;
+}
+
+.auth-card {
+  width: min(420px, 92vw);
+  margin: 12vh auto;
+  padding: 2rem;
+}
+
+.actions {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1.2rem;
+}

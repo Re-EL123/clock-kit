@@ -1,0 +1,1 @@
+export const STATES = { OFF_DUTY: 'OFF_DUTY', WORKING: 'WORKING', ON_BREAK: 'ON_BREAK' };

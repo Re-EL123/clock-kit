@@ -1,0 +1,16 @@
+.muted {
+  color: var(--ck-grey);
+}
+.stack {
+  display: grid;
+  gap: 0.4rem;
+}
+.hidden {
+  display: none !important;
+}
+.mt {
+  margin-top: 1rem;
+}
+.center {
+  text-align: center;
+}

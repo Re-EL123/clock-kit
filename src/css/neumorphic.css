@@ -1,0 +1,58 @@
+.raised,
+.card,
+.btn,
+.stat,
+.clock-face {
+  background: var(--ck-light);
+  box-shadow: var(--shadow-raised);
+  border-radius: var(--radius-md);
+}
+
+.inset,
+.input,
+.search,
+.table-wrap {
+  background: var(--ck-light);
+  box-shadow: var(--shadow-inset);
+  border-radius: var(--radius-sm);
+}
+
+.hero-surface {
+  border-radius: var(--radius-hero);
+  box-shadow: var(--shadow-raised);
+}
+
+.btn {
+  border: 0;
+  cursor: pointer;
+  padding: 0.9rem 1.4rem;
+  font-weight: 700;
+  color: var(--ck-navy);
+  transition: transform var(--motion) ease, box-shadow var(--motion) ease;
+}
+
+.btn:active {
+  transform: scale(0.98);
+  box-shadow: var(--shadow-inset);
+}
+
+.btn-primary {
+  background: var(--ck-navy);
+  color: var(--ck-white);
+  box-shadow: 8px 8px 18px rgba(33, 57, 106, 0.28);
+}
+
+.btn-danger {
+  background: var(--ck-red);
+  color: var(--ck-white);
+}
+
+.btn-gold {
+  background: var(--ck-gold);
+  color: var(--ck-charcoal);
+}
+
+.admin-table .card,
+.admin-table .raised {
+  box-shadow: 4px 4px 12px rgba(59, 66, 79, 0.08);
+}

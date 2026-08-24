@@ -1,0 +1,28 @@
+:root {
+  --ck-navy: #21396a;
+  --ck-slate: #3b424f;
+  --ck-gold: #f5bf48;
+  --ck-red: #ba133a;
+  --ck-charcoal: #222832;
+  --ck-light: #e2ddd8;
+  --ck-grey: #77777e;
+  --ck-white: #ffffff;
+  --status-working: var(--ck-navy);
+  --status-break: var(--ck-gold);
+  --status-danger: var(--ck-red);
+  --status-neutral: var(--ck-grey);
+  --status-success: var(--ck-navy);
+  --radius-sm: 12px;
+  --radius-md: 18px;
+  --radius-lg: 28px;
+  --radius-hero: 36px;
+  --shadow-raised:
+    10px 10px 24px rgba(59, 66, 79, 0.16),
+    -10px -10px 24px rgba(255, 255, 255, 0.96);
+  --shadow-inset:
+    inset 6px 6px 14px rgba(59, 66, 79, 0.14),
+    inset -6px -6px 14px rgba(255, 255, 255, 0.96);
+  --font: "Inter", "Segoe UI", system-ui, sans-serif;
+  --space: 16px;
+  --motion: 200ms;
+}

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 120" role="img" aria-label="Clock-Kit">
+  <image href="./clock-kit-mark.svg" x="0" y="12" width="96" height="96"/>
+  <text x="112" y="68" font-family="Inter, Arial, sans-serif" font-size="44" font-weight="800">
+    <tspan fill="#21396A">Clock</tspan><tspan fill="#BA133A">-Kit</tspan>
+  </text>
+  <text x="112" y="96" font-family="Inter, Arial, sans-serif" font-size="11" font-weight="700" letter-spacing="2.2" fill="#222832">CLOCK IN. WORK ON. SUCCEED TOGETHER.</text>
+</svg>
