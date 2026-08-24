@@ -1,3 +1,5 @@
+import { icon } from '../icons.js';
+
 export function el(tag, attrs = {}, children = []) {
   const node = document.createElement(tag);
   for (const [key, value] of Object.entries(attrs)) {
@@ -28,9 +30,12 @@ export function href(view, extra = {}) {
 
 export function toast(message, kind = 'ok') {
   document.querySelector('.toast')?.remove();
-  const node = el('div', { class: `toast raised ${kind === 'err' ? 'chip-danger' : ''}` }, [message]);
+  const node = el('div', { class: `toast raised ${kind === 'err' ? 'chip-danger' : ''}` }, [
+    icon(kind === 'err' ? 'alert' : 'check', { size: 18 }),
+    el('span', { text: message }),
+  ]);
   document.body.append(node);
-  setTimeout(() => node.remove(), 3200);
+  setTimeout(() => node.remove(), 3800);
 }
 
 export function formatTime(iso) {

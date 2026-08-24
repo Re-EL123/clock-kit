@@ -1,11 +1,16 @@
 .shell {
   display: grid;
-  grid-template-columns: 260px 1fr;
+  grid-template-columns: 272px 1fr;
   min-height: 100vh;
+  min-height: 100dvh;
 }
 
 .sidebar {
-  padding: 1.4rem 1rem;
+  padding: calc(1.2rem + var(--safe-top)) 1rem 1.4rem;
+  position: sticky;
+  top: 0;
+  height: 100dvh;
+  overflow: auto;
 }
 
 .brand {
@@ -24,10 +29,12 @@
   display: flex;
   align-items: center;
   gap: 0.7rem;
-  padding: 0.7rem 0.9rem;
+  padding: 0.72rem 0.9rem;
   border-radius: 12px;
   color: var(--ck-slate);
   margin-bottom: 0.25rem;
+  font-weight: 600;
+  transition: background var(--motion) ease, color var(--motion) ease, transform var(--motion) ease;
 }
 
 .nav-link.active,
@@ -36,15 +43,43 @@
   color: var(--ck-navy);
 }
 
+.nav-link.active {
+  box-shadow: var(--shadow-inset);
+}
+
+.sidebar .btn.sign-out {
+  width: 100%;
+  margin-top: 1.2rem;
+}
+
 .main {
-  padding: 1.2rem 1.6rem 2rem;
+  padding: calc(1.2rem + var(--safe-top)) 1.6rem calc(2rem + var(--safe-bottom));
+  min-width: 0;
 }
 
 .topbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 1rem;
   margin-bottom: 1.2rem;
+  flex-wrap: wrap;
+}
+
+.topbar h1 {
+  margin: 0;
+}
+
+.live-clock {
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  color: var(--ck-navy);
+  letter-spacing: 0.04em;
+}
+
+.topbar-user {
+  color: var(--ck-slate);
+  font-weight: 600;
 }
 
 .grid {
@@ -71,6 +106,12 @@
   margin: 1rem auto 1.4rem;
 }
 
+.status-block {
+  display: grid;
+  justify-items: center;
+  gap: 0.55rem;
+}
+
 .status-block h1 {
   font-size: 1.1rem;
   letter-spacing: 0.16em;
@@ -79,13 +120,14 @@
 
 .digital {
   font-variant-numeric: tabular-nums;
-  font-size: 3rem;
+  font-size: clamp(2.1rem, 8vw, 3rem);
   font-weight: 800;
   color: var(--ck-navy);
 }
 
 .kiosk {
   min-height: 100vh;
+  min-height: 100dvh;
   display: grid;
   place-items: center;
   padding: 2rem;
@@ -93,12 +135,21 @@
 
 .auth-card {
   width: min(420px, 92vw);
-  margin: 12vh auto;
+  margin: 8vh auto;
   padding: 2rem;
+  text-align: center;
+}
+
+.auth-card img {
+  margin-bottom: 0.6rem;
 }
 
 .actions {
   display: grid;
   gap: 0.75rem;
   margin-top: 1.2rem;
+}
+
+.actions .btn {
+  width: 100%;
 }

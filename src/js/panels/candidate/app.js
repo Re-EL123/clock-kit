@@ -4,6 +4,7 @@ import { api } from '../../api.js';
 import { el, viewParam, formatTime, nowClock, toast } from '../../utils/dom.js';
 import { shell, table } from '../../components/sidebar.js';
 import { ClockFace, StatusChip } from '../../components/clock-card.js';
+import { icon } from '../../icons.js';
 import { captureLocation } from '../../geolocation.js';
 import { flushQueue, pendingCount, queueClock } from '../../offline.js';
 
@@ -49,7 +50,7 @@ async function home(user) {
   const digital = el('div', { class: 'digital', text: nowClock() });
   setInterval(() => {
     digital.textContent = nowClock();
-  }, 1000);
+  }, 250);
 
   const actions = el('div', { class: 'actions' });
   if (state === 'OFF_DUTY') {
@@ -64,7 +65,7 @@ async function home(user) {
             toast(e.message, 'err');
           }
         },
-      }, ['CLOCK IN']),
+      }, [icon('log-in'), 'CLOCK IN']),
     );
   } else if (state === 'WORKING') {
     actions.append(
@@ -78,7 +79,7 @@ async function home(user) {
             toast(e.message, 'err');
           }
         },
-      }, ['START BREAK']),
+      }, [icon('coffee'), 'START BREAK']),
       el('button', {
         class: 'btn btn-danger',
         onClick: async () => {
@@ -89,7 +90,7 @@ async function home(user) {
             toast(e.message, 'err');
           }
         },
-      }, ['CLOCK OUT']),
+      }, [icon('log-out'), 'CLOCK OUT']),
     );
   } else if (state === 'ON_BREAK') {
     actions.append(
@@ -103,7 +104,7 @@ async function home(user) {
             toast(e.message, 'err');
           }
         },
-      }, ['END BREAK']),
+      }, [icon('check'), 'END BREAK']),
     );
   }
 
@@ -114,10 +115,10 @@ async function home(user) {
       StatusChip(pending ? 'PENDING_SYNC' : 'CONFIRMED'),
     ]),
     digital,
-    el('div', { class: 'clock-wrap' }, [ClockFace()]),
-    el('div', { class: 'muted', text: assignment?.hosts?.name || 'No active host' }),
-    el('div', { text: site?.name || 'No site assigned' }),
-    pending ? el('div', { class: 'pending', text: `${pending} PENDING SYNC` }) : null,
+    el('div', { class: `clock-wrap ${state === 'WORKING' ? 'is-live' : state === 'ON_BREAK' ? 'is-break' : ''}` }, [ClockFace()]),
+    el('div', { class: 'muted' }, [icon('warehouse', { size: 16 }), assignment?.hosts?.name || 'No active host']),
+    el('div', { class: 'icon-label', style: 'justify-content:center' }, [icon('sites', { size: 16 }), site?.name || 'No site assigned']),
+    pending ? el('div', { class: 'pending' }, [icon('timer', { size: 16 }), `${pending} PENDING SYNC`]) : null,
     actions,
   ]);
 }
@@ -177,7 +178,7 @@ async function leave() {
             toast(e.message, 'err');
           }
         },
-      }, ['Submit']),
+      }, [icon('plus', { size: 18 }), 'Submit']),
     ]),
     el('div', {}, [
       el('h3', { text: 'Balances' }),
@@ -212,9 +213,9 @@ async function notifications() {
 
 function profile(user) {
   return el('div', { class: 'card', style: 'padding:1.2rem' }, [
-    el('h2', { text: user.displayName }),
-    el('p', { class: 'muted', text: user.email }),
-    el('p', { text: user.role }),
+    el('h2', { class: 'icon-label' }, [icon('profile'), user.displayName]),
+    el('p', { class: 'muted icon-label' }, [icon('mail', { size: 16 }), user.email]),
+    el('p', { class: 'icon-label' }, [icon('shield', { size: 16 }), user.role]),
   ]);
 }
 

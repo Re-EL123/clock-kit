@@ -1,8 +1,15 @@
 const BASE = new URL('./', self.location).pathname;
-const CACHE = 'clock-kit-shell-v2';
-const SHELL = ['', 'login.html', 'offline.html', 'candidate/', 'assets/logo/clock-kit-mark.svg'].map(
-  (path) => `${BASE}${path}`,
-);
+const CACHE = 'clock-kit-shell-v3';
+const SHELL = [
+  '',
+  'login.html',
+  'offline.html',
+  'candidate/',
+  'splash.css',
+  'splash-boot.js',
+  'assets/logo/clock-kit-mark.svg',
+  'assets/logo/clock-kit-light.svg',
+].map((path) => `${BASE}${path}`);
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(SHELL)).then(() => self.skipWaiting()));

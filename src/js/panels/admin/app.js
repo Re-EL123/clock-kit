@@ -4,12 +4,18 @@ import { api } from '../../api.js';
 import { el, viewParam, formatTime, toast } from '../../utils/dom.js';
 import { shell, table } from '../../components/sidebar.js';
 import { StatCard } from '../../components/clock-card.js';
+import { Modal } from '../../components/modal.js';
+import { ConfirmationSheet } from '../../components/confirmation-sheet.js';
 import { isEmail, isPassword } from '../../validators.js';
 
 const NAV = [
   { view: 'dashboard', label: 'Dashboard' },
   { view: 'organisations', label: 'Organisations' },
   { view: 'users', label: 'Users' },
+  { view: 'hosts', label: 'Hosts' },
+  { view: 'candidates', label: 'Candidates' },
+  { view: 'sites', label: 'Sites' },
+  { view: 'assignments', label: 'Assignments' },
   { view: 'security', label: 'Security' },
   { view: 'health', label: 'Health' },
 ];
@@ -35,12 +41,91 @@ function requireAccountFields({ email, password, confirm }) {
   if (password !== confirm) throw new Error('Passwords do not match');
 }
 
+function smBtn(label, onClick, kind = '') {
+  return el('button', {
+    class: `btn ${kind}`.trim(),
+    style: 'padding:.45rem .75rem;font-size:.8rem',
+    onClick,
+  }, [label]);
+}
+
+function actions(buttons) {
+  return el('div', { style: 'display:flex;flex-wrap:wrap;gap:.35rem' }, buttons);
+}
+
+function confirmAction(message, { danger = false, confirmLabel = 'Confirm' } = {}) {
+  return new Promise((resolve) => {
+    const node = ConfirmationSheet({
+      message,
+      danger,
+      confirmLabel,
+      onConfirm: () => {
+        node.remove();
+        resolve(true);
+      },
+      onCancel: () => {
+        node.remove();
+        resolve(false);
+      },
+    });
+    document.body.append(node);
+  });
+}
+
+function selectInput(options, value = '') {
+  const node = el(
+    'select',
+    { class: 'input' },
+    options.map((opt) => el('option', { value: opt.value, text: opt.label, selected: opt.value === value })),
+  );
+  if (value) node.value = value;
+  return node;
+}
+
+function openForm({ title, fields, submitLabel = 'Save', onSubmit }) {
+  const inputs = {};
+  const nodes = fields.map((item) => {
+    const input = item.options
+      ? selectInput(item.options, item.value || '')
+      : textInput(item.placeholder || item.label, item.type || 'text');
+    if (!item.options && item.value != null) input.value = item.value;
+    inputs[item.name] = input;
+    return field(item.label, input);
+  });
+  const modal = Modal({
+    title,
+    onClose: () => modal.remove(),
+    children: [
+      ...nodes,
+      el('div', { style: 'display:flex;gap:.5rem;justify-content:flex-end;margin-top:1rem' }, [
+        el('button', { class: 'btn', onClick: () => modal.remove() }, ['Cancel']),
+        el('button', {
+          class: 'btn btn-primary',
+          onClick: async () => {
+            try {
+              const values = Object.fromEntries(
+                Object.entries(inputs).map(([key, input]) => [key, input.value]),
+              );
+              await onSubmit(values);
+              modal.remove();
+              location.reload();
+            } catch (e) {
+              toast(e.message, 'err');
+            }
+          },
+        }, [submitLabel]),
+      ]),
+    ],
+  });
+  document.body.append(modal);
+}
+
 async function dashboard() {
   const stats = await api('admin', 'platform-stats', { body: {} });
   return el('div', { class: 'grid grid-4' }, [
     StatCard('Organisations', stats.organisations, '?view=organisations'),
     StatCard('Active candidates', stats.activeCandidates),
-    StatCard('Hosts', stats.hosts),
+    StatCard('Hosts', stats.hosts, '?view=hosts'),
     StatCard('Clocked in today', stats.clockedInToday),
   ]);
 }
@@ -88,8 +173,88 @@ async function organisations() {
       }, ['Create organisation']),
     ]),
     table(
-      ['Name', 'Status', 'Timezone'],
-      (data.organisations || []).map((o) => [o.name, o.status, o.timezone]),
+      ['Name', 'Status', 'Timezone', 'Actions'],
+      (data.organisations || []).map((o) => [
+        o.name,
+        o.status,
+        o.timezone,
+        actions([
+          smBtn('Edit', () => {
+            openForm({
+              title: `Edit ${o.name}`,
+              fields: [
+                { name: 'name', label: 'Name', value: o.name },
+                { name: 'timezone', label: 'Timezone', value: o.timezone || 'Africa/Johannesburg' },
+                { name: 'countryCode', label: 'Country code', value: o.country_code || 'ZA' },
+                { name: 'registrationNumber', label: 'Registration number', value: o.registration_number || '' },
+                {
+                  name: 'status',
+                  label: 'Status',
+                  value: o.status,
+                  options: [
+                    { value: 'active', label: 'Active' },
+                    { value: 'suspended', label: 'Suspended' },
+                  ],
+                },
+                {
+                  name: 'legalHold',
+                  label: 'Legal hold',
+                  value: o.legal_hold ? 'true' : 'false',
+                  options: [
+                    { value: 'false', label: 'Off' },
+                    { value: 'true', label: 'On' },
+                  ],
+                },
+              ],
+              onSubmit: async (values) => {
+                if (!values.name.trim()) throw new Error('Name is required');
+                await api('admin', 'update-organisation', {
+                  body: {
+                    organisationId: o.id,
+                    name: values.name.trim(),
+                    timezone: values.timezone.trim(),
+                    countryCode: values.countryCode.trim() || 'ZA',
+                    registrationNumber: values.registrationNumber.trim() || undefined,
+                    status: values.status,
+                    legalHold: values.legalHold === 'true',
+                  },
+                });
+                toast('Organisation updated');
+              },
+            });
+          }),
+          smBtn(o.status === 'suspended' ? 'Activate' : 'Suspend', async () => {
+            const next = o.status === 'suspended' ? 'activate-organisation' : 'suspend-organisation';
+            const ok = await confirmAction(
+              o.status === 'suspended'
+                ? `Activate ${o.name}?`
+                : `Suspend ${o.name} and its member logins?`,
+            );
+            if (!ok) return;
+            try {
+              await api('admin', next, { body: { organisationId: o.id } });
+              toast('Organisation status updated');
+              location.reload();
+            } catch (e) {
+              toast(e.message, 'err');
+            }
+          }),
+          smBtn('Delete', async () => {
+            const ok = await confirmAction(`Delete ${o.name} and all of its data? This cannot be undone.`, {
+              danger: true,
+              confirmLabel: 'Delete',
+            });
+            if (!ok) return;
+            try {
+              await api('admin', 'delete-organisation', { body: { organisationId: o.id } });
+              toast('Organisation deleted');
+              location.reload();
+            } catch (e) {
+              toast(e.message, 'err');
+            }
+          }, 'btn-danger'),
+        ]),
+      ]),
     ),
   ]);
 }
@@ -245,16 +410,123 @@ async function users() {
       }, ['Create staff account']),
     ]),
     table(
-      ['Name', 'Email', 'Role', 'Organisation', 'Status'],
+      ['Name', 'Email', 'Role', 'Organisation', 'Status', 'Actions'],
       (people.users || []).map((u) => [
         u.display_name,
         u.email,
         u.role,
         u.organisations?.name || '—',
         u.status,
+        actions([
+          smBtn('Edit', () => {
+            openForm({
+              title: `Edit ${u.display_name}`,
+              fields: [
+                { name: 'displayName', label: 'Name', value: u.display_name },
+                { name: 'email', label: 'Email', type: 'email', value: u.email },
+                { name: 'phone', label: 'Phone', value: u.phone || '' },
+                {
+                  name: 'role',
+                  label: 'Role',
+                  value: u.role,
+                  options: [
+                    { value: 'ORG_OWNER', label: 'Organisation owner' },
+                    { value: 'ORG_ADMIN', label: 'Organisation admin' },
+                    { value: 'ORG_MANAGER', label: 'Organisation manager' },
+                    { value: 'ORG_VIEWER', label: 'Organisation viewer' },
+                    { value: 'HOST', label: 'Host' },
+                    { value: 'CANDIDATE', label: 'Candidate' },
+                    { value: 'PLATFORM_ADMIN', label: 'Platform admin' },
+                  ].filter((opt) => u.role === 'PLATFORM_ADMIN' || opt.value !== 'PLATFORM_ADMIN'),
+                },
+                { name: 'password', label: 'New password (optional)', type: 'password' },
+              ],
+              onSubmit: async (values) => {
+                if (!values.displayName.trim()) throw new Error('Name is required');
+                if (!isEmail(values.email)) throw new Error('Enter a valid email');
+                const body = {
+                  userId: u.id,
+                  displayName: values.displayName.trim(),
+                  email: values.email.trim(),
+                  phone: values.phone.trim() || null,
+                };
+                if (u.role !== 'PLATFORM_ADMIN') body.role = values.role;
+                if (values.password) {
+                  if (!isPassword(values.password)) throw new Error('Password must be at least 8 characters');
+                  body.password = values.password;
+                }
+                await api('admin', 'update-user', { body });
+                toast('User updated');
+              },
+            });
+          }),
+          smBtn(u.status === 'suspended' ? 'Activate' : 'Suspend', async () => {
+            const next = u.status === 'suspended' ? 'active' : 'suspended';
+            const ok = await confirmAction(`${next === 'active' ? 'Activate' : 'Suspend'} ${u.display_name}?`);
+            if (!ok) return;
+            try {
+              await api('admin', 'set-user-status', { body: { userId: u.id, status: next } });
+              toast('User status updated');
+              location.reload();
+            } catch (e) {
+              toast(e.message, 'err');
+            }
+          }),
+          smBtn('Delete', async () => {
+            const ok = await confirmAction(`Delete ${u.display_name}? They will no longer be able to sign in.`, {
+              danger: true,
+              confirmLabel: 'Delete',
+            });
+            if (!ok) return;
+            try {
+              await api('admin', 'delete-user', { body: { userId: u.id } });
+              toast('User deleted');
+              location.reload();
+            } catch (e) {
+              toast(e.message, 'err');
+            }
+          }, 'btn-danger'),
+        ]),
       ]),
     ),
   ]);
+}
+
+async function hosts() {
+  const data = await api('admin', 'list-hosts', { body: {} });
+  return table(
+    ['Host', 'Organisation', 'Sites', 'Status'],
+    (data.hosts || []).map((h) => [h.name, h.organisations?.name || '—', String(h.sites?.length || 0), h.status]),
+  );
+}
+
+async function candidatesView() {
+  const data = await api('admin', 'list-candidates', { body: {} });
+  return table(
+    ['Name', 'Reference', 'Organisation', 'Status'],
+    (data.candidates || []).map((c) => [`${c.first_name} ${c.last_name}`, c.candidate_reference, c.organisations?.name || '—', c.status]),
+  );
+}
+
+async function sites() {
+  const data = await api('admin', 'sites', { body: {} });
+  return table(
+    ['Site', 'Host', 'Organisation', 'Geofence', 'Status'],
+    (data.sites || []).map((s) => [s.name, s.hosts?.name || '—', s.organisations?.name || '—', s.geofence_mode, s.status]),
+  );
+}
+
+async function assignments() {
+  const data = await api('admin', 'assignments', { body: {} });
+  return table(
+    ['Candidate', 'Host', 'Site', 'Status'],
+    (data.assignments || []).map((a) => [
+      `${a.candidates?.first_name || ''} ${a.candidates?.last_name || ''}`.trim() || '—',
+      a.hosts?.name || '—',
+      a.sites?.name || '—',
+      a.status,
+    ]),
+  );
 }
 
 async function security() {
@@ -281,6 +553,10 @@ const views = {
   dashboard,
   organisations,
   users,
+  hosts,
+  candidates: candidatesView,
+  sites,
+  assignments,
   security,
   health,
 };

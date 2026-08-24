@@ -20,6 +20,20 @@ textarea {
   color: var(--ck-charcoal);
 }
 
+.input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding-left: 0.9rem;
+  color: var(--ck-navy);
+}
+
+.input-wrap .input {
+  box-shadow: none;
+  background: transparent;
+  padding-left: 0;
+}
+
 .form-error {
   color: var(--ck-red);
   font-size: 0.9rem;

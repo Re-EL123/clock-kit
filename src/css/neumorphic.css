@@ -10,6 +10,7 @@
 
 .inset,
 .input,
+.input-wrap,
 .search,
 .table-wrap {
   background: var(--ck-light);
@@ -28,6 +29,10 @@
   padding: 0.9rem 1.4rem;
   font-weight: 700;
   color: var(--ck-navy);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   transition: transform var(--motion) ease, box-shadow var(--motion) ease;
 }
 

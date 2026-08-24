@@ -24,5 +24,7 @@
     inset -6px -6px 14px rgba(255, 255, 255, 0.96);
   --font: "Inter", "Segoe UI", system-ui, sans-serif;
   --space: 16px;
-  --motion: 200ms;
+  --motion: 220ms;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-top: env(safe-area-inset-top, 0px);
 }
