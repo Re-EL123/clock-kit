@@ -4,6 +4,8 @@ import { api } from '../../api.js';
 import { el, viewParam, toast, formatTime } from '../../utils/dom.js';
 import { shell, table } from '../../components/sidebar.js';
 import { StatCard } from '../../components/clock-card.js';
+import { can } from '../../permissions.js';
+import { isEmail, isPassword } from '../../validators.js';
 
 const NAV = [
   { view: 'dashboard', label: 'Dashboard' },
@@ -23,6 +25,16 @@ const NAV = [
 
 function field(label, input) {
   return el('div', { class: 'field' }, [el('span', { text: label }), input]);
+}
+
+function textInput(placeholder, type = 'text') {
+  return el('input', { class: 'input', type, placeholder, autocomplete: type === 'password' ? 'new-password' : 'off' });
+}
+
+function requireAccountFields({ email, password, confirm }) {
+  if (!isEmail(email)) throw new Error('Enter a valid email');
+  if (!isPassword(password)) throw new Error('Password must be at least 8 characters');
+  if (password !== confirm) throw new Error('Passwords do not match');
 }
 
 async function dashboard() {
@@ -47,77 +59,126 @@ async function dashboard() {
 
 async function candidates() {
   const data = await api('organisation', 'candidates', { body: {} });
-  const first = el('input', { class: 'input', placeholder: 'First name' });
-  const last = el('input', { class: 'input', placeholder: 'Last name' });
-  const email = el('input', { class: 'input', type: 'email', placeholder: 'Email' });
-  const ref = el('input', { class: 'input', placeholder: 'Reference' });
+  const first = textInput('First name');
+  const last = textInput('Last name');
+  const email = textInput('Email', 'email');
+  const ref = textInput('Reference');
+  const password = textInput('Password', 'password');
+  const confirm = textInput('Confirm password', 'password');
+  const list = table(
+    ['Ref', 'Name', 'Email', 'Status'],
+    (data.candidates || []).map((c) => [c.candidate_reference, `${c.first_name} ${c.last_name}`, c.email, c.status]),
+  );
+  if (!can(user.role, 'createCandidate')) {
+    return el('div', { class: 'grid' }, [
+      el('p', { class: 'muted', text: 'You can view candidates. Creating accounts is limited to organisation owners, admins, and managers.' }),
+      list,
+    ]);
+  }
   return el('div', { class: 'grid' }, [
     el('div', { class: 'card', style: 'padding:1rem' }, [
-      el('h2', { text: 'Create candidate' }),
+      el('h2', { text: 'Create candidate account' }),
+      el('p', { class: 'muted', text: 'The candidate signs in with this email and password.' }),
       field('Reference', ref),
       field('First name', first),
       field('Last name', last),
       field('Email', email),
+      field('Password', password),
+      field('Confirm password', confirm),
       el('button', {
         class: 'btn btn-primary',
         onClick: async () => {
           try {
-            const created = await api('organisation', 'create-candidate', {
+            if (!ref.value.trim() || !first.value.trim() || !last.value.trim()) {
+              throw new Error('Reference and name are required');
+            }
+            requireAccountFields({ email: email.value, password: password.value, confirm: confirm.value });
+            await api('organisation', 'create-candidate', {
               body: {
-                candidateReference: ref.value,
-                firstName: first.value,
-                lastName: last.value,
-                email: email.value,
+                candidateReference: ref.value.trim(),
+                firstName: first.value.trim(),
+                lastName: last.value.trim(),
+                email: email.value.trim(),
+                password: password.value,
               },
             });
-            toast(`Created. Temporary password: ${created.temporaryPassword}`);
-          } catch (e) {
-            toast(e.message, 'err');
-          }
-        },
-      }, ['Invite candidate']),
-    ]),
-    table(
-      ['Ref', 'Name', 'Email', 'Status'],
-      (data.candidates || []).map((c) => [c.candidate_reference, `${c.first_name} ${c.last_name}`, c.email, c.status]),
-    ),
-  ]);
-}
-
-async function users() {
-  const data = await api('organisation', 'users', { body: {} });
-  return table(
-    ['Name', 'Email', 'Role', 'Status'],
-    (data.users || []).map((u) => [u.display_name, u.email, u.role, u.status]),
-  );
-}
-
-async function hosts() {
-  const data = await api('organisation', 'hosts', { body: {} });
-  const name = el('input', { class: 'input', placeholder: 'Host name' });
-  const email = el('input', { class: 'input', type: 'email', placeholder: 'Contact email' });
-  return el('div', { class: 'grid' }, [
-    el('div', { class: 'card', style: 'padding:1rem' }, [
-      el('h2', { text: 'Create host' }),
-      field('Name', name),
-      field('Contact email', email),
-      el('button', {
-        class: 'btn btn-primary',
-        onClick: async () => {
-          try {
-            await api('organisation', 'create-host', { body: { name: name.value, contactEmail: email.value } });
-            toast('Host created');
+            toast('Candidate account created. They can sign in now.');
             location.reload();
           } catch (e) {
             toast(e.message, 'err');
           }
         },
-      }, ['Create']),
+      }, ['Create candidate account']),
     ]),
+    list,
+  ]);
+}
+
+async function users() {
+  const data = await api('organisation', 'users', { body: {} });
+  return el('div', { class: 'grid' }, [
+    el('p', {
+      class: 'muted',
+      text: can(user.role, 'createHost')
+        ? 'Host and candidate logins are created on the Hosts and Candidates pages, with a password they can use immediately.'
+        : 'You can view organisation users. Creating host and candidate accounts is limited to owners, admins, and managers.',
+    }),
     table(
-      ['Host', 'Sites', 'Status'],
-      (data.hosts || []).map((h) => [h.name, String(h.sites?.length || 0), h.status]),
+      ['Name', 'Email', 'Role', 'Status'],
+      (data.users || []).map((u) => [u.display_name, u.email, u.role, u.status]),
     ),
+  ]);
+}
+
+async function hosts() {
+  const data = await api('organisation', 'hosts', { body: {} });
+  const name = textInput('Host name');
+  const contact = textInput('Login name');
+  const email = textInput('Login email', 'email');
+  const password = textInput('Password', 'password');
+  const confirm = textInput('Confirm password', 'password');
+  const list = table(
+    ['Host', 'Sites', 'Status'],
+    (data.hosts || []).map((h) => [h.name, String(h.sites?.length || 0), h.status]),
+  );
+  if (!can(user.role, 'createHost')) {
+    return el('div', { class: 'grid' }, [
+      el('p', { class: 'muted', text: 'You can view hosts. Creating host accounts is limited to organisation owners, admins, and managers.' }),
+      list,
+    ]);
+  }
+  return el('div', { class: 'grid' }, [
+    el('div', { class: 'card', style: 'padding:1rem' }, [
+      el('h2', { text: 'Create host account' }),
+      el('p', { class: 'muted', text: 'Creates the host and a HOST login. They sign in with this email and password.' }),
+      field('Host name', name),
+      field('Login name', contact),
+      field('Email', email),
+      field('Password', password),
+      field('Confirm password', confirm),
+      el('button', {
+        class: 'btn btn-primary',
+        onClick: async () => {
+          try {
+            if (!name.value.trim() || !contact.value.trim()) throw new Error('Host name and login name are required');
+            requireAccountFields({ email: email.value, password: password.value, confirm: confirm.value });
+            await api('organisation', 'create-host', {
+              body: {
+                name: name.value.trim(),
+                contactName: contact.value.trim(),
+                contactEmail: email.value.trim(),
+                password: password.value,
+              },
+            });
+            toast('Host account created. They can sign in now.');
+            location.reload();
+          } catch (e) {
+            toast(e.message, 'err');
+          }
+        },
+      }, ['Create host account']),
+    ]),
+    list,
   ]);
 }
 

@@ -13,7 +13,7 @@ document.getElementById('app').append(
   el('div', { class: 'auth-card card' }, [
     el('img', { src: withBase('assets/logo/clock-kit-logo.png'), alt: 'Clock-Kit', width: '220' }),
     el('h1', { text: 'Sign in' }),
-    el('p', { class: 'muted', text: 'Workforce clocking for host-site teams' }),
+    el('p', { class: 'muted', text: 'Use the email and password set by your platform admin or organisation. There is no self-signup.' }),
     el('form', {
       onSubmit: async (ev) => {
         ev.preventDefault();

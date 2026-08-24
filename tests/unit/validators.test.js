@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isEmail } from '../../src/js/validators.js';
+import { isEmail, isPassword } from '../../src/js/validators.js';
 
 describe('validators', () => {
   it('accepts a normal email', () => {
@@ -8,5 +8,12 @@ describe('validators', () => {
 
   it('rejects empty values', () => {
     expect(isEmail('')).toBe(false);
+  });
+});
+
+describe('isPassword', () => {
+  it('requires at least 8 characters', () => {
+    expect(isPassword('short')).toBe(false);
+    expect(isPassword('ClockKit1')).toBe(true);
   });
 });
