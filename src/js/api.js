@@ -30,7 +30,13 @@ export async function api(fn, action, { method = 'POST', body, idempotent, idemp
     }
   }
   if (!json.ok) {
-    const err = new Error(json.error?.message || 'Request failed');
+    const detail = json.error?.details?.[0];
+    const path = Array.isArray(detail?.path) ? detail.path.filter(Boolean).join('.') : '';
+    const err = new Error(
+      path && detail?.message
+        ? `${path}: ${detail.message}`
+        : json.error?.message || 'Request failed',
+    );
     err.code = json.error?.code;
     err.status = res.status;
     throw err;

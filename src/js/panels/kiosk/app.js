@@ -27,7 +27,12 @@ async function clock(kind) {
     saveSession(login.session, login.user);
     const geo = await captureLocation();
     const data = await api('clock', kind, {
-      body: { siteId: siteId || undefined, qrToken: qr.value || undefined, source: qr.value ? 'QR' : 'KIOSK', location: geo },
+      body: {
+        siteId: siteId || undefined,
+        qrToken: qr.value || undefined,
+        source: qr.value ? 'QR' : 'KIOSK',
+        ...(geo ? { location: geo } : {}),
+      },
       idempotent: true,
     });
     result.replaceChildren(

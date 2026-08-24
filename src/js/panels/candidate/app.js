@@ -19,7 +19,9 @@ const NAV = [
 
 async function mutateClock(action, body = {}) {
   const location = await captureLocation();
-  const payload = { ...body, location, source: 'APP' };
+  const payload = { ...body, source: 'APP' };
+  if (location) payload.location = location;
+  if (!payload.siteId) delete payload.siteId;
   if (!navigator.onLine) {
     queueClock(action, payload);
     toast('Saved locally — PENDING SYNC', 'ok');
@@ -54,19 +56,35 @@ async function home(user) {
 
   const actions = el('div', { class: 'actions' });
   if (state === 'OFF_DUTY') {
-    actions.append(
-      el('button', {
-        class: 'btn btn-primary',
-        onClick: async () => {
-          try {
-            await mutateClock('clock-in', { siteId: assignment?.site_id });
-            location.reload();
-          } catch (e) {
-            toast(e.message, 'err');
-          }
-        },
-      }, [icon('log-in'), 'CLOCK IN']),
-    );
+    if (!assignment) {
+      actions.append(
+        el('p', {
+          class: 'muted',
+          text: 'You do not have an active host assignment, so you cannot clock in yet.',
+        }),
+      );
+    } else if (!assignment.site_id) {
+      actions.append(
+        el('p', {
+          class: 'muted',
+          text: 'No site is assigned to you yet. Ask your organisation to assign a site.',
+        }),
+      );
+    } else {
+      actions.append(
+        el('button', {
+          class: 'btn btn-primary',
+          onClick: async () => {
+            try {
+              await mutateClock('clock-in', { siteId: assignment.site_id });
+              location.reload();
+            } catch (e) {
+              toast(e.message, 'err');
+            }
+          },
+        }, [icon('log-in'), 'CLOCK IN']),
+      );
+    }
   } else if (state === 'WORKING') {
     actions.append(
       el('button', {
