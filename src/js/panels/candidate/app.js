@@ -149,9 +149,10 @@ async function home(user) {
 async function attendance() {
   const data = await api('attendance', 'attendance', { body: {} });
   return table(
-    ['When', 'Site', 'In', 'Out', 'Host review'],
+    ['When', 'Host', 'Site', 'In', 'Out', 'Host review'],
     (data.sessions || []).map((s) => [
       s.clocked_in_at?.slice(0, 10),
+      s.hosts?.name || '—',
       s.sites?.name || '',
       formatTime(s.host_corrected_in_at || s.clocked_in_at),
       formatTime(s.host_corrected_out_at || s.clocked_out_at),

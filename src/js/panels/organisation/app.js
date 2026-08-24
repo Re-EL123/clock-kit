@@ -425,10 +425,12 @@ async function schedules() {
 async function attendance() {
   const data = await api('attendance', 'attendance', { body: {} });
   return table(
-    ['Date', 'Candidate', 'In', 'Out', 'Host review', 'Reviewed by'],
+    ['Date', 'Candidate', 'ID / passport', 'Host', 'In', 'Out', 'Host review', 'Reviewed by'],
     (data.sessions || []).map((s) => [
       s.clocked_in_at?.slice(0, 10),
       `${s.candidates?.first_name || ''} ${s.candidates?.last_name || ''}`,
+      s.candidates?.id_number || '—',
+      s.hosts?.name || '—',
       formatTime(s.host_corrected_in_at || s.clocked_in_at),
       formatTime(s.host_corrected_out_at || s.clocked_out_at),
       s.host_review_status === 'CONFIRMED' ? 'Confirmed' : s.host_review_status === 'REJECTED' ? 'Rejected' : 'Unreviewed',
@@ -534,7 +536,10 @@ async function reports() {
   const candidate = el('select', { class: 'input' }, [
     el('option', { value: '', text: 'All candidates (bulk)' }),
     ...(people.candidates || []).map((c) =>
-      el('option', { value: c.id, text: `${c.first_name} ${c.last_name} (${c.candidate_reference})` }),
+      el('option', {
+        value: c.id,
+        text: `${c.first_name} ${c.last_name} (${c.candidate_reference})${c.id_number ? ` · ${c.id_number}` : ''}`,
+      }),
     ),
   ]);
 
@@ -552,7 +557,7 @@ async function reports() {
       el('h2', { text: 'Timesheets' }),
       el('p', {
         class: 'muted',
-        text: 'Download a weekly or monthly PDF. It lists who confirmed or rejected each day. Choose one student or all candidates.',
+        text: 'Download a weekly or monthly PDF. Each candidate block shows their host and ID or passport number, plus who confirmed or rejected each day.',
       }),
       field('Period', period),
       field('Date in period', date),

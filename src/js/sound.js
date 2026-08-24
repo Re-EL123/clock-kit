@@ -1,4 +1,5 @@
 import { reducedMotion } from './motion.js';
+import { armBusy } from './busy.js';
 
 const STORAGE = 'ck_sounds';
 let ctx;
@@ -64,6 +65,7 @@ export function playSound(kind = 'tap') {
 let armed = false;
 
 export function armSounds() {
+  armBusy();
   if (armed) return;
   armed = true;
   const unlock = () => {
@@ -74,7 +76,9 @@ export function armSounds() {
     const pressable = ev.target.closest('.btn, .nav-link, .mobile-nav a, .mobile-nav button, .stat');
     if (!pressable) return;
     pressable.classList.add('is-pressed');
-    const clear = () => pressable.classList.remove('is-pressed');
+    const clear = () => {
+      if (!pressable.classList.contains('is-busy')) pressable.classList.remove('is-pressed');
+    };
     pressable.addEventListener('pointerup', clear, { once: true });
     pressable.addEventListener('pointerleave', clear, { once: true });
     pressable.addEventListener('pointercancel', clear, { once: true });

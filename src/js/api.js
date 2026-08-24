@@ -1,4 +1,5 @@
 import { config, TOKEN_KEY, REFRESH_KEY, USER_KEY, withBase } from './config.js';
+import { beginRequest, endRequest } from './busy.js';
 
 function headers(extra = {}) {
   const token = localStorage.getItem(TOKEN_KEY);
@@ -14,34 +15,39 @@ export async function api(fn, action, { method = 'POST', body, idempotent, idemp
   const extra = {};
   if (idempotent) extra['Idempotency-Key'] = idempotencyKey || crypto.randomUUID();
 
-  const res = await fetch(url, {
-    method,
-    headers: headers(extra),
-    body: method === 'GET' ? undefined : JSON.stringify({ action, ...(body || {}) }),
-    signal: AbortSignal.timeout(20000),
-  });
+  beginRequest();
+  try {
+    const res = await fetch(url, {
+      method,
+      headers: headers(extra),
+      body: method === 'GET' ? undefined : JSON.stringify({ action, ...(body || {}) }),
+      signal: AbortSignal.timeout(20000),
+    });
 
-  const json = await res.json().catch(() => ({ ok: false, error: { message: 'Invalid response' } }));
-  if (res.status === 401) {
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(USER_KEY);
-    if (!location.pathname.includes('/login.html') && !location.pathname.includes('/kiosk')) {
-      location.href = withBase('login.html');
+    const json = await res.json().catch(() => ({ ok: false, error: { message: 'Invalid response' } }));
+    if (res.status === 401) {
+      localStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem(USER_KEY);
+      if (!location.pathname.includes('/login.html') && !location.pathname.includes('/kiosk')) {
+        location.href = withBase('login.html');
+      }
     }
+    if (!json.ok) {
+      const detail = json.error?.details?.[0];
+      const path = Array.isArray(detail?.path) ? detail.path.filter(Boolean).join('.') : '';
+      const err = new Error(
+        path && detail?.message
+          ? `${path}: ${detail.message}`
+          : json.error?.message || 'Request failed',
+      );
+      err.code = json.error?.code;
+      err.status = res.status;
+      throw err;
+    }
+    return json.data;
+  } finally {
+    endRequest();
   }
-  if (!json.ok) {
-    const detail = json.error?.details?.[0];
-    const path = Array.isArray(detail?.path) ? detail.path.filter(Boolean).join('.') : '';
-    const err = new Error(
-      path && detail?.message
-        ? `${path}: ${detail.message}`
-        : json.error?.message || 'Request failed',
-    );
-    err.code = json.error?.code;
-    err.status = res.status;
-    throw err;
-  }
-  return json.data;
 }
 
 export function saveSession(session, user) {

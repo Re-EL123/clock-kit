@@ -99,10 +99,11 @@ async function dashboard() {
 async function candidates() {
   const data = await api('host', 'candidates', { body: {} });
   return table(
-    ['Name', 'Reference', 'Nationality', 'Role'],
+    ['Name', 'Reference', 'ID / passport', 'Nationality', 'Role'],
     (data.candidates || []).map((c) => [
       `${c.first_name} ${c.last_name}`,
       c.candidate_reference,
+      c.id_number || '—',
       c.nationality || '—',
       c.assignment?.role_title || '',
     ]),
@@ -117,9 +118,10 @@ async function attendance() {
       text: 'Confirm or reject each student’s attendance. If you confirmed the wrong day, change it. Use Correct times when the clock times are wrong.',
     }),
     table(
-      ['Candidate', 'In', 'Out', 'Review', 'By', 'Actions'],
+      ['Candidate', 'ID / passport', 'In', 'Out', 'Review', 'By', 'Actions'],
       (data.sessions || []).map((s) => [
         `${s.candidates?.first_name || ''} ${s.candidates?.last_name || ''}`,
+        s.candidates?.id_number || '—',
         formatTime(s.host_corrected_in_at || s.clocked_in_at),
         formatTime(s.host_corrected_out_at || s.clocked_out_at),
         reviewLabel(s.host_review_status),

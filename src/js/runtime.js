@@ -2,6 +2,7 @@ import { el, viewParam } from './utils/dom.js';
 import { shell, replaceShellContent, closeMoreSheet } from './components/sidebar.js';
 import { armSounds } from './sound.js';
 import { startPwa } from './pwa.js';
+import { PanelLoader, beginPaint, endPaint } from './busy.js';
 
 export function refreshPanel() {
   window.dispatchEvent(new Event('ck:refresh'));
@@ -14,26 +15,31 @@ function samePanel(url) {
 export async function bootPanel({ title, items, user, views, defaultView }) {
   armSounds();
   const root = document.getElementById('app');
+  root.replaceChildren(PanelLoader('Loading your workspace'));
   let current = viewParam(defaultView);
   let tree;
 
   async function paint(view = current) {
     current = view || viewParam(defaultView);
     const heading = items.find((item) => item.view === current)?.label || title;
-    if (tree) tree.querySelector('.page-body')?.classList.add('is-refreshing');
-    let content;
+    beginPaint();
     try {
-      content = await (views[current] || views[defaultView])();
-    } catch (err) {
-      content = el('p', { class: 'form-error', text: err.message });
+      let content;
+      try {
+        content = await (views[current] || views[defaultView])();
+      } catch (err) {
+        content = el('p', { class: 'form-error', text: err.message });
+      }
+      if (!tree) {
+        tree = shell({ title, items, view: current, heading, user, content });
+        root.replaceChildren(tree);
+      } else {
+        replaceShellContent(tree, { view: current, heading, content, items });
+      }
+      closeMoreSheet();
+    } finally {
+      endPaint();
     }
-    if (!tree) {
-      tree = shell({ title, items, view: current, heading, user, content });
-      root.replaceChildren(tree);
-    } else {
-      replaceShellContent(tree, { view: current, heading, content, items });
-    }
-    closeMoreSheet();
   }
 
   document.addEventListener('click', (ev) => {

@@ -1,5 +1,5 @@
-import { el } from '../utils/dom.js';
+import { PanelLoader } from '../busy.js';
 
 export function SkeletonLoader() {
-  return el('div', { class: 'muted', text: 'Loading…' });
+  return PanelLoader('Loading…');
 }

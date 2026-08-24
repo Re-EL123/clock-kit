@@ -4,6 +4,7 @@ import { withBase } from '../config.js';
 import { icon, viewIcon } from '../icons.js';
 import { reveal } from '../motion.js';
 import { fillPwaSlots } from '../pwa.js';
+import { viewLoader } from '../busy.js';
 
 const SECTION_FOR = {
   dashboard: 'Overview',
@@ -222,6 +223,7 @@ export function MobileNav(items, view, user, title) {
 
 export function shell({ title, items, view, heading, user, content }) {
   const body = el('div', { class: 'page-body' }, [content]);
+  const stage = el('div', { class: 'page-stage' }, [body, viewLoader()]);
   const headingEl = el('h1', { text: heading });
   queueMicrotask(() => reveal(body));
   const topbar = el('header', { class: 'topbar' }, [
@@ -237,7 +239,7 @@ export function shell({ title, items, view, heading, user, content }) {
   return el('div', { class: 'shell' }, [
     Sidebar({ title, items, view, user }),
     el('div', { class: 'shell-main' }, [
-      el('main', { class: 'main' }, [topbar, body]),
+      el('main', { class: 'main' }, [topbar, stage]),
       MobileNav(items, view, user, title),
     ]),
   ]);
@@ -258,7 +260,6 @@ export function replaceShellContent(root, { view, heading, content, items = [] }
   const body = root.querySelector('.page-body');
   if (body) {
     body.replaceChildren(content);
-    body.classList.remove('is-refreshing');
     reveal(body);
   }
 }

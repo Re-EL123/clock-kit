@@ -1,0 +1,181 @@
+@keyframes ck-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes ck-progress-slide {
+  0% { transform: translateX(-120%); }
+  100% { transform: translateX(320%); }
+}
+
+.ck-spinner {
+  width: 1.05em;
+  height: 1.05em;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: ck-spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+.ck-spinner-lg {
+  width: 2rem;
+  height: 2rem;
+  border-width: 3px;
+  color: var(--ck-navy);
+}
+
+.ck-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  z-index: 80;
+  overflow: hidden;
+  pointer-events: none;
+  background: rgba(33, 57, 106, 0.12);
+}
+
+.ck-progress.is-on {
+  display: block;
+}
+
+.ck-progress-bar {
+  height: 100%;
+  width: 35%;
+  background: var(--ck-gold);
+  animation: ck-progress-slide 1.05s ease-in-out infinite;
+}
+
+.ck-page-loader {
+  min-height: 60vh;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 0.85rem;
+  padding: 2rem;
+}
+
+.page-stage {
+  position: relative;
+  min-height: 42vh;
+}
+
+.ck-view-loader {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 0.7rem;
+  background: color-mix(in srgb, var(--ck-light) 82%, transparent);
+  backdrop-filter: blur(2px);
+  color: var(--ck-navy);
+  font-weight: 700;
+}
+
+.ck-view-loader[hidden] {
+  display: none;
+}
+
+.btn.is-busy,
+.nav-link.is-busy,
+.mobile-nav a.is-busy,
+.mobile-nav button.is-busy,
+a.brand.is-busy {
+  position: relative;
+}
+
+.btn.is-busy,
+.btn.is-busy-lock {
+  cursor: progress;
+}
+
+.btn.is-busy:not(:disabled),
+.btn.is-busy-lock:not(:disabled) {
+  transform: scale(0.96) translateY(1px);
+  box-shadow: var(--shadow-inset);
+}
+
+.btn.is-busy-lock {
+  pointer-events: none;
+}
+
+.btn.is-busy > :not(.ck-spinner) {
+  opacity: 0.38;
+}
+
+.nav-link.is-busy,
+.nav-link.is-busy-lock,
+.mobile-nav a.is-busy,
+.mobile-nav a.is-busy-lock {
+  pointer-events: none;
+}
+
+.nav-link.is-busy {
+  background: rgba(33, 57, 106, 0.08);
+  color: var(--ck-navy);
+}
+
+.nav-link.is-busy .nav-ico {
+  position: relative;
+}
+
+.nav-link.is-busy .nav-ico .ck-icon {
+  visibility: hidden;
+}
+
+.nav-link.is-busy .nav-ico::after,
+.mobile-nav a.is-busy::after,
+.mobile-nav button.is-busy::after {
+  content: "";
+  width: 16px;
+  height: 16px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: ck-spin 0.7s linear infinite;
+}
+
+.nav-link.is-busy .nav-ico::after {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+}
+
+.mobile-nav a.is-busy,
+.mobile-nav button.is-busy {
+  color: var(--ck-navy);
+}
+
+.mobile-nav a.is-busy > .ck-icon,
+.mobile-nav button.is-busy > .ck-icon {
+  visibility: hidden;
+}
+
+.mobile-nav a.is-busy::after,
+.mobile-nav button.is-busy::after {
+  position: absolute;
+  top: 0.45rem;
+  left: 50%;
+  margin-left: -8px;
+}
+
+html.ck-busy {
+  cursor: progress;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ck-spinner,
+  .ck-progress-bar,
+  .nav-link.is-busy .nav-ico::after,
+  .mobile-nav a.is-busy::after,
+  .mobile-nav button.is-busy::after {
+    animation: none;
+  }
+
+  .ck-progress-bar {
+    width: 100%;
+  }
+}
