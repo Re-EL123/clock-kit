@@ -9,6 +9,9 @@ import { Modal } from '../../components/modal.js';
 import { ConfirmationSheet } from '../../components/confirmation-sheet.js';
 import { isEmail, isPassword } from '../../validators.js';
 import { nationalitySelect } from '../../nationalities.js';
+import { AccountForm } from '../../components/account-form.js';
+import { AlertsPanel } from '../../components/alerts-panel.js';
+import { formatPublished } from '../../legal-format.js';
 
 const NAV = [
   { view: 'dashboard', label: 'Dashboard' },
@@ -20,6 +23,9 @@ const NAV = [
   { view: 'assignments', label: 'Assignments' },
   { view: 'security', label: 'Security' },
   { view: 'health', label: 'Health' },
+  { view: 'legal', label: 'Legal' },
+  { view: 'notifications', label: 'Alerts' },
+  { view: 'profile', label: 'Account' },
 ];
 
 function field(label, input) {
@@ -590,6 +596,69 @@ async function health() {
   ]);
 }
 
+async function legal() {
+  const data = await api('admin', 'legal', { body: {} });
+  function historyList(kind) {
+    const rows = (data.history || []).filter((row) => row.kind === kind).slice(0, 6);
+    if (!rows.length) return null;
+    return el('ul', { class: 'muted legal-history' }, rows.map((row) =>
+      el('li', { text: `Version ${row.version}${row.publishedAt ? ` · ${formatPublished(row.publishedAt)}` : ''}` }),
+    ));
+  }
+  function editor(kind, doc) {
+    const title = el('input', { class: 'input' });
+    title.value = doc?.title || (kind === 'PRIVACY' ? 'Privacy Policy' : 'Terms and Conditions');
+    const body = el('textarea', { class: 'input legal-editor' });
+    body.value = doc?.body || '';
+    const err = el('div', { class: 'form-error' });
+    return el('div', { class: 'card', style: 'padding:1rem' }, [
+      el('h2', { text: kind === 'PRIVACY' ? 'Privacy Policy' : 'Terms and Conditions' }),
+      el('p', {
+        class: 'muted',
+        text: `Current version ${doc?.version || 1}. Publishing a new version asks every user to read and accept it again. Use ## headings for sections.`,
+      }),
+      field('Title', title),
+      field('Document', body),
+      err,
+      el('button', {
+        class: 'btn btn-primary',
+        type: 'button',
+        onClick: () => {
+          const sheet = ConfirmationSheet({
+            message: 'Publishing a new version will ask every signed-in user to accept it before they can continue.',
+            confirmLabel: 'Publish',
+            onCancel: () => sheet.remove(),
+            onConfirm: async () => {
+              sheet.remove();
+              err.textContent = '';
+              try {
+                await api('admin', 'publish-legal', {
+                  body: { kind, title: title.value.trim(), body: body.value },
+                });
+                toast('Published. Users will be asked to accept the new version.');
+                refreshPanel();
+              } catch (e) {
+                err.textContent = e.message;
+                toast(e.message, 'err');
+              }
+            },
+          });
+          document.body.append(sheet);
+        },
+      }, ['Publish new version']),
+      historyList(kind),
+    ]);
+  }
+  return el('div', { class: 'grid' }, [
+    editor('TERMS', data.terms),
+    editor('PRIVACY', data.privacy),
+  ]);
+}
+
+async function profileView() {
+  return AccountForm({ user, showIdentity: false });
+}
+
 const user = Auth.requireRole('PLATFORM_ADMIN');
 await bootPanel({
   title: 'Platform',
@@ -606,5 +675,8 @@ await bootPanel({
     assignments,
     security,
     health,
+    legal,
+    notifications: AlertsPanel,
+    profile: profileView,
   },
 });

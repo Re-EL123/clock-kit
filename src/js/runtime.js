@@ -3,6 +3,7 @@ import { shell, replaceShellContent, closeMoreSheet } from './components/sidebar
 import { armSounds } from './sound.js';
 import { startPwa } from './pwa.js';
 import { PanelLoader, beginPaint, endPaint } from './busy.js';
+import { startOnboarding } from './onboarding.js';
 
 export function refreshPanel() {
   window.dispatchEvent(new Event('ck:refresh'));
@@ -63,7 +64,16 @@ export async function bootPanel({ title, items, user, views, defaultView }) {
 
   window.addEventListener('popstate', () => paint(viewParam(defaultView)));
   window.addEventListener('ck:refresh', () => paint(current));
+  window.addEventListener('ck:go', (ev) => {
+    const view = ev.detail?.view || viewParam(defaultView);
+    const next = `${location.pathname}?view=${encodeURIComponent(view)}`;
+    if (`${location.pathname}${location.search}` !== next) {
+      history.pushState({ view }, '', next);
+    }
+    paint(view);
+  });
   window.addEventListener('online', () => paint(current));
   await paint(current);
   startPwa();
+  startOnboarding({ user, items });
 }

@@ -28,7 +28,12 @@ export async function api(fn, action, { method = 'POST', body, idempotent, idemp
     if (res.status === 401) {
       localStorage.removeItem(TOKEN_KEY);
       localStorage.removeItem(USER_KEY);
-      if (!location.pathname.includes('/login.html') && !location.pathname.includes('/kiosk')) {
+      if (
+      !location.pathname.includes('/login.html')
+      && !location.pathname.includes('/kiosk')
+      && !location.pathname.includes('terms.html')
+      && !location.pathname.includes('privacy.html')
+    ) {
         location.href = withBase('login.html');
       }
     }
@@ -53,6 +58,10 @@ export async function api(fn, action, { method = 'POST', body, idempotent, idemp
 export function saveSession(session, user) {
   localStorage.setItem(TOKEN_KEY, session.accessToken);
   localStorage.setItem(REFRESH_KEY, session.refreshToken);
+  localStorage.setItem(USER_KEY, JSON.stringify(user));
+}
+
+export function persistUser(user) {
   localStorage.setItem(USER_KEY, JSON.stringify(user));
 }
 

@@ -1,9 +1,11 @@
 const BASE = new URL('./', self.location).pathname;
-const CACHE = 'clock-kit-shell-v4';
+const CACHE = 'clock-kit-shell-v6';
 const SHELL = [
   '',
   'login.html',
   'offline.html',
+  'terms.html',
+  'privacy.html',
   'candidate/',
   'admin/',
   'organisation/',

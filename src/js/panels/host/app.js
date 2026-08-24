@@ -6,12 +6,15 @@ import { table } from '../../components/sidebar.js';
 import { bootPanel, refreshPanel } from '../../runtime.js';
 import { StatCard } from '../../components/clock-card.js';
 import { Modal } from '../../components/modal.js';
+import { AccountForm } from '../../components/account-form.js';
+import { AlertsPanel } from '../../components/alerts-panel.js';
 
 const NAV = [
   { view: 'dashboard', label: 'Dashboard' },
   { view: 'candidates', label: 'Candidates' },
   { view: 'attendance', label: 'Attendance' },
   { view: 'schedule', label: 'Schedule' },
+  { view: 'notifications', label: 'Alerts' },
   { view: 'profile', label: 'Profile' },
 ];
 
@@ -186,6 +189,7 @@ await bootPanel({
     candidates,
     attendance,
     schedule,
-    profile: () => el('div', { text: user.displayName }),
+    notifications: AlertsPanel,
+    profile: () => AccountForm({ user, showIdentity: false }),
   },
 });

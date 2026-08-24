@@ -28,6 +28,7 @@ const SECTION_FOR = {
   notifications: 'Account',
   alerts: 'Account',
   profile: 'Account',
+  legal: 'System',
 };
 
 const ROLE_LABEL = {
@@ -121,6 +122,18 @@ function accountCard(user, title) {
   ]);
 }
 
+function legalLinks() {
+  return el('div', { class: 'sidebar-legal' }, [
+    el('a', { href: withBase('terms.html') }, ['Terms']),
+    el('a', { href: withBase('privacy.html') }, ['Privacy']),
+    el('button', {
+      class: 'linkish',
+      type: 'button',
+      onClick: () => window.dispatchEvent(new Event('ck:tour')),
+    }, ['Take a tour']),
+  ]);
+}
+
 function signOutButton() {
   return el('button', { class: 'btn sign-out', type: 'button', onClick: () => Auth.logout() }, [
     icon('log-out', { size: 18 }),
@@ -136,6 +149,7 @@ export function Sidebar({ title, items, view, user }) {
     el('div', { class: 'sidebar-foot' }, [
       el('div', { class: 'pwa-slot' }),
       accountCard(user, title),
+      legalLinks(),
       signOutButton(),
     ]),
   ]);
@@ -176,6 +190,7 @@ function openMoreSheet({ rest, view, user, title, more }) {
     ...navGroups(rest, view),
     el('div', { class: 'pwa-slot' }),
     accountCard(user, title),
+    legalLinks(),
     signOutButton(),
   ]);
   document.body.append(backdrop, sheet);

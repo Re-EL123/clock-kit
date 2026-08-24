@@ -1,0 +1,151 @@
+.legal-card {
+  width: min(720px, calc(100vw - 1.5rem));
+  margin: 4vh auto 2rem;
+  text-align: left;
+  padding: 1.6rem;
+}
+
+.legal-card h1 {
+  margin: 0.4rem 0 0.2rem;
+}
+
+.legal-card h2 {
+  font-size: 1.05rem;
+  margin: 1.15rem 0 0.35rem;
+  color: var(--ck-navy);
+}
+
+.legal-switch {
+  margin-top: 1.2rem;
+  font-weight: 700;
+}
+
+.legal-doc {
+  max-height: 28vh;
+  overflow: auto;
+  margin-top: 0.75rem;
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-inset);
+}
+
+.legal-doc h3,
+.legal-doc h4 {
+  margin: 0.65rem 0 0.3rem;
+  color: var(--ck-navy);
+}
+
+.legal-doc h3 {
+  font-size: 1rem;
+}
+
+.legal-agree {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  font-weight: 600;
+}
+
+.legal-reminders {
+  margin: 0 0 1rem;
+  padding-left: 1.1rem;
+}
+
+.modal-wide {
+  width: min(760px, calc(100vw - 1.5rem));
+}
+
+.modal-backdrop.is-blocking {
+  background: rgba(34, 40, 50, 0.55);
+}
+
+.sidebar-legal {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.sidebar-legal a,
+button.linkish {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--ck-navy);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+}
+
+.legal-editor {
+  min-height: 280px;
+  font-family: inherit;
+  line-height: 1.45;
+  resize: vertical;
+}
+
+.ck-tour {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  pointer-events: none;
+}
+
+.ck-tour-card {
+  pointer-events: auto;
+  position: fixed;
+  right: max(1rem, env(safe-area-inset-right));
+  bottom: calc(5.2rem + env(safe-area-inset-bottom));
+  width: min(360px, calc(100vw - 2rem));
+  padding: 1.1rem;
+  z-index: 71;
+}
+
+.nav-link.ck-tour-spot,
+.mobile-nav a.ck-tour-spot {
+  outline: 3px solid var(--ck-gold);
+  outline-offset: 2px;
+  z-index: 72;
+}
+
+.ck-nudge-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem 0.85rem;
+  margin: -0.4rem 0 1.1rem;
+  padding: 0.7rem 0.9rem;
+  border-radius: var(--radius-sm);
+  background: rgba(245, 191, 72, 0.28);
+  color: var(--ck-navy);
+  font-size: 0.9rem;
+}
+
+.ck-nudge-banner strong {
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ck-nudge-banner span {
+  flex: 1 1 12rem;
+}
+
+.ck-nudge-banner .btn {
+  margin-left: auto;
+}
+
+.legal-history {
+  margin: 0.7rem 0 0;
+  padding-left: 1.1rem;
+  font-size: 0.85rem;
+}
+
+@media (max-width: 860px) {
+  .ck-tour-card {
+    left: 1rem;
+    right: 1rem;
+    width: auto;
+  }
+}

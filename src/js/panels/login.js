@@ -52,6 +52,11 @@ const card = el('div', { class: 'auth-card card' }, [
     error,
     submit,
   ]),
+  el('p', { class: 'legal-switch' }, [
+    el('a', { href: withBase('terms.html') }, ['Terms']),
+    ' · ',
+    el('a', { href: withBase('privacy.html') }, ['Privacy']),
+  ]),
   el('div', { class: 'pwa-slot', style: 'margin-top:1rem' }),
 ]);
 

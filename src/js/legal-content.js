@@ -29,7 +29,7 @@ export const TERMS_SECTIONS = [
   },
   {
     heading: '8. Changes',
-    body: 'We may update these Terms. The date at the top of the page is the current version. Continued use after an update means you accept the new Terms. Last updated 24 August 2026.',
+    body: 'We may update these Terms. When we publish a new version you will be asked to read and accept it before you continue using Clock-Kit.',
   },
 ];
 
@@ -64,6 +64,6 @@ export const PRIVACY_SECTIONS = [
   },
   {
     heading: '8. Changes',
-    body: 'We may update this Privacy Policy when the product or the law changes. The date at the top of the page is the current version. Last updated 24 August 2026.',
+    body: 'We may update this Privacy Policy when the product or the law changes. When we publish a new version you will be asked to read and accept it before you continue using Clock-Kit.',
   },
 ];

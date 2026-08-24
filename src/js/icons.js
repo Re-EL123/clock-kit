@@ -11,7 +11,9 @@ import {
   Clock,
   Coffee,
   FileSpreadsheet,
+  FileText,
   HeartPulse,
+  HelpCircle,
   House,
   LayoutDashboard,
   Lock,
@@ -52,7 +54,9 @@ const ICONS = {
   clock: Clock,
   coffee: Coffee,
   dashboard: LayoutDashboard,
+  'file-text': FileText,
   health: HeartPulse,
+  help: HelpCircle,
   home: House,
   hosts: Warehouse,
   leave: TreePalm,
@@ -106,6 +110,7 @@ export const VIEW_ICONS = {
   notifications: 'bell',
   alerts: 'bell',
   profile: 'profile',
+  legal: 'file-text',
 };
 
 export function icon(name, { size = 20, className = '', stroke = 2 } = {}) {

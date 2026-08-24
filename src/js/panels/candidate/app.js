@@ -8,6 +8,8 @@ import { ClockFace, StatusChip } from '../../components/clock-card.js';
 import { icon } from '../../icons.js';
 import { captureLocation } from '../../geolocation.js';
 import { flushQueue, pendingCount, queueClock } from '../../offline.js';
+import { AccountForm } from '../../components/account-form.js';
+import { AlertsPanel } from '../../components/alerts-panel.js';
 
 const NAV = [
   { view: 'home', label: 'Home' },
@@ -231,20 +233,18 @@ async function schedule() {
   );
 }
 
-async function notifications() {
-  const data = await api('notifications', 'list', { body: {} });
-  return table(
-    ['When', 'Title', 'Message'],
-    (data.notifications || []).map((n) => [formatTime(n.created_at), n.title, n.body]),
-  );
-}
-
-function profile(user) {
-  return el('div', { class: 'card', style: 'padding:1.2rem' }, [
-    el('h2', { class: 'icon-label' }, [icon('profile'), user.displayName]),
-    el('p', { class: 'muted icon-label' }, [icon('mail', { size: 16 }), user.email]),
-    el('p', { class: 'icon-label' }, [icon('shield', { size: 16 }), user.role]),
-  ]);
+async function profile() {
+  let extra = { user, candidate: null };
+  try {
+    extra = await api('auth', 'checklist', { body: { remind: false } });
+  } catch {
+    /* use signed-in user */
+  }
+  return AccountForm({
+    user: extra.user || user,
+    candidate: extra.candidate,
+    showIdentity: true,
+  });
 }
 
 const user = Auth.requireRole('CANDIDATE');
@@ -258,8 +258,8 @@ await bootPanel({
     attendance,
     leave,
     schedule,
-    notifications,
-    profile: () => profile(user),
+    notifications: AlertsPanel,
+    profile,
   },
 });
 window.addEventListener('online', () => flushQueue(api));

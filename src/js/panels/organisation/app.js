@@ -8,6 +8,8 @@ import { StatCard } from '../../components/clock-card.js';
 import { can } from '../../permissions.js';
 import { isEmail, isPassword } from '../../validators.js';
 import { nationalitySelect } from '../../nationalities.js';
+import { AccountForm } from '../../components/account-form.js';
+import { AlertsPanel } from '../../components/alerts-panel.js';
 
 const NAV = [
   { view: 'dashboard', label: 'Dashboard' },
@@ -23,9 +25,11 @@ const NAV = [
   { view: 'reports', label: 'Reports' },
   { view: 'audit', label: 'Audit' },
   { view: 'settings', label: 'Settings' },
+  { view: 'notifications', label: 'Alerts' },
+  { view: 'profile', label: 'Account' },
 ];
 
-const MANAGER_VIEWS = ['dashboard', 'candidates', 'assignments', 'attendance', 'leave', 'approvals', 'reports'];
+const MANAGER_VIEWS = ['dashboard', 'candidates', 'assignments', 'attendance', 'leave', 'approvals', 'reports', 'notifications', 'profile'];
 
 function navFor(role) {
   if (role === 'ORG_MANAGER') return NAV.filter((item) => MANAGER_VIEWS.includes(item.view));
@@ -610,6 +614,10 @@ async function settings() {
   ]);
 }
 
+async function profileView() {
+  return AccountForm({ user, showIdentity: false });
+}
+
 const user = Auth.requireRole('ORG_OWNER', 'ORG_ADMIN', 'ORG_MANAGER', 'ORG_VIEWER');
 const items = navFor(user.role);
 const allViews = {
@@ -626,6 +634,8 @@ const allViews = {
   reports,
   audit,
   settings,
+  notifications: AlertsPanel,
+  profile: profileView,
 };
 await bootPanel({
   title: 'Organisation',

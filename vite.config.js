@@ -24,6 +24,8 @@ export default defineConfig({
         host: resolve(root, 'host/index.html'),
         candidate: resolve(root, 'candidate/index.html'),
         kiosk: resolve(root, 'kiosk/index.html'),
+        terms: resolve(root, 'terms.html'),
+        privacy: resolve(root, 'privacy.html'),
       },
     },
   },
