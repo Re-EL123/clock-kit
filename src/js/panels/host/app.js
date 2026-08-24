@@ -1,8 +1,9 @@
 import '../../../css/app.css';
 import { Auth } from '../../auth.js';
 import { api } from '../../api.js';
-import { el, viewParam, formatTime, toast } from '../../utils/dom.js';
-import { shell, table } from '../../components/sidebar.js';
+import { el, formatTime, toast } from '../../utils/dom.js';
+import { table } from '../../components/sidebar.js';
+import { bootPanel } from '../../runtime.js';
 import { StatCard } from '../../components/clock-card.js';
 
 const NAV = [
@@ -58,24 +59,16 @@ async function schedule() {
 }
 
 const user = Auth.requireRole('HOST');
-const view = viewParam('dashboard');
-const views = { dashboard, candidates, attendance, schedule, profile: () => el('div', { text: user.displayName }) };
-
-let content;
-try {
-  content = await (views[view] || dashboard)();
-} catch (e) {
-  content = el('p', { class: 'form-error', text: e.message });
-  toast(e.message, 'err');
-}
-
-document.getElementById('app').append(
-  shell({
-    title: 'Host',
-    items: NAV,
-    view,
-    heading: NAV.find((n) => n.view === view)?.label || 'Dashboard',
-    user,
-    content,
-  }),
-);
+await bootPanel({
+  title: 'Host',
+  items: NAV,
+  user,
+  defaultView: 'dashboard',
+  views: {
+    dashboard,
+    candidates,
+    attendance,
+    schedule,
+    profile: () => el('div', { text: user.displayName }),
+  },
+});

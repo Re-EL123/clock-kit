@@ -38,15 +38,19 @@ export function ClockFace() {
       + '</svg>',
   );
 
+  let mounted = false;
   function tick() {
-    const now = new Date();
-    const ms = now.getMilliseconds();
-    const s = now.getSeconds() + ms / 1000;
-    const m = now.getMinutes() + s / 60;
-    const h = (now.getHours() % 12) + m / 60;
-    second.style.transform = `translateX(-50%) rotate(${s * 6}deg)`;
-    minute.style.transform = `translateX(-50%) rotate(${m * 6}deg)`;
-    hour.style.transform = `translateX(-50%) rotate(${h * 30}deg)`;
+    if (face.isConnected) {
+      mounted = true;
+      const now = new Date();
+      const ms = now.getMilliseconds();
+      const s = now.getSeconds() + ms / 1000;
+      const m = now.getMinutes() + s / 60;
+      const h = (now.getHours() % 12) + m / 60;
+      second.style.transform = `translateX(-50%) rotate(${s * 6}deg)`;
+      minute.style.transform = `translateX(-50%) rotate(${m * 6}deg)`;
+      hour.style.transform = `translateX(-50%) rotate(${h * 30}deg)`;
+    } else if (mounted) return;
     face._raf = requestAnimationFrame(tick);
   }
   tick();

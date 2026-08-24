@@ -1,8 +1,9 @@
 import '../../../css/app.css';
 import { Auth } from '../../auth.js';
 import { api } from '../../api.js';
-import { el, viewParam, toast, formatTime } from '../../utils/dom.js';
-import { shell, table } from '../../components/sidebar.js';
+import { el, toast, formatTime } from '../../utils/dom.js';
+import { table } from '../../components/sidebar.js';
+import { bootPanel, refreshPanel } from '../../runtime.js';
 import { StatCard } from '../../components/clock-card.js';
 import { can } from '../../permissions.js';
 import { isEmail, isPassword } from '../../validators.js';
@@ -103,7 +104,7 @@ async function candidates() {
               },
             });
             toast('Candidate account created. They can sign in now.');
-            location.reload();
+            refreshPanel();
           } catch (e) {
             toast(e.message, 'err');
           }
@@ -171,7 +172,7 @@ async function hosts() {
               },
             });
             toast('Host account created. They can sign in now.');
-            location.reload();
+            refreshPanel();
           } catch (e) {
             toast(e.message, 'err');
           }
@@ -220,7 +221,7 @@ async function sites() {
               },
             });
             toast('Site created');
-            location.reload();
+            refreshPanel();
           } catch (e) {
             toast(e.message, 'err');
           }
@@ -266,7 +267,7 @@ async function assignments() {
               },
             });
             toast('Assignment saved');
-            location.reload();
+            refreshPanel();
           } catch (e) {
             toast(e.message, 'err');
           }
@@ -336,14 +337,14 @@ async function approvals() {
             class: 'btn btn-primary mt',
             onClick: async () => {
               await api('leave', 'approve', { body: { id: r.id } });
-              location.reload();
+              refreshPanel();
             },
           }, ['Approve']),
           el('button', {
             class: 'btn mt',
             onClick: async () => {
               await api('leave', 'reject', { body: { id: r.id } });
-              location.reload();
+              refreshPanel();
             },
           }, ['Reject']),
         ]),
@@ -359,14 +360,14 @@ async function approvals() {
             class: 'btn btn-primary mt',
             onClick: async () => {
               await api('attendance', 'approve-correction', { body: { id: c.id } });
-              location.reload();
+              refreshPanel();
             },
           }, ['Approve']),
           el('button', {
             class: 'btn mt',
             onClick: async () => {
               await api('attendance', 'reject-correction', { body: { id: c.id } });
-              location.reload();
+              refreshPanel();
             },
           }, ['Reject']),
         ]),
@@ -409,37 +410,24 @@ async function settings() {
 }
 
 const user = Auth.requireRole('ORG_OWNER', 'ORG_ADMIN', 'ORG_MANAGER', 'ORG_VIEWER');
-const view = viewParam('dashboard');
-const views = {
-  dashboard,
-  candidates,
-  users,
-  hosts,
-  sites,
-  assignments,
-  schedules,
-  attendance,
-  leave: leaveView,
-  approvals,
-  reports,
-  audit,
-  settings,
-};
-
-let content;
-try {
-  content = await (views[view] || dashboard)();
-} catch (e) {
-  content = el('div', { class: 'form-error', text: e.message });
-}
-
-document.getElementById('app').append(
-  shell({
-    title: 'Organisation',
-    items: NAV,
-    view,
-    heading: NAV.find((n) => n.view === view)?.label || 'Dashboard',
-    user,
-    content,
-  }),
-);
+await bootPanel({
+  title: 'Organisation',
+  items: NAV,
+  user,
+  defaultView: 'dashboard',
+  views: {
+    dashboard,
+    candidates,
+    users,
+    hosts,
+    sites,
+    assignments,
+    schedules,
+    attendance,
+    leave: leaveView,
+    approvals,
+    reports,
+    audit,
+    settings,
+  },
+});

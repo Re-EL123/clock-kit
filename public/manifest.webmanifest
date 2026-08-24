@@ -1,17 +1,40 @@
 {
+  "id": "/clock-kit/",
   "name": "Clock-Kit",
   "short_name": "Clock-Kit",
+  "description": "Clock in. Work on. Succeed together.",
   "display": "standalone",
-  "start_url": "./candidate/",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait-primary",
+  "start_url": "./login.html",
   "scope": "./",
   "background_color": "#E2DDD8",
   "theme_color": "#21396A",
+  "categories": ["business", "productivity"],
   "icons": [
     {
-      "src": "./assets/logo/clock-kit-logo.png",
+      "src": "./assets/logo/clock-kit-icon-180.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./assets/logo/clock-kit-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./assets/logo/clock-kit-icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
+    },
+    {
+      "src": "./assets/logo/clock-kit-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     },
     {
       "src": "./assets/logo/clock-kit-mark.svg",

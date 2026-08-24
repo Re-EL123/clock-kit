@@ -1,4 +1,4 @@
-import { el, href, nowClock } from '../utils/dom.js';
+import { el, href, liveText, nowClock } from '../utils/dom.js';
 import { Auth } from '../auth.js';
 import { withBase } from '../config.js';
 import { icon, viewIcon } from '../icons.js';
@@ -45,7 +45,7 @@ function liveClock() {
     el('span', { class: 'live-clock-time', text: nowClock() }),
   ]);
   const time = node.querySelector('.live-clock-time');
-  setInterval(() => {
+  liveText(node, () => {
     time.textContent = nowClock();
   }, 1000);
   return node;
@@ -75,6 +75,7 @@ function navLink(item, view) {
   return el('a', {
     class: `nav-link${active ? ' active' : ''}`,
     href: href(item.view),
+    dataset: { view: item.view },
     'aria-current': active ? 'page' : null,
   }, [
     el('span', { class: 'nav-ico', 'aria-hidden': 'true' }, [viewIcon(item.view, { size: 18 })]),
@@ -131,6 +132,7 @@ export function Sidebar({ title, items, view, user }) {
     brandLockup(title, homeView),
     el('nav', { class: 'sidebar-nav', 'aria-label': `${title} navigation` }, navGroups(items, view)),
     el('div', { class: 'sidebar-foot' }, [
+      el('div', { class: 'pwa-slot' }),
       accountCard(user, title),
       signOutButton(),
     ]),
@@ -150,10 +152,14 @@ export function Topbar({ heading, user }) {
   ]);
 }
 
-function closeMore() {
+export function closeMoreSheet() {
   document.querySelector('.more-sheet-backdrop')?.remove();
   document.querySelector('.more-sheet')?.remove();
   document.querySelector('.mobile-nav .more-btn')?.setAttribute('aria-expanded', 'false');
+}
+
+function closeMore() {
+  closeMoreSheet();
 }
 
 function openMoreSheet({ rest, view, user, title, more }) {
@@ -198,7 +204,11 @@ export function MobileNav(items, view, user, title) {
 
   return el('nav', { class: 'mobile-nav', 'aria-label': 'Primary' }, [
     ...primary.map((item) =>
-      el('a', { href: href(item.view), class: item.view === view ? 'active' : '' }, [
+      el('a', {
+        href: href(item.view),
+        class: item.view === view ? 'active' : '',
+        dataset: { view: item.view },
+      }, [
         viewIcon(item.view, { size: 20 }),
         item.label,
       ]),
@@ -209,14 +219,45 @@ export function MobileNav(items, view, user, title) {
 
 export function shell({ title, items, view, heading, user, content }) {
   const body = el('div', { class: 'page-body' }, [content]);
+  const headingEl = el('h1', { text: heading });
   queueMicrotask(() => reveal(body));
+  const topbar = el('header', { class: 'topbar' }, [
+    el('div', {}, [
+      headingEl,
+      el('div', { class: 'topbar-user muted' }, [
+        icon('user', { size: 16 }),
+        user.displayName || user.email,
+      ]),
+    ]),
+    liveClock(),
+  ]);
   return el('div', { class: 'shell' }, [
     Sidebar({ title, items, view, user }),
     el('div', { class: 'shell-main' }, [
-      el('main', { class: 'main' }, [Topbar({ heading, user }), body]),
+      el('main', { class: 'main' }, [topbar, body]),
       MobileNav(items, view, user, title),
     ]),
   ]);
+}
+
+export function replaceShellContent(root, { view, heading, content, items = [] }) {
+  root.querySelectorAll('[data-view]').forEach((node) => {
+    const on = node.dataset.view === view;
+    node.classList.toggle('active', on);
+    if (on) node.setAttribute('aria-current', 'page');
+    else node.removeAttribute('aria-current');
+  });
+  const rest = items.slice(4);
+  const more = root.querySelector('.mobile-nav .more-btn');
+  if (more) more.classList.toggle('active', rest.some((item) => item.view === view));
+  const headingEl = root.querySelector('.topbar h1');
+  if (headingEl) headingEl.textContent = heading;
+  const body = root.querySelector('.page-body');
+  if (body) {
+    body.replaceChildren(content);
+    body.classList.remove('is-refreshing');
+    reveal(body);
+  }
 }
 
 export function table(headers, rows) {

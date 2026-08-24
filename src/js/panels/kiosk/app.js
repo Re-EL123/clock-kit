@@ -1,16 +1,18 @@
 import '../../../css/app.css';
 import { api, saveSession } from '../../api.js';
-import { el, nowClock, toast } from '../../utils/dom.js';
+import { el, liveText, nowClock, toast } from '../../utils/dom.js';
 import { ClockFace } from '../../components/clock-card.js';
 import { captureLocation } from '../../geolocation.js';
 import { withBase } from '../../config.js';
 import { icon } from '../../icons.js';
 import { popIn } from '../../motion.js';
+import { armSounds } from '../../sound.js';
+import { startPwa } from '../../pwa.js';
 
 const siteId = localStorage.getItem('ck_kiosk_site') || '';
 const digital = el('div', { class: 'digital', text: nowClock() });
-setInterval(() => {
-  digital.textContent = nowClock();
+liveText(digital, (node) => {
+  node.textContent = nowClock();
 }, 250);
 
 const email = el('input', { class: 'input', placeholder: 'Candidate email', autocomplete: 'username' });
@@ -35,6 +37,7 @@ async function clock(kind) {
       },
       idempotent: true,
     });
+    toast(kind === 'clock-in' ? 'Clocked in' : 'Clocked out');
     result.replaceChildren(
       el('h2', { class: 'icon-label', style: 'justify-content:center' }, [
         icon(kind === 'clock-in' ? 'log-in' : 'log-out'),
@@ -64,7 +67,10 @@ const card = el('div', { class: 'card hero-surface', style: 'padding:2rem;width:
     el('button', { class: 'btn btn-danger', onClick: () => clock('clock-out') }, [icon('log-out'), 'CLOCK OUT']),
   ]),
   result,
+  el('div', { class: 'pwa-slot', style: 'margin-top:1rem' }),
 ]);
 
 document.getElementById('app').append(el('main', { class: 'kiosk' }, [card]));
 popIn(card);
+armSounds();
+startPwa();

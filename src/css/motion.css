@@ -28,6 +28,11 @@
   animation: rise-in 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+.page-body.is-refreshing {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
 .auth-card,
 .kiosk .hero-surface {
   animation: pop-in 480ms cubic-bezier(0.22, 1, 0.36, 1) both;
@@ -137,7 +142,12 @@
   .modal-backdrop,
   .kiosk .hero-surface,
   .more-sheet,
-  .nav-link:hover {
+  .nav-link:hover,
+  .nav-link:active,
+  .nav-link.is-pressed,
+  .btn:hover:not(:disabled),
+  .btn:active:not(:disabled),
+  .btn.is-pressed {
     animation: none !important;
     transform: none !important;
   }

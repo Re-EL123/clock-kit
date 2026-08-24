@@ -1,8 +1,9 @@
 import '../../../css/app.css';
 import { Auth } from '../../auth.js';
 import { api } from '../../api.js';
-import { el, viewParam, formatTime, toast } from '../../utils/dom.js';
-import { shell, table } from '../../components/sidebar.js';
+import { el, formatTime, toast } from '../../utils/dom.js';
+import { table } from '../../components/sidebar.js';
+import { bootPanel, refreshPanel } from '../../runtime.js';
 import { StatCard } from '../../components/clock-card.js';
 import { Modal } from '../../components/modal.js';
 import { ConfirmationSheet } from '../../components/confirmation-sheet.js';
@@ -108,7 +109,7 @@ function openForm({ title, fields, submitLabel = 'Save', onSubmit }) {
               );
               await onSubmit(values);
               modal.remove();
-              location.reload();
+              refreshPanel();
             } catch (e) {
               toast(e.message, 'err');
             }
@@ -165,7 +166,7 @@ async function organisations() {
               },
             });
             toast('Organisation account created. The owner can sign in now.');
-            location.reload();
+            refreshPanel();
           } catch (e) {
             toast(e.message, 'err');
           }
@@ -234,7 +235,7 @@ async function organisations() {
             try {
               await api('admin', next, { body: { organisationId: o.id } });
               toast('Organisation status updated');
-              location.reload();
+              refreshPanel();
             } catch (e) {
               toast(e.message, 'err');
             }
@@ -248,7 +249,7 @@ async function organisations() {
             try {
               await api('admin', 'delete-organisation', { body: { organisationId: o.id } });
               toast('Organisation deleted');
-              location.reload();
+              refreshPanel();
             } catch (e) {
               toast(e.message, 'err');
             }
@@ -324,7 +325,7 @@ async function users() {
               },
             });
             toast('Host account created. They can sign in now.');
-            location.reload();
+            refreshPanel();
           } catch (e) {
             toast(e.message, 'err');
           }
@@ -365,7 +366,7 @@ async function users() {
               },
             });
             toast('Candidate account created. They can sign in now.');
-            location.reload();
+            refreshPanel();
           } catch (e) {
             toast(e.message, 'err');
           }
@@ -402,7 +403,7 @@ async function users() {
               },
             });
             toast('Organisation login created. They can sign in now.');
-            location.reload();
+            refreshPanel();
           } catch (e) {
             toast(e.message, 'err');
           }
@@ -467,7 +468,7 @@ async function users() {
             try {
               await api('admin', 'set-user-status', { body: { userId: u.id, status: next } });
               toast('User status updated');
-              location.reload();
+              refreshPanel();
             } catch (e) {
               toast(e.message, 'err');
             }
@@ -481,7 +482,7 @@ async function users() {
             try {
               await api('admin', 'delete-user', { body: { userId: u.id } });
               toast('User deleted');
-              location.reload();
+              refreshPanel();
             } catch (e) {
               toast(e.message, 'err');
             }
@@ -548,33 +549,20 @@ async function health() {
 }
 
 const user = Auth.requireRole('PLATFORM_ADMIN');
-const view = viewParam('dashboard');
-const views = {
-  dashboard,
-  organisations,
-  users,
-  hosts,
-  candidates: candidatesView,
-  sites,
-  assignments,
-  security,
-  health,
-};
-
-let content;
-try {
-  content = await (views[view] || dashboard)();
-} catch (e) {
-  content = el('p', { class: 'form-error', text: e.message });
-}
-
-document.getElementById('app').append(
-  shell({
-    title: 'Platform',
-    items: NAV,
-    view,
-    heading: NAV.find((n) => n.view === view)?.label || 'Dashboard',
-    user,
-    content,
-  }),
-);
+await bootPanel({
+  title: 'Platform',
+  items: NAV,
+  user,
+  defaultView: 'dashboard',
+  views: {
+    dashboard,
+    organisations,
+    users,
+    hosts,
+    candidates: candidatesView,
+    sites,
+    assignments,
+    security,
+    health,
+  },
+});

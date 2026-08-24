@@ -4,6 +4,8 @@ import { el, toast } from '../utils/dom.js';
 import { withBase } from '../config.js';
 import { icon } from '../icons.js';
 import { popIn } from '../motion.js';
+import { armSounds } from '../sound.js';
+import { startPwa } from '../pwa.js';
 
 Auth.requireGuest();
 
@@ -50,7 +52,10 @@ const card = el('div', { class: 'auth-card card' }, [
     error,
     submit,
   ]),
+  el('div', { class: 'pwa-slot', style: 'margin-top:1rem' }),
 ]);
 
 document.getElementById('app').append(card);
 popIn(card);
+armSounds();
+startPwa();

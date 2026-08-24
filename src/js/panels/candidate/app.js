@@ -1,8 +1,9 @@
 import '../../../css/app.css';
 import { Auth } from '../../auth.js';
 import { api } from '../../api.js';
-import { el, viewParam, formatTime, nowClock, toast } from '../../utils/dom.js';
-import { shell, table } from '../../components/sidebar.js';
+import { el, formatTime, liveText, nowClock, toast } from '../../utils/dom.js';
+import { table } from '../../components/sidebar.js';
+import { bootPanel, refreshPanel } from '../../runtime.js';
 import { ClockFace, StatusChip } from '../../components/clock-card.js';
 import { icon } from '../../icons.js';
 import { captureLocation } from '../../geolocation.js';
@@ -50,8 +51,8 @@ async function home(user) {
   const state = status.state || 'OFF_DUTY';
   const site = assignment?.sites;
   const digital = el('div', { class: 'digital', text: nowClock() });
-  setInterval(() => {
-    digital.textContent = nowClock();
+  liveText(digital, (node) => {
+    node.textContent = nowClock();
   }, 250);
 
   const actions = el('div', { class: 'actions' });
@@ -76,8 +77,9 @@ async function home(user) {
           class: 'btn btn-primary',
           onClick: async () => {
             try {
-              await mutateClock('clock-in', { siteId: assignment.site_id });
-              location.reload();
+              const result = await mutateClock('clock-in', { siteId: assignment.site_id });
+              if (!result?.pending) toast('Clocked in');
+              refreshPanel();
             } catch (e) {
               toast(e.message, 'err');
             }
@@ -90,9 +92,10 @@ async function home(user) {
       el('button', {
         class: 'btn btn-gold',
         onClick: async () => {
-          try {
-            await mutateClock('start-break', { type: 'MEAL' });
-            location.reload();
+            try {
+              const result = await mutateClock('start-break', { type: 'MEAL' });
+              if (!result?.pending) toast('Break started');
+              refreshPanel();
           } catch (e) {
             toast(e.message, 'err');
           }
@@ -101,9 +104,10 @@ async function home(user) {
       el('button', {
         class: 'btn btn-danger',
         onClick: async () => {
-          try {
-            await mutateClock('clock-out');
-            location.reload();
+            try {
+              const result = await mutateClock('clock-out');
+              if (!result?.pending) toast('Clocked out');
+              refreshPanel();
           } catch (e) {
             toast(e.message, 'err');
           }
@@ -115,9 +119,10 @@ async function home(user) {
       el('button', {
         class: 'btn btn-primary',
         onClick: async () => {
-          try {
-            await mutateClock('end-break');
-            location.reload();
+            try {
+              const result = await mutateClock('end-break');
+              if (!result?.pending) toast('Break ended');
+              refreshPanel();
           } catch (e) {
             toast(e.message, 'err');
           }
@@ -191,7 +196,7 @@ async function leave() {
               idempotent: true,
             });
             toast('Leave submitted');
-            location.reload();
+            refreshPanel();
           } catch (e) {
             toast(e.message, 'err');
           }
@@ -238,31 +243,18 @@ function profile(user) {
 }
 
 const user = Auth.requireRole('CANDIDATE');
-const view = viewParam('home');
-const root = document.getElementById('app');
-
-const views = {
-  home: () => home(user),
-  attendance,
-  leave,
-  schedule,
-  notifications,
-  profile: () => profile(user),
-};
-
-const content = await (views[view] || views.home)();
-root.append(
-  shell({
-    title: 'Candidate',
-    items: NAV,
-    view,
-    heading: NAV.find((n) => n.view === view)?.label || 'Home',
-    user,
-    content,
-  }),
-);
-
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register(`${import.meta.env.BASE_URL}service-worker.js`);
-}
+await bootPanel({
+  title: 'Candidate',
+  items: NAV,
+  user,
+  defaultView: 'home',
+  views: {
+    home: () => home(user),
+    attendance,
+    leave,
+    schedule,
+    notifications,
+    profile: () => profile(user),
+  },
+});
 window.addEventListener('online', () => flushQueue(api));

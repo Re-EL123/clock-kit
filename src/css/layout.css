@@ -152,6 +152,17 @@
   transform: translateX(2px);
 }
 
+.nav-link:active,
+.nav-link.is-pressed,
+.mobile-nav a:active,
+.mobile-nav a.is-pressed,
+.mobile-nav button:active,
+.mobile-nav button.is-pressed,
+.stat:active,
+.stat.is-pressed {
+  transform: scale(0.96);
+}
+
 .sidebar-foot {
   display: grid;
   gap: 0.65rem;
@@ -205,6 +216,12 @@
   width: 100%;
   padding: 0.7rem 1rem;
   color: var(--ck-red);
+}
+
+.install-btn {
+  width: 100%;
+  padding: 0.65rem 1rem;
+  font-size: 0.85rem;
 }
 
 .main {

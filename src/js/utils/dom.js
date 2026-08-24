@@ -1,4 +1,5 @@
 import { icon } from '../icons.js';
+import { playSound } from '../sound.js';
 
 function flatten(list) {
   const out = [];
@@ -37,13 +38,27 @@ export function href(view, extra = {}) {
   return `${location.pathname}?${params}`;
 }
 
+export function liveText(node, write, ms = 1000) {
+  let mounted = false;
+  const tick = () => {
+    if (node.isConnected) {
+      mounted = true;
+      write(node);
+    } else if (mounted) return;
+    node._live = setTimeout(tick, mounted ? ms : 40);
+  };
+  tick();
+  return node;
+}
+
 export function toast(message, kind = 'ok') {
   document.querySelector('.toast')?.remove();
   const node = el('div', { class: `toast raised ${kind === 'err' ? 'chip-danger' : ''}` }, [
-    icon(kind === 'err' ? 'alert' : 'check', { size: 18 }),
+    icon(kind === 'err' ? 'alert' : kind === 'notify' ? 'bell' : 'check', { size: 18 }),
     el('span', { text: message }),
   ]);
   document.body.append(node);
+  playSound(kind === 'err' ? 'err' : kind === 'notify' ? 'notify' : 'ok');
   setTimeout(() => node.remove(), 3800);
 }
 
