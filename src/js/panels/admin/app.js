@@ -287,6 +287,7 @@ async function users() {
   const candFirst = textInput('First name');
   const candLast = textInput('Last name');
   const candIdNumber = textInput('ID or passport number');
+  const candSponsor = textInput('Sponsor name');
   const candNationality = nationalitySelect(el);
   const candEmail = textInput('Candidate email', 'email');
   const candPassword = textInput('Candidate password', 'password');
@@ -350,6 +351,7 @@ async function users() {
       field('First name', candFirst),
       field('Last name', candLast),
       field('ID / passport number', candIdNumber),
+      field('Sponsor', candSponsor),
       field('Nationality', candNationality),
       field('Email', candEmail),
       field('Password', candPassword),
@@ -363,6 +365,7 @@ async function users() {
               throw new Error('Reference and name are required');
             }
             if (!candIdNumber.value.trim()) throw new Error('ID or passport number is required');
+            if (!candSponsor.value.trim()) throw new Error('Sponsor name is required');
             if (!candNationality.value) throw new Error('Nationality is required');
             requireAccountFields({
               email: candEmail.value,
@@ -376,6 +379,7 @@ async function users() {
                 firstName: candFirst.value.trim(),
                 lastName: candLast.value.trim(),
                 idNumber: candIdNumber.value.trim(),
+                sponsorName: candSponsor.value.trim(),
                 nationality: candNationality.value,
                 email: candEmail.value.trim(),
                 password: candPassword.value,
@@ -524,7 +528,7 @@ async function candidatesView() {
   ]);
   const managers = (people.users || []).filter((u) => u.status !== 'suspended');
   return table(
-    ['Name', 'Reference', 'ID / passport', 'Nationality', 'Organisation', 'Manager', 'Status'],
+    ['Name', 'Reference', 'ID / passport', 'Sponsor', 'Nationality', 'Organisation', 'Manager', 'Status'],
     (data.candidates || []).map((c) => {
       const orgManagers = managers.filter((m) => m.organisation_id === c.organisation_id);
       const sel = el('select', { class: 'input' }, [
@@ -536,6 +540,7 @@ async function candidatesView() {
         `${c.first_name} ${c.last_name}`,
         c.candidate_reference,
         c.id_number || '—',
+        c.sponsor_name || '—',
         c.nationality || '—',
         c.organisations?.name || '—',
         el('div', { class: 'btn-row' }, [

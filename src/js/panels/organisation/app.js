@@ -88,6 +88,7 @@ async function candidates() {
   const last = textInput('Last name');
   const idNumber = textInput('ID or passport number');
   const nationality = nationalitySelect(el);
+  const sponsor = textInput('Sponsor name');
   const email = textInput('Email', 'email');
   const ref = textInput('Reference');
   const password = textInput('Password', 'password');
@@ -124,11 +125,12 @@ async function candidates() {
   }
 
   const list = table(
-    ['Ref', 'Name', 'ID / passport', 'Nationality', 'Email', 'Manager', 'Status'],
+    ['Ref', 'Name', 'ID / passport', 'Sponsor', 'Nationality', 'Email', 'Manager', 'Status'],
     (data.candidates || []).map((c) => [
       c.candidate_reference,
       `${c.first_name} ${c.last_name}`,
       c.id_number || '—',
+      c.sponsor_name || '—',
       c.nationality || '—',
       c.email,
       managerCell(c),
@@ -156,6 +158,7 @@ async function candidates() {
       field('First name', first),
       field('Last name', last),
       field('ID / passport number', idNumber),
+      field('Sponsor', sponsor),
       field('Nationality', nationality),
       field('Email', email),
       field('Password', password),
@@ -169,6 +172,7 @@ async function candidates() {
               throw new Error('Reference and name are required');
             }
             if (!idNumber.value.trim()) throw new Error('ID or passport number is required');
+            if (!sponsor.value.trim()) throw new Error('Sponsor name is required');
             if (!nationality.value) throw new Error('Nationality is required');
             requireAccountFields({ email: email.value, password: password.value, confirm: confirm.value });
             await api('organisation', 'create-candidate', {
@@ -177,6 +181,7 @@ async function candidates() {
                 firstName: first.value.trim(),
                 lastName: last.value.trim(),
                 idNumber: idNumber.value.trim(),
+                sponsorName: sponsor.value.trim(),
                 nationality: nationality.value,
                 email: email.value.trim(),
                 password: password.value,
@@ -450,11 +455,12 @@ async function schedules() {
 async function attendance() {
   const data = await api('attendance', 'attendance', { body: {} });
   return table(
-    ['Date', 'Candidate', 'ID / passport', 'Host', 'In', 'Out', 'Host review', 'Reviewed by'],
+    ['Date', 'Candidate', 'ID / passport', 'Sponsor', 'Host', 'In', 'Out', 'Host review', 'Reviewed by'],
     (data.sessions || []).map((s) => [
       s.clocked_in_at?.slice(0, 10),
       `${s.candidates?.first_name || ''} ${s.candidates?.last_name || ''}`,
       s.candidates?.id_number || '—',
+      s.candidates?.sponsor_name || '—',
       s.hosts?.name || '—',
       formatTime(s.host_corrected_in_at || s.clocked_in_at),
       formatTime(s.host_corrected_out_at || s.clocked_out_at),
@@ -563,7 +569,7 @@ async function reports() {
     ...(people.candidates || []).map((c) =>
       el('option', {
         value: c.id,
-        text: `${c.first_name} ${c.last_name} (${c.candidate_reference})${c.id_number ? ` · ${c.id_number}` : ''}`,
+        text: `${c.first_name} ${c.last_name} (${c.candidate_reference})${c.id_number ? ` · ${c.id_number}` : ''}${c.sponsor_name ? ` · ${c.sponsor_name}` : ''}`,
       }),
     ),
   ]);
