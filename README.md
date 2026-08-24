@@ -26,7 +26,7 @@ The browser never receives `SUPABASE_SERVICE_ROLE_KEY`.
 
 Live site: https://re-el123.github.io/clock-kit/
 
-Set repository variables (`VITE_API_URL`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`) so the deployed app can reach the backend. Local `npm run dev` still uses `/`.
+The Pages build talks to `https://clock-kit-backend.vercel.app/api`. Override with repository variables if needed (`VITE_API_URL`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`). Local `npm run dev` still defaults to `http://localhost:3000/api` unless you set `.env`.
 
 ## Design
 
