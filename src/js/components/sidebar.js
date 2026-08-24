@@ -3,6 +3,7 @@ import { Auth } from '../auth.js';
 import { withBase } from '../config.js';
 import { icon, viewIcon } from '../icons.js';
 import { reveal } from '../motion.js';
+import { fillPwaSlots } from '../pwa.js';
 
 const SECTION_FOR = {
   dashboard: 'Overview',
@@ -172,10 +173,12 @@ function openMoreSheet({ rest, view, user, title, more }) {
     'aria-label': 'More',
   }, [
     ...navGroups(rest, view),
+    el('div', { class: 'pwa-slot' }),
     accountCard(user, title),
     signOutButton(),
   ]);
   document.body.append(backdrop, sheet);
+  fillPwaSlots();
   const onKey = (ev) => {
     if (ev.key !== 'Escape') return;
     closeMore();
@@ -213,7 +216,7 @@ export function MobileNav(items, view, user, title) {
         item.label,
       ]),
     ),
-    more,
+    rest.length ? more : null,
   ]);
 }
 
@@ -268,7 +271,7 @@ export function table(headers, rows) {
         'tbody',
         {},
         rows.length
-          ? rows.map((r) => el('tr', {}, r.map((c) => el('td', {}, [c]))))
+          ? rows.map((r) => el('tr', {}, r.map((c, i) => el('td', { dataset: { label: String(headers[i] || '') } }, [c]))))
           : [el('tr', {}, [el('td', { colSpan: String(headers.length) }, [EmptyHint()])])],
       ),
     ]),

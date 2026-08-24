@@ -4,8 +4,10 @@ export function ConfirmationSheet({ message, confirmLabel = 'Confirm', danger = 
   return el('div', { class: 'modal-backdrop' }, [
     el('div', { class: 'modal card' }, [
       el('p', { text: message }),
-      el('button', { class: 'btn', onClick: onCancel }, ['Cancel']),
-      el('button', { class: `btn ${danger ? 'btn-danger' : 'btn-primary'}`, onClick: onConfirm }, [confirmLabel]),
+      el('div', { class: 'modal-actions' }, [
+        el('button', { class: 'btn', onClick: onCancel }, ['Cancel']),
+        el('button', { class: `btn ${danger ? 'btn-danger' : 'btn-primary'}`, onClick: onConfirm }, [confirmLabel]),
+      ]),
     ]),
   ]);
 }

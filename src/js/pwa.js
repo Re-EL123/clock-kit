@@ -40,15 +40,19 @@ function renderInstall(slot) {
           deferredPrompt.prompt();
           await deferredPrompt.userChoice;
           deferredPrompt = null;
-          slot.replaceChildren();
+          document.querySelectorAll('.pwa-slot').forEach((node) => node.replaceChildren());
           return;
         }
         toast(isIos ? 'Share → Add to Home Screen to install Clock-Kit.' : 'Use your browser menu to install Clock-Kit.', 'ok');
         sessionStorage.setItem('ck_install_dismissed', '1');
-        slot.replaceChildren();
+        document.querySelectorAll('.pwa-slot').forEach((node) => node.replaceChildren());
       },
     }, [icon('plus', { size: 16 }), label]),
   );
+}
+
+export function fillPwaSlots() {
+  document.querySelectorAll('.pwa-slot').forEach(renderInstall);
 }
 
 async function subscribePush() {
@@ -102,11 +106,11 @@ export function startPwa() {
   window.addEventListener('beforeinstallprompt', (event) => {
     event.preventDefault();
     deferredPrompt = event;
-    renderInstall(document.querySelector('.pwa-slot'));
+    fillPwaSlots();
   });
   window.addEventListener('appinstalled', () => {
     deferredPrompt = null;
-    document.querySelector('.pwa-slot')?.replaceChildren();
+    document.querySelectorAll('.pwa-slot').forEach((node) => node.replaceChildren());
     toast('Clock-Kit is installed', 'ok');
   });
   if (navigator.serviceWorker) {
@@ -115,7 +119,7 @@ export function startPwa() {
       toast(event.data.title || event.data.body || 'Update', 'notify');
     });
   }
-  queueMicrotask(() => renderInstall(document.querySelector('.pwa-slot')));
+  queueMicrotask(() => fillPwaSlots());
   const unlockPush = () => {
     subscribePush();
     document.removeEventListener('pointerdown', unlockPush);

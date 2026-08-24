@@ -53,21 +53,25 @@ async function clock(kind) {
 }
 
 const result = el('div', { class: 'center' });
-const card = el('div', { class: 'card hero-surface', style: 'padding:2rem;width:min(440px,94vw)' }, [
-  el('img', { src: withBase('assets/logo/clock-kit-mark.svg'), alt: 'Clock-Kit', width: '72', height: '72' }),
-  el('h1', { text: 'CLOCK-KIT' }),
-  digital,
-  el('div', { class: 'clock-wrap is-live' }, [ClockFace()]),
-  status,
-  el('div', { class: 'input-wrap', style: 'margin-bottom:.7rem' }, [icon('mail', { size: 18 }), email]),
-  el('div', { class: 'input-wrap', style: 'margin-bottom:.7rem' }, [icon('lock', { size: 18 }), password]),
-  el('div', { class: 'input-wrap', style: 'margin-bottom:.7rem' }, [icon('clipboard', { size: 18 }), qr]),
-  el('div', { class: 'actions' }, [
-    el('button', { class: 'btn btn-primary', onClick: () => clock('clock-in') }, [icon('log-in'), 'CLOCK IN']),
-    el('button', { class: 'btn btn-danger', onClick: () => clock('clock-out') }, [icon('log-out'), 'CLOCK OUT']),
+const card = el('div', { class: 'card hero-surface kiosk-card' }, [
+  el('div', { class: 'kiosk-brand' }, [
+    el('img', { src: withBase('assets/logo/clock-kit-mark.svg'), alt: 'Clock-Kit', width: '72', height: '72' }),
+    el('h1', { text: 'CLOCK-KIT' }),
+    digital,
+    el('div', { class: 'clock-wrap is-live' }, [ClockFace()]),
+    status,
   ]),
-  result,
-  el('div', { class: 'pwa-slot', style: 'margin-top:1rem' }),
+  el('div', { class: 'kiosk-form' }, [
+    el('div', { class: 'input-wrap', style: 'margin-bottom:.7rem' }, [icon('mail', { size: 18 }), email]),
+    el('div', { class: 'input-wrap', style: 'margin-bottom:.7rem' }, [icon('lock', { size: 18 }), password]),
+    el('div', { class: 'input-wrap', style: 'margin-bottom:.7rem' }, [icon('clipboard', { size: 18 }), qr]),
+    el('div', { class: 'actions' }, [
+      el('button', { class: 'btn btn-primary', onClick: () => clock('clock-in') }, [icon('log-in'), 'CLOCK IN']),
+      el('button', { class: 'btn btn-danger', onClick: () => clock('clock-out') }, [icon('log-out'), 'CLOCK OUT']),
+    ]),
+    result,
+    el('div', { class: 'pwa-slot', style: 'margin-top:1rem' }),
+  ]),
 ]);
 
 document.getElementById('app').append(el('main', { class: 'kiosk' }, [card]));

@@ -1,6 +1,6 @@
 .shell {
   display: grid;
-  grid-template-columns: 280px 1fr;
+  grid-template-columns: 280px minmax(0, 1fr);
   min-height: 100vh;
   min-height: 100dvh;
 }
@@ -225,7 +225,7 @@
 }
 
 .main {
-  padding: calc(1.2rem + var(--safe-top)) 1.6rem calc(2rem + var(--safe-bottom));
+  padding: calc(1.2rem + var(--safe-top)) max(1.6rem, var(--safe-right)) calc(2rem + var(--safe-bottom)) max(1.6rem, var(--safe-left));
   min-width: 0;
 }
 
@@ -257,6 +257,7 @@
 .grid {
   display: grid;
   gap: 1rem;
+  min-width: 0;
 }
 
 .grid-4 {
@@ -274,7 +275,7 @@
 }
 
 .clock-wrap {
-  width: min(360px, 90vw);
+  width: min(360px, 86vw);
   margin: 1rem auto 1.4rem;
 }
 
@@ -302,18 +303,30 @@
   min-height: 100dvh;
   display: grid;
   place-items: center;
+  padding: max(1rem, var(--safe-top)) max(1rem, var(--safe-right)) max(1rem, var(--safe-bottom)) max(1rem, var(--safe-left));
+}
+
+.kiosk .hero-surface,
+.kiosk-card {
+  width: min(440px, 94vw);
   padding: 2rem;
 }
 
 .auth-card {
-  width: min(420px, 92vw);
+  width: min(420px, calc(100vw - 1.5rem));
   margin: 8vh auto;
   padding: 2rem;
   text-align: center;
 }
 
 .auth-card img {
+  width: min(280px, 100%);
   margin-bottom: 0.6rem;
+}
+
+.auth-card .btn,
+.kiosk-form .btn {
+  width: 100%;
 }
 
 .actions {

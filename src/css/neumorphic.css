@@ -18,12 +18,19 @@
   border-radius: var(--radius-sm);
 }
 
+.card,
+.stat,
+.table-wrap {
+  min-width: 0;
+}
+
 .hero-surface {
   border-radius: var(--radius-hero);
   box-shadow: var(--shadow-raised);
 }
 
 .btn {
+  max-width: 100%;
   border: 0;
   cursor: pointer;
   padding: 0.9rem 1.4rem;

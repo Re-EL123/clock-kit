@@ -51,7 +51,7 @@ function smBtn(label, onClick, kind = '') {
 }
 
 function actions(buttons) {
-  return el('div', { style: 'display:flex;flex-wrap:wrap;gap:.35rem' }, buttons);
+  return el('div', { class: 'btn-row' }, buttons);
 }
 
 function confirmAction(message, { danger = false, confirmLabel = 'Confirm' } = {}) {
@@ -98,7 +98,7 @@ function openForm({ title, fields, submitLabel = 'Save', onSubmit }) {
     onClose: () => modal.remove(),
     children: [
       ...nodes,
-      el('div', { style: 'display:flex;gap:.5rem;justify-content:flex-end;margin-top:1rem' }, [
+      el('div', { class: 'modal-actions' }, [
         el('button', { class: 'btn', onClick: () => modal.remove() }, ['Cancel']),
         el('button', {
           class: 'btn btn-primary',

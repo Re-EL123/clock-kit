@@ -74,8 +74,22 @@
 }
 
 .modal {
-  width: min(520px, 92vw);
+  width: min(520px, calc(100vw - 1.5rem));
   padding: 1.4rem;
+  max-height: min(90vh, 90dvh);
+  overflow: auto;
+}
+
+.modal-actions,
+.btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.modal-actions {
+  justify-content: flex-end;
+  margin-top: 1rem;
 }
 
 .empty {
