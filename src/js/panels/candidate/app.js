@@ -149,13 +149,17 @@ async function home(user) {
 async function attendance() {
   const data = await api('attendance', 'attendance', { body: {} });
   return table(
-    ['When', 'Site', 'In', 'Out', 'Status'],
+    ['When', 'Site', 'In', 'Out', 'Host review'],
     (data.sessions || []).map((s) => [
       s.clocked_in_at?.slice(0, 10),
       s.sites?.name || '',
-      formatTime(s.clocked_in_at),
-      formatTime(s.clocked_out_at),
-      s.status,
+      formatTime(s.host_corrected_in_at || s.clocked_in_at),
+      formatTime(s.host_corrected_out_at || s.clocked_out_at),
+      s.host_review_status === 'CONFIRMED'
+        ? `Confirmed${s.host_reviewer?.display_name ? ` by ${s.host_reviewer.display_name}` : ''}`
+        : s.host_review_status === 'REJECTED'
+          ? `Rejected${s.host_reviewer?.display_name ? ` by ${s.host_reviewer.display_name}` : ''}`
+          : 'Unreviewed',
     ]),
   );
 }

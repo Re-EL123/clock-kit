@@ -67,6 +67,33 @@ export function formatTime(iso) {
   return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
+export function toDateTimeLocal(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+export function downloadBase64(filename, base64, mime = 'application/pdf') {
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+  const blob = new Blob([bytes], { type: mime });
+  const href = URL.createObjectURL(blob);
+  const a = el('a', { href, download: filename });
+  a.click();
+  URL.revokeObjectURL(href);
+}
+
+export function downloadText(filename, text, mime = 'text/csv') {
+  const blob = new Blob([text], { type: mime });
+  const href = URL.createObjectURL(blob);
+  const a = el('a', { href, download: filename });
+  a.click();
+  URL.revokeObjectURL(href);
+}
+
 export function nowClock(date = new Date()) {
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 }

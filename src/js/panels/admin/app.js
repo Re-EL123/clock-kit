@@ -8,6 +8,7 @@ import { StatCard } from '../../components/clock-card.js';
 import { Modal } from '../../components/modal.js';
 import { ConfirmationSheet } from '../../components/confirmation-sheet.js';
 import { isEmail, isPassword } from '../../validators.js';
+import { nationalitySelect } from '../../nationalities.js';
 
 const NAV = [
   { view: 'dashboard', label: 'Dashboard' },
@@ -278,6 +279,8 @@ async function users() {
   const candRef = textInput('Reference');
   const candFirst = textInput('First name');
   const candLast = textInput('Last name');
+  const candIdNumber = textInput('ID or passport number');
+  const candNationality = nationalitySelect(el);
   const candEmail = textInput('Candidate email', 'email');
   const candPassword = textInput('Candidate password', 'password');
   const candConfirm = textInput('Confirm password', 'password');
@@ -339,6 +342,8 @@ async function users() {
       field('Reference', candRef),
       field('First name', candFirst),
       field('Last name', candLast),
+      field('ID / passport number', candIdNumber),
+      field('Nationality', candNationality),
       field('Email', candEmail),
       field('Password', candPassword),
       field('Confirm password', candConfirm),
@@ -350,6 +355,8 @@ async function users() {
             if (!candRef.value.trim() || !candFirst.value.trim() || !candLast.value.trim()) {
               throw new Error('Reference and name are required');
             }
+            if (!candIdNumber.value.trim()) throw new Error('ID or passport number is required');
+            if (!candNationality.value) throw new Error('Nationality is required');
             requireAccountFields({
               email: candEmail.value,
               password: candPassword.value,
@@ -361,6 +368,8 @@ async function users() {
                 candidateReference: candRef.value.trim(),
                 firstName: candFirst.value.trim(),
                 lastName: candLast.value.trim(),
+                idNumber: candIdNumber.value.trim(),
+                nationality: candNationality.value,
                 email: candEmail.value.trim(),
                 password: candPassword.value,
               },
@@ -502,10 +511,43 @@ async function hosts() {
 }
 
 async function candidatesView() {
-  const data = await api('admin', 'list-candidates', { body: {} });
+  const [data, people] = await Promise.all([
+    api('admin', 'list-candidates', { body: {} }),
+    api('admin', 'users', { body: { role: 'ORG_MANAGER' } }),
+  ]);
+  const managers = (people.users || []).filter((u) => u.status !== 'suspended');
   return table(
-    ['Name', 'Reference', 'Organisation', 'Status'],
-    (data.candidates || []).map((c) => [`${c.first_name} ${c.last_name}`, c.candidate_reference, c.organisations?.name || '—', c.status]),
+    ['Name', 'Reference', 'ID / passport', 'Nationality', 'Organisation', 'Manager', 'Status'],
+    (data.candidates || []).map((c) => {
+      const orgManagers = managers.filter((m) => m.organisation_id === c.organisation_id);
+      const sel = el('select', { class: 'input' }, [
+        el('option', { value: '', text: 'Unassigned' }),
+        ...orgManagers.map((m) => el('option', { value: m.id, text: m.display_name })),
+      ]);
+      sel.value = c.manager_user_id || c.manager?.id || '';
+      return [
+        `${c.first_name} ${c.last_name}`,
+        c.candidate_reference,
+        c.id_number || '—',
+        c.nationality || '—',
+        c.organisations?.name || '—',
+        el('div', { class: 'btn-row' }, [
+          sel,
+          smBtn('Save', async () => {
+            try {
+              await api('admin', 'assign-manager', {
+                body: { candidateId: c.id, managerUserId: sel.value || null },
+              });
+              toast('Manager updated');
+              refreshPanel();
+            } catch (e) {
+              toast(e.message, 'err');
+            }
+          }),
+        ]),
+        c.status,
+      ];
+    }),
   );
 }
 

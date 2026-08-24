@@ -1,12 +1,13 @@
 import '../../../css/app.css';
 import { Auth } from '../../auth.js';
 import { api } from '../../api.js';
-import { el, toast, formatTime } from '../../utils/dom.js';
+import { el, toast, formatTime, downloadBase64, downloadText } from '../../utils/dom.js';
 import { table } from '../../components/sidebar.js';
 import { bootPanel, refreshPanel } from '../../runtime.js';
 import { StatCard } from '../../components/clock-card.js';
 import { can } from '../../permissions.js';
 import { isEmail, isPassword } from '../../validators.js';
+import { nationalitySelect } from '../../nationalities.js';
 
 const NAV = [
   { view: 'dashboard', label: 'Dashboard' },
@@ -23,6 +24,14 @@ const NAV = [
   { view: 'audit', label: 'Audit' },
   { view: 'settings', label: 'Settings' },
 ];
+
+const MANAGER_VIEWS = ['dashboard', 'candidates', 'assignments', 'attendance', 'leave', 'approvals', 'reports'];
+
+function navFor(role) {
+  if (role === 'ORG_MANAGER') return NAV.filter((item) => MANAGER_VIEWS.includes(item.view));
+  if (role === 'ORG_VIEWER') return NAV.filter((item) => item.view !== 'audit');
+  return NAV;
+}
 
 function field(label, input) {
   return el('div', { class: 'field' }, [el('span', { text: label }), input]);
@@ -43,6 +52,11 @@ async function dashboard() {
   const t = data.today || {};
   const a = data.attention || {};
   return el('div', { class: 'grid' }, [
+    user.role === 'ORG_MANAGER'
+      ? el('p', { class: 'muted', text: 'You only see students assigned to you.' })
+      : user.role === 'ORG_VIEWER'
+        ? el('p', { class: 'muted', text: 'View only. You cannot create records or approve requests.' })
+        : null,
     el('div', { class: 'grid grid-4' }, [
       StatCard('Scheduled', t.scheduled, '?view=attendance'),
       StatCard('Present', t.present, '?view=attendance'),
@@ -59,33 +73,88 @@ async function dashboard() {
 }
 
 async function candidates() {
-  const data = await api('organisation', 'candidates', { body: {} });
+  const [data, people] = await Promise.all([
+    api('organisation', 'candidates', { body: {} }),
+    can(user.role, 'assignManager') ? api('organisation', 'users', { body: {} }) : Promise.resolve({ users: [] }),
+  ]);
+  const managers = (people.users || []).filter((u) => u.role === 'ORG_MANAGER' && u.status !== 'suspended');
   const first = textInput('First name');
   const last = textInput('Last name');
+  const idNumber = textInput('ID or passport number');
+  const nationality = nationalitySelect(el);
   const email = textInput('Email', 'email');
   const ref = textInput('Reference');
   const password = textInput('Password', 'password');
   const confirm = textInput('Confirm password', 'password');
+  const managerSel = el('select', { class: 'input' }, [
+    el('option', { value: '', text: 'Unassigned' }),
+    ...managers.map((m) => el('option', { value: m.id, text: m.display_name })),
+  ]);
+
+  function managerCell(c) {
+    if (!can(user.role, 'assignManager')) return c.manager?.display_name || 'Unassigned';
+    const sel = el('select', { class: 'input' }, [
+      el('option', { value: '', text: 'Unassigned' }),
+      ...managers.map((m) => el('option', { value: m.id, text: m.display_name })),
+    ]);
+    sel.value = c.manager_user_id || c.manager?.id || '';
+    return el('div', { class: 'btn-row' }, [
+      sel,
+      el('button', {
+        class: 'btn',
+        onClick: async () => {
+          try {
+            await api('organisation', 'assign-manager', {
+              body: { candidateId: c.id, managerUserId: sel.value || null },
+            });
+            toast('Manager updated');
+            refreshPanel();
+          } catch (e) {
+            toast(e.message, 'err');
+          }
+        },
+      }, ['Save']),
+    ]);
+  }
+
   const list = table(
-    ['Ref', 'Name', 'Email', 'Status'],
-    (data.candidates || []).map((c) => [c.candidate_reference, `${c.first_name} ${c.last_name}`, c.email, c.status]),
+    ['Ref', 'Name', 'ID / passport', 'Nationality', 'Email', 'Manager', 'Status'],
+    (data.candidates || []).map((c) => [
+      c.candidate_reference,
+      `${c.first_name} ${c.last_name}`,
+      c.id_number || '—',
+      c.nationality || '—',
+      c.email,
+      managerCell(c),
+      c.status,
+    ]),
   );
+
+  if (user.role === 'ORG_MANAGER') {
+    return el('div', { class: 'grid' }, [
+      el('p', { class: 'muted', text: 'You only see candidates assigned to you.' }),
+      list,
+    ]);
+  }
   if (!can(user.role, 'createCandidate')) {
     return el('div', { class: 'grid' }, [
-      el('p', { class: 'muted', text: 'You can view candidates. Creating accounts is limited to organisation owners, admins, and managers.' }),
+      el('p', { class: 'muted', text: 'View only. You cannot create candidates or assign managers.' }),
       list,
     ]);
   }
   return el('div', { class: 'grid' }, [
     el('div', { class: 'card', style: 'padding:1rem' }, [
       el('h2', { text: 'Create candidate account' }),
-      el('p', { class: 'muted', text: 'The candidate signs in with this email and password.' }),
+      el('p', { class: 'muted', text: 'The candidate signs in with this email and password. Assign a manager so they only manage this student.' }),
       field('Reference', ref),
       field('First name', first),
       field('Last name', last),
+      field('ID / passport number', idNumber),
+      field('Nationality', nationality),
       field('Email', email),
       field('Password', password),
       field('Confirm password', confirm),
+      field('Manager', managerSel),
       el('button', {
         class: 'btn btn-primary',
         onClick: async () => {
@@ -93,14 +162,19 @@ async function candidates() {
             if (!ref.value.trim() || !first.value.trim() || !last.value.trim()) {
               throw new Error('Reference and name are required');
             }
+            if (!idNumber.value.trim()) throw new Error('ID or passport number is required');
+            if (!nationality.value) throw new Error('Nationality is required');
             requireAccountFields({ email: email.value, password: password.value, confirm: confirm.value });
             await api('organisation', 'create-candidate', {
               body: {
                 candidateReference: ref.value.trim(),
                 firstName: first.value.trim(),
                 lastName: last.value.trim(),
+                idNumber: idNumber.value.trim(),
+                nationality: nationality.value,
                 email: email.value.trim(),
                 password: password.value,
+                managerUserId: managerSel.value || undefined,
               },
             });
             toast('Candidate account created. They can sign in now.');
@@ -117,17 +191,57 @@ async function candidates() {
 
 async function users() {
   const data = await api('organisation', 'users', { body: {} });
+  const list = table(
+    ['Name', 'Email', 'Role', 'Status'],
+    (data.users || []).map((u) => [u.display_name, u.email, u.role, u.status]),
+  );
+  if (!can(user.role, 'createOrgUser')) {
+    return el('div', { class: 'grid' }, [
+      el('p', { class: 'muted', text: 'View only. Managers and viewers cannot create organisation logins.' }),
+      list,
+    ]);
+  }
+  const name = textInput('Display name');
+  const email = textInput('Email', 'email');
+  const password = textInput('Password', 'password');
+  const confirm = textInput('Confirm password', 'password');
+  const role = el('select', { class: 'input' }, [
+    el('option', { value: 'ORG_MANAGER', text: 'Manager' }),
+    el('option', { value: 'ORG_VIEWER', text: 'Viewer' }),
+    ...(user.role === 'ORG_OWNER' ? [el('option', { value: 'ORG_ADMIN', text: 'Organisation admin' })] : []),
+  ]);
   return el('div', { class: 'grid' }, [
-    el('p', {
-      class: 'muted',
-      text: can(user.role, 'createHost')
-        ? 'Host and candidate logins are created on the Hosts and Candidates pages, with a password they can use immediately.'
-        : 'You can view organisation users. Creating host and candidate accounts is limited to owners, admins, and managers.',
-    }),
-    table(
-      ['Name', 'Email', 'Role', 'Status'],
-      (data.users || []).map((u) => [u.display_name, u.email, u.role, u.status]),
-    ),
+    el('div', { class: 'card', style: 'padding:1rem' }, [
+      el('h2', { text: 'Create staff login' }),
+      el('p', { class: 'muted', text: 'Managers only see candidates assigned to them. Viewers can look but cannot change anything.' }),
+      field('Name', name),
+      field('Email', email),
+      field('Role', role),
+      field('Password', password),
+      field('Confirm password', confirm),
+      el('button', {
+        class: 'btn btn-primary',
+        onClick: async () => {
+          try {
+            if (!name.value.trim()) throw new Error('Name is required');
+            requireAccountFields({ email: email.value, password: password.value, confirm: confirm.value });
+            await api('organisation', 'create-user', {
+              body: {
+                displayName: name.value.trim(),
+                email: email.value.trim(),
+                password: password.value,
+                role: role.value,
+              },
+            });
+            toast('Staff login created. They can sign in now.');
+            refreshPanel();
+          } catch (e) {
+            toast(e.message, 'err');
+          }
+        },
+      }, ['Create staff login']),
+    ]),
+    list,
   ]);
 }
 
@@ -144,7 +258,7 @@ async function hosts() {
   );
   if (!can(user.role, 'createHost')) {
     return el('div', { class: 'grid' }, [
-      el('p', { class: 'muted', text: 'You can view hosts. Creating host accounts is limited to organisation owners, admins, and managers.' }),
+      el('p', { class: 'muted', text: 'You can view hosts. Creating host accounts is limited to organisation owners and admins.' }),
       list,
     ]);
   }
@@ -199,6 +313,16 @@ async function sites() {
     el('option', { value: 'SOFT', text: 'Soft' }),
     el('option', { value: 'STRICT', text: 'Strict' }),
   ]);
+  const list = table(
+    ['Site', 'Mode', 'Status'],
+    (data.sites || []).map((s) => [s.name, s.geofence_mode, s.status]),
+  );
+  if (!can(user.role, 'createSite')) {
+    return el('div', { class: 'grid' }, [
+      el('p', { class: 'muted', text: 'View only. You cannot create sites.' }),
+      list,
+    ]);
+  }
   return el('div', { class: 'grid' }, [
     el('div', { class: 'card', style: 'padding:1rem' }, [
       el('h2', { text: 'Create site' }),
@@ -228,10 +352,7 @@ async function sites() {
         },
       }, ['Create site']),
     ]),
-    table(
-      ['Site', 'Mode', 'Status'],
-      (data.sites || []).map((s) => [s.name, s.geofence_mode, s.status]),
-    ),
+    list,
   ]);
 }
 
@@ -246,6 +367,21 @@ async function assignments() {
   const hostSel = el('select', { class: 'input' }, (hostsData.hosts || []).map((h) => el('option', { value: h.id, text: h.name })));
   const siteSel = el('select', { class: 'input' }, (sites.sites || []).map((s) => el('option', { value: s.id, text: s.name })));
   const start = el('input', { class: 'input', type: 'date' });
+  const list = table(
+    ['Candidate', 'Host', 'Site', 'Status'],
+    (asg.assignments || []).map((a) => [
+      `${a.candidates?.first_name || ''} ${a.candidates?.last_name || ''}`,
+      a.hosts?.name || '',
+      a.sites?.name || '',
+      a.status,
+    ]),
+  );
+  if (!can(user.role, 'assignCandidate')) {
+    return el('div', { class: 'grid' }, [
+      el('p', { class: 'muted', text: 'View only. You cannot assign candidates to hosts.' }),
+      list,
+    ]);
+  }
   return el('div', { class: 'grid' }, [
     el('div', { class: 'card', style: 'padding:1rem' }, [
       el('h2', { text: 'Assign candidate' }),
@@ -274,15 +410,7 @@ async function assignments() {
         },
       }, ['Assign']),
     ]),
-    table(
-      ['Candidate', 'Host', 'Site', 'Status'],
-      (asg.assignments || []).map((a) => [
-        `${a.candidates?.first_name || ''} ${a.candidates?.last_name || ''}`,
-        a.hosts?.name || '',
-        a.sites?.name || '',
-        a.status,
-      ]),
-    ),
+    list,
   ]);
 }
 
@@ -297,13 +425,14 @@ async function schedules() {
 async function attendance() {
   const data = await api('attendance', 'attendance', { body: {} });
   return table(
-    ['Date', 'Candidate', 'In', 'Out', 'Status'],
+    ['Date', 'Candidate', 'In', 'Out', 'Host review', 'Reviewed by'],
     (data.sessions || []).map((s) => [
       s.clocked_in_at?.slice(0, 10),
       `${s.candidates?.first_name || ''} ${s.candidates?.last_name || ''}`,
-      formatTime(s.clocked_in_at),
-      formatTime(s.clocked_out_at),
-      s.status,
+      formatTime(s.host_corrected_in_at || s.clocked_in_at),
+      formatTime(s.host_corrected_out_at || s.clocked_out_at),
+      s.host_review_status === 'CONFIRMED' ? 'Confirmed' : s.host_review_status === 'REJECTED' ? 'Rejected' : 'Unreviewed',
+      s.host_reviewer?.display_name || '—',
     ]),
   );
 }
@@ -321,11 +450,41 @@ async function leaveView() {
   );
 }
 
+function reviewButtons(canAct, onApprove, onReject) {
+  if (!canAct) return [el('p', { class: 'muted mt', text: 'View only' })];
+  return [
+    el('button', {
+      class: 'btn btn-primary mt',
+      onClick: async () => {
+        try {
+          await onApprove();
+          refreshPanel();
+        } catch (e) {
+          toast(e.message, 'err');
+        }
+      },
+    }, ['Approve']),
+    el('button', {
+      class: 'btn mt',
+      onClick: async () => {
+        try {
+          await onReject();
+          refreshPanel();
+        } catch (e) {
+          toast(e.message, 'err');
+        }
+      },
+    }, ['Reject']),
+  ];
+}
+
 async function approvals() {
   const [leave, corr] = await Promise.all([
     api('leave', 'list', { body: { status: 'PENDING' } }),
     api('attendance', 'corrections', { body: { status: 'PENDING' } }),
   ]);
+  const canLeave = can(user.role, 'leaveApproval');
+  const canCorr = can(user.role, 'correctionApproval');
   return el('div', { class: 'grid grid-2' }, [
     el('div', {}, [
       el('h3', { text: 'Leave' }),
@@ -333,20 +492,11 @@ async function approvals() {
         el('div', { class: 'card', style: 'padding:1rem;margin-bottom:.6rem' }, [
           el('strong', { text: `${r.candidates?.first_name} ${r.candidates?.last_name}` }),
           el('div', { text: `${r.start_date} → ${r.end_date}` }),
-          el('button', {
-            class: 'btn btn-primary mt',
-            onClick: async () => {
-              await api('leave', 'approve', { body: { id: r.id } });
-              refreshPanel();
-            },
-          }, ['Approve']),
-          el('button', {
-            class: 'btn mt',
-            onClick: async () => {
-              await api('leave', 'reject', { body: { id: r.id } });
-              refreshPanel();
-            },
-          }, ['Reject']),
+          ...reviewButtons(
+            canLeave,
+            () => api('leave', 'approve', { body: { id: r.id } }),
+            () => api('leave', 'reject', { body: { id: r.id } }),
+          ),
         ]),
       ),
     ]),
@@ -356,20 +506,11 @@ async function approvals() {
         el('div', { class: 'card', style: 'padding:1rem;margin-bottom:.6rem' }, [
           el('div', { text: `ORIGINAL ${formatTime(c.attendance_sessions?.clocked_out_at)}` }),
           el('div', { text: c.reason }),
-          el('button', {
-            class: 'btn btn-primary mt',
-            onClick: async () => {
-              await api('attendance', 'approve-correction', { body: { id: c.id } });
-              refreshPanel();
-            },
-          }, ['Approve']),
-          el('button', {
-            class: 'btn mt',
-            onClick: async () => {
-              await api('attendance', 'reject-correction', { body: { id: c.id } });
-              refreshPanel();
-            },
-          }, ['Reject']),
+          ...reviewButtons(
+            canCorr,
+            () => api('attendance', 'approve-correction', { body: { id: c.id } }),
+            () => api('attendance', 'reject-correction', { body: { id: c.id } }),
+          ),
         ]),
       ),
     ]),
@@ -377,17 +518,72 @@ async function approvals() {
 }
 
 async function reports() {
-  return el('div', { class: 'card', style: 'padding:1rem' }, [
-    el('h2', { text: 'Attendance CSV' }),
-    el('button', {
-      class: 'btn btn-primary',
-      onClick: async () => {
-        const data = await api('attendance', 'export', { body: {} });
-        const blob = new Blob([data.csv], { type: 'text/csv' });
-        const a = el('a', { href: URL.createObjectURL(blob), download: data.filename || 'attendance.csv' });
-        a.click();
-      },
-    }, ['Download CSV']),
+  if (!can(user.role, 'exportAttendance')) {
+    return el('div', { class: 'card', style: 'padding:1rem' }, [
+      el('h2', { text: 'Reports' }),
+      el('p', { class: 'muted', text: 'View only. Exporting attendance is limited to owners, admins, and managers.' }),
+    ]);
+  }
+  const people = await api('organisation', 'candidates', { body: {} });
+  const period = el('select', { class: 'input' }, [
+    el('option', { value: 'week', text: 'Weekly' }),
+    el('option', { value: 'month', text: 'Monthly' }),
+  ]);
+  const date = el('input', { class: 'input', type: 'date' });
+  date.value = new Date().toISOString().slice(0, 10);
+  const candidate = el('select', { class: 'input' }, [
+    el('option', { value: '', text: 'All candidates (bulk)' }),
+    ...(people.candidates || []).map((c) =>
+      el('option', { value: c.id, text: `${c.first_name} ${c.last_name} (${c.candidate_reference})` }),
+    ),
+  ]);
+
+  function payload() {
+    if (!date.value) throw new Error('Pick a date in the week or month');
+    return {
+      period: period.value,
+      date: date.value,
+      candidateId: candidate.value || undefined,
+    };
+  }
+
+  return el('div', { class: 'grid' }, [
+    el('div', { class: 'card', style: 'padding:1rem' }, [
+      el('h2', { text: 'Timesheets' }),
+      el('p', {
+        class: 'muted',
+        text: 'Download a weekly or monthly PDF. It lists who confirmed or rejected each day. Choose one student or all candidates.',
+      }),
+      field('Period', period),
+      field('Date in period', date),
+      field('Candidate', candidate),
+      el('div', { class: 'btn-row mt' }, [
+        el('button', {
+          class: 'btn btn-primary',
+          onClick: async () => {
+            try {
+              const data = await api('attendance', 'timesheet-pdf', { body: payload() });
+              downloadBase64(data.filename || 'timesheet.pdf', data.pdfBase64, 'application/pdf');
+              toast(`Downloaded ${data.period?.label || 'timesheet'}`);
+            } catch (e) {
+              toast(e.message, 'err');
+            }
+          },
+        }, ['Download PDF']),
+        el('button', {
+          class: 'btn',
+          onClick: async () => {
+            try {
+              const data = await api('attendance', 'export', { body: payload() });
+              downloadText(data.filename || 'attendance.csv', data.csv, 'text/csv');
+              toast('CSV downloaded');
+            } catch (e) {
+              toast(e.message, 'err');
+            }
+          },
+        }, ['Download CSV']),
+      ]),
+    ]),
   ]);
 }
 
@@ -410,24 +606,26 @@ async function settings() {
 }
 
 const user = Auth.requireRole('ORG_OWNER', 'ORG_ADMIN', 'ORG_MANAGER', 'ORG_VIEWER');
+const items = navFor(user.role);
+const allViews = {
+  dashboard,
+  candidates,
+  users,
+  hosts,
+  sites,
+  assignments,
+  schedules,
+  attendance,
+  leave: leaveView,
+  approvals,
+  reports,
+  audit,
+  settings,
+};
 await bootPanel({
   title: 'Organisation',
-  items: NAV,
+  items,
   user,
   defaultView: 'dashboard',
-  views: {
-    dashboard,
-    candidates,
-    users,
-    hosts,
-    sites,
-    assignments,
-    schedules,
-    attendance,
-    leave: leaveView,
-    approvals,
-    reports,
-    audit,
-    settings,
-  },
+  views: Object.fromEntries(items.map((item) => [item.view, allViews[item.view]])),
 });
