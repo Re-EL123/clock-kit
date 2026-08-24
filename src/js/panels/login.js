@@ -57,7 +57,7 @@ const card = el('div', { class: 'auth-card card' }, [
     ' · ',
     el('a', { href: withBase('privacy.html') }, ['Privacy']),
   ]),
-  el('div', { class: 'pwa-slot', style: 'margin-top:1rem' }),
+  el('div', { class: 'pwa-slot pwa-slot-card', style: 'margin-top:1rem' }),
 ]);
 
 document.getElementById('app').append(card);

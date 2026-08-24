@@ -224,6 +224,46 @@
   font-size: 0.85rem;
 }
 
+.pwa-slot-card {
+  display: grid;
+  gap: 0.55rem;
+  text-align: left;
+}
+
+.pwa-slot-card .muted {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.ck-install-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0.75rem 1rem;
+  padding: 0.9rem 1rem;
+  margin-bottom: 1rem;
+}
+
+.ck-install-banner p {
+  margin: 0;
+  flex: 1 1 12rem;
+}
+
+.ck-install-banner .btn-row {
+  margin: 0;
+}
+
+.install-steps {
+  margin: 0.75rem 0 0;
+  padding-left: 1.2rem;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.install-steps li {
+  line-height: 1.4;
+}
+
 .main {
   padding: calc(1.2rem + var(--safe-top)) max(1.6rem, var(--safe-right)) calc(2rem + var(--safe-bottom)) max(1.6rem, var(--safe-left));
   min-width: 0;

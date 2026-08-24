@@ -1,5 +1,6 @@
 import { api, currentUser, saveSession } from './api.js';
 import { TOKEN_KEY, USER_KEY, withBase } from './config.js';
+import { unsubscribePush } from './pwa.js';
 
 const ROLE_HOME = {
   PLATFORM_ADMIN: withBase('admin/'),
@@ -25,6 +26,11 @@ export const Auth = {
   },
 
   async logout() {
+    try {
+      await unsubscribePush();
+    } catch {
+      /* ignore */
+    }
     try {
       await api('auth', 'logout');
     } catch {
