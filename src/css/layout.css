@@ -1,40 +1,124 @@
 .shell {
   display: grid;
-  grid-template-columns: 272px 1fr;
+  grid-template-columns: 280px 1fr;
   min-height: 100vh;
   min-height: 100dvh;
 }
 
+.shell-main {
+  min-width: 0;
+}
+
 .sidebar {
-  padding: calc(1.2rem + var(--safe-top)) 1rem 1.4rem;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 0.85rem;
+  padding: calc(1rem + var(--safe-top)) 0.85rem calc(1rem + var(--safe-bottom));
   position: sticky;
   top: 0;
   height: 100dvh;
-  overflow: auto;
+  background:
+    linear-gradient(180deg, rgba(33, 57, 106, 0.08), transparent 7.5rem),
+    var(--ck-light);
+  box-shadow: 8px 0 24px rgba(59, 66, 79, 0.06);
 }
 
 .brand {
   display: flex;
   gap: 0.75rem;
   align-items: center;
-  margin-bottom: 1.5rem;
+  padding: 0.35rem 0.35rem 0.85rem;
+  color: inherit;
+  border-bottom: 1px solid rgba(33, 57, 106, 0.1);
 }
 
-.brand img {
+.brand-mark {
   width: 48px;
   height: 48px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--ck-light);
+  box-shadow: var(--shadow-raised);
+  flex-shrink: 0;
+}
+
+.brand img,
+.brand-mark img {
+  width: 40px;
+  height: 40px;
+}
+
+.brand-copy {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.brand-wordmark {
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.brand-role {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 0.12rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(245, 191, 72, 0.28);
+  color: var(--ck-navy);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.sidebar-nav {
+  overflow: auto;
+  padding-right: 0.15rem;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(33, 57, 106, 0.28) transparent;
+}
+
+.nav-section + .nav-section {
+  margin-top: 0.7rem;
+}
+
+.nav-section-label {
+  margin: 0 0.7rem 0.35rem;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ck-grey);
 }
 
 .nav-link {
   display: flex;
   align-items: center;
   gap: 0.7rem;
-  padding: 0.72rem 0.9rem;
-  border-radius: 12px;
+  position: relative;
+  padding: 0.42rem 0.7rem 0.42rem 0.55rem;
+  border-radius: 14px;
   color: var(--ck-slate);
-  margin-bottom: 0.25rem;
-  font-weight: 600;
+  margin-bottom: 0.2rem;
+  font-weight: 700;
   transition: background var(--motion) ease, color var(--motion) ease, transform var(--motion) ease;
+}
+
+.nav-ico {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: var(--ck-light);
+  box-shadow: var(--shadow-inset);
+  color: var(--ck-navy);
+  flex-shrink: 0;
 }
 
 .nav-link.active,
@@ -47,9 +131,80 @@
   box-shadow: var(--shadow-inset);
 }
 
-.sidebar .btn.sign-out {
+.nav-link.active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 18%;
+  bottom: 18%;
+  width: 4px;
+  border-radius: 999px;
+  background: var(--ck-gold);
+}
+
+.nav-link.active .nav-ico {
+  background: var(--ck-navy);
+  color: var(--ck-white);
+  box-shadow: 6px 6px 12px rgba(33, 57, 106, 0.28);
+}
+
+.nav-link:hover:not(.active) {
+  transform: translateX(2px);
+}
+
+.sidebar-foot {
+  display: grid;
+  gap: 0.65rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(33, 57, 106, 0.1);
+}
+
+.sidebar-user {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-width: 0;
+  padding: 0.35rem 0.2rem;
+}
+
+.sidebar-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  background: var(--ck-gold);
+  color: var(--ck-navy);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  box-shadow: var(--shadow-raised);
+}
+
+.sidebar-user-meta {
+  display: grid;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.sidebar-user-meta strong,
+.sidebar-user-meta .muted {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sidebar-user-meta strong {
+  font-size: 0.92rem;
+  line-height: 1.2;
+}
+
+.sidebar .btn.sign-out,
+.more-sheet .btn.sign-out {
   width: 100%;
-  margin-top: 1.2rem;
+  padding: 0.7rem 1rem;
+  color: var(--ck-red);
 }
 
 .main {

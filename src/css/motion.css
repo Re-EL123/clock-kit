@@ -18,6 +18,12 @@
   gap: 0.5rem;
 }
 
+.sidebar .nav-link,
+.more-sheet .nav-link {
+  display: flex;
+  width: 100%;
+}
+
 .page-body {
   animation: rise-in 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
@@ -129,7 +135,10 @@
   .live-dot::after,
   .toast,
   .modal-backdrop,
-  .kiosk .hero-surface {
+  .kiosk .hero-surface,
+  .more-sheet,
+  .nav-link:hover {
     animation: none !important;
+    transform: none !important;
   }
 }

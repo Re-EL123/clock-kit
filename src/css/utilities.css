@@ -1,6 +1,12 @@
 .muted {
   color: var(--ck-grey);
 }
+.ck-navy {
+  color: var(--ck-navy);
+}
+.ck-red {
+  color: var(--ck-red);
+}
 .stack {
   display: grid;
   gap: 0.4rem;
