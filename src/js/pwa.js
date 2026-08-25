@@ -4,7 +4,7 @@ import { TOKEN_KEY, withBase } from './config.js';
 import { icon } from './icons.js';
 import { playSound } from './sound.js';
 import { Modal } from './components/modal.js';
-import { detectDevice, installGuide, shouldAskNotificationPermission } from './device.js';
+import { alertsEnabledHint, detectDevice, installGuide, shouldAskNotificationPermission } from './device.js';
 import {
   clearInstalledMemory,
   displayModeInstalled,
@@ -360,7 +360,7 @@ async function subscribePush({ interactive = false } = {}) {
       });
     }
     await saveSubscription(subscription.toJSON());
-    if (interactive) toast('Background alerts are on for this device.', 'ok');
+    if (interactive) toast(alertsEnabledHint(detectDevice()), 'ok');
     return { ok: true };
   } catch (err) {
     if (interactive) toast(err.message || 'Could not enable background alerts.', 'err');
@@ -473,7 +473,7 @@ export async function pushStatus() {
   if (flags.enabled) {
     return {
       ...flags,
-      hint: 'Background alerts are on for this phone, tablet, or computer. You will get them even when Clock-Kit is closed.',
+      hint: alertsEnabledHint(device),
     };
   }
   if (permission === 'denied') {

@@ -79,12 +79,19 @@ export function detectDevice({
   const mobile = os === 'ios' || os === 'android' || os === 'huawei' || os === 'harmony';
   const operaMini = browser === 'opera-mini';
   const chromium = ['chrome', 'edge', 'opera', 'samsung', 'huawei'].includes(browser);
+  const ipad = /iPad/i.test(agent) || ipadOs;
+  const kind = formFactor({ os, agent, ipad, android });
+  const osLabel = OS_LABELS[os] || OS_LABELS.other;
+  const browserLabel = BROWSER_LABELS[browser] || BROWSER_LABELS.other;
+  const hardwareLabel = hardwareName({ os, kind });
 
   return {
     os,
     browser,
-    osLabel: OS_LABELS[os] || OS_LABELS.other,
-    browserLabel: BROWSER_LABELS[browser] || BROWSER_LABELS.other,
+    kind,
+    osLabel,
+    browserLabel,
+    hardwareLabel,
     ios,
     android: os === 'android' || os === 'huawei',
     mobile,
@@ -95,6 +102,32 @@ export function detectDevice({
       return `${this.osLabel} · ${this.browserLabel}`;
     },
   };
+}
+
+function formFactor({ os, agent, ipad, android }) {
+  if (os === 'ios') return ipad ? 'tablet' : 'phone';
+  if (os === 'android' || os === 'huawei' || os === 'harmony') {
+    if (/Tablet|\bPad\b/i.test(agent) || (android && !/Mobile/i.test(agent))) return 'tablet';
+    return 'phone';
+  }
+  return 'computer';
+}
+
+function hardwareName({ os, kind }) {
+  if (os === 'ios') return kind === 'tablet' ? 'iPad' : 'iPhone';
+  if (os === 'android') return kind === 'tablet' ? 'Android tablet' : 'Android phone';
+  if (os === 'huawei') return kind === 'tablet' ? 'Huawei tablet' : 'Huawei phone';
+  if (os === 'harmony') return kind === 'tablet' ? 'HarmonyOS tablet' : 'HarmonyOS phone';
+  if (os === 'windows') return 'Windows computer';
+  if (os === 'macos') return 'Mac';
+  if (os === 'linux') return 'Linux computer';
+  if (os === 'chromeos') return 'Chromebook';
+  return 'device';
+}
+
+export function alertsEnabledHint(device) {
+  const env = device || detectDevice();
+  return `Background alerts are on for this ${env.hardwareLabel} in ${env.browserLabel}. You will get them even when Clock-Kit is closed.`;
 }
 
 function lastAlertStep() {

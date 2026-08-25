@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { detectDevice, installGuide, shouldAskNotificationPermission } from '../../src/js/device.js';
+import { alertsEnabledHint, detectDevice, installGuide, shouldAskNotificationPermission } from '../../src/js/device.js';
 
 describe('detectDevice', () => {
   it('detects iPhone Safari', () => {
@@ -83,6 +83,29 @@ describe('installGuide', () => {
     }));
     expect(linux.detected).toBe('Linux · Firefox');
     expect(linux.steps.join(' ')).toMatch(/Install site as an app|Chrome or Edge/);
+  });
+});
+
+describe('alertsEnabledHint', () => {
+  it('names the OS, device type, and browser', () => {
+    expect(alertsEnabledHint(detectDevice({
+      ua: 'Mozilla/5.0 (X11; Linux x86_64; rv:121.0) Gecko/20100101 Firefox/121.0',
+    }))).toBe('Background alerts are on for this Linux computer in Firefox. You will get them even when Clock-Kit is closed.');
+    expect(alertsEnabledHint(detectDevice({
+      ua: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
+    }))).toMatch(/this iPhone in Safari/);
+    expect(alertsEnabledHint(detectDevice({
+      ua: 'Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
+    }))).toMatch(/this iPad in Safari/);
+    expect(alertsEnabledHint(detectDevice({
+      ua: 'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36',
+    }))).toMatch(/this Android phone in Chrome/);
+    expect(alertsEnabledHint(detectDevice({
+      ua: 'Mozilla/5.0 (Linux; Android 12; SM-X810) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    }))).toMatch(/this Android tablet in Chrome/);
+    expect(alertsEnabledHint(detectDevice({
+      ua: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0',
+    }))).toMatch(/this Windows computer in Edge/);
   });
 });
 
