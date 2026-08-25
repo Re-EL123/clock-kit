@@ -10,7 +10,7 @@ export function AddressPicker({ address = '', lat = null, lng = null } = {}) {
     lat: lat == null ? null : Number(lat),
     lng: lng == null ? null : Number(lng),
   };
-  let abort;
+  let lookupId = 0;
   const input = el('input', {
     class: 'input',
     type: 'search',
@@ -68,7 +68,13 @@ export function AddressPicker({ address = '', lat = null, lng = null } = {}) {
             type: 'button',
             role: 'option',
             onClick: () => setPlace(place),
-          }, [icon('map-pin', { size: 16 }), place.label]),
+          }, [
+            icon('map-pin', { size: 16 }),
+            el('span', { class: 'suggest-copy' }, [
+              el('strong', { class: 'suggest-title', text: place.title || place.label }),
+              place.detail ? el('span', { class: 'suggest-detail', text: place.detail }) : null,
+            ]),
+          ]),
         ]),
       ),
     );
@@ -76,16 +82,16 @@ export function AddressPicker({ address = '', lat = null, lng = null } = {}) {
   }
 
   const lookup = debounce(async (query) => {
-    abort?.abort();
-    abort = new AbortController();
+    const id = ++lookupId;
     try {
-      const places = await searchPlaces(query, { signal: abort.signal, near: isCoords(state.lat, state.lng) ? state : undefined });
-      if (input.value.trim() === query.trim()) showSuggestions(places);
+      const places = await searchPlaces(query, { near: isCoords(state.lat, state.lng) ? state : undefined });
+      if (id !== lookupId || input.value.trim() !== query.trim()) return;
+      showSuggestions(places);
     } catch (err) {
-      if (err.name === 'AbortError') return;
+      if (id !== lookupId) return;
       list.hidden = true;
     }
-  }, 320);
+  }, 450);
 
   input.addEventListener('input', () => {
     state.address = input.value;
