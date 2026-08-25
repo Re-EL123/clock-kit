@@ -9,6 +9,7 @@ import { todayMixChart, weekComboChart, reviewChart } from '../../components/cha
 import { Modal } from '../../components/modal.js';
 import { AccountForm } from '../../components/account-form.js';
 import { AlertsPanel } from '../../components/alerts-panel.js';
+import { nationalitySelect } from '../../nationalities.js';
 
 const NAV = [
   { view: 'dashboard', label: 'Dashboard' },
@@ -110,17 +111,100 @@ async function dashboard() {
 
 async function candidates() {
   const data = await api('host', 'candidates', { body: {} });
-  return table(
-    ['Name', 'Reference', 'ID / passport', 'Sponsor', 'Nationality', 'Role'],
-    (data.candidates || []).map((c) => [
-      `${c.first_name} ${c.last_name}`,
-      c.candidate_reference,
-      c.id_number || '—',
-      c.sponsor_name || '—',
-      c.nationality || '—',
-      c.assignment?.role_title || '',
-    ]),
-  );
+
+  function openEdit(candidate) {
+    const first = el('input', { class: 'input', placeholder: 'First name' });
+    first.value = candidate.first_name || '';
+    const last = el('input', { class: 'input', placeholder: 'Last name' });
+    last.value = candidate.last_name || '';
+    const ref = el('input', { class: 'input', placeholder: 'Reference' });
+    ref.value = candidate.candidate_reference || '';
+    const idNumber = el('input', { class: 'input', placeholder: 'ID or passport number' });
+    idNumber.value = candidate.id_number || '';
+    const sponsor = el('input', { class: 'input', placeholder: 'Sponsor name' });
+    sponsor.value = candidate.sponsor_name || '';
+    const nationality = nationalitySelect(el);
+    if (candidate.nationality && ![...nationality.options].some((option) => option.value === candidate.nationality)) {
+      nationality.append(el('option', { value: candidate.nationality, text: candidate.nationality }));
+    }
+    nationality.value = candidate.nationality || '';
+    const role = el('input', { class: 'input', placeholder: 'Role at this workplace' });
+    role.value = candidate.assignment?.role_title || '';
+    const node = Modal({
+      title: 'Update candidate',
+      onClose: () => node.remove(),
+      children: [
+        el('p', {
+          class: 'muted',
+          text: 'Fix the details for this placement. Login email and password stay with the organisation.',
+        }),
+        field('First name', first),
+        field('Last name', last),
+        field('Reference', ref),
+        field('ID / passport number', idNumber),
+        field('Sponsor', sponsor),
+        field('Nationality', nationality),
+        field('Role', role),
+        el('div', { class: 'modal-actions' }, [
+          el('button', { class: 'btn', type: 'button', onClick: () => node.remove() }, ['Cancel']),
+          el('button', {
+            class: 'btn btn-primary',
+            type: 'button',
+            onClick: async () => {
+              try {
+                if (!first.value.trim() || !last.value.trim()) throw new Error('Name is required');
+                if (!ref.value.trim()) throw new Error('Reference is required');
+                if (!idNumber.value.trim()) throw new Error('ID or passport number is required');
+                if (!sponsor.value.trim()) throw new Error('Sponsor name is required');
+                if (!nationality.value) throw new Error('Nationality is required');
+                await api('host', 'update-candidate', {
+                  body: {
+                    candidateId: candidate.id,
+                    firstName: first.value.trim(),
+                    lastName: last.value.trim(),
+                    candidateReference: ref.value.trim(),
+                    idNumber: idNumber.value.trim(),
+                    sponsorName: sponsor.value.trim(),
+                    nationality: nationality.value,
+                    roleTitle: role.value.trim(),
+                  },
+                });
+                node.remove();
+                toast('Candidate updated');
+                refreshPanel();
+              } catch (e) {
+                toast(e.message, 'err');
+              }
+            },
+          }, ['Save changes']),
+        ]),
+      ],
+    });
+    document.body.append(node);
+  }
+
+  return el('div', { class: 'grid' }, [
+    el('p', {
+      class: 'muted',
+      text: 'Students placed at your workplace. Edit a record if the name, ID, sponsor, or role is wrong.',
+    }),
+    table(
+      ['Name', 'Reference', 'ID / passport', 'Sponsor', 'Nationality', 'Role', 'Edit'],
+      (data.candidates || []).map((c) => [
+        `${c.first_name} ${c.last_name}`,
+        c.candidate_reference,
+        c.id_number || '—',
+        c.sponsor_name || '—',
+        c.nationality || '—',
+        c.assignment?.role_title || '',
+        el('button', {
+          class: 'btn',
+          type: 'button',
+          onClick: () => openEdit(c),
+        }, ['Edit']),
+      ]),
+    ),
+  ]);
 }
 
 async function attendance() {
