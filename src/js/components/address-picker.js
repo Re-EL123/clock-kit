@@ -11,6 +11,7 @@ export function AddressPicker({ address = '', lat = null, lng = null } = {}) {
     lng: lng == null ? null : Number(lng),
   };
   let lookupId = 0;
+  let suggestions = [];
   const input = el('input', {
     class: 'input',
     type: 'search',
@@ -60,6 +61,7 @@ export function AddressPicker({ address = '', lat = null, lng = null } = {}) {
   }
 
   function showSuggestions(places) {
+    suggestions = places || [];
     list.replaceChildren(
       ...places.map((place) =>
         el('li', {}, [
@@ -89,6 +91,7 @@ export function AddressPicker({ address = '', lat = null, lng = null } = {}) {
       showSuggestions(places);
     } catch (err) {
       if (id !== lookupId) return;
+      suggestions = [];
       list.hidden = true;
     }
   }, 450);
@@ -99,14 +102,21 @@ export function AddressPicker({ address = '', lat = null, lng = null } = {}) {
       state.lat = null;
       state.lng = null;
       paintMeta();
+      suggestions = [];
       list.hidden = true;
       return;
     }
     if (input.value.trim().length < 3) {
+      suggestions = [];
       list.hidden = true;
       return;
     }
     lookup(input.value);
+  });
+  input.addEventListener('keydown', (event) => {
+    if (event.key !== 'Enter' || !suggestions[0]) return;
+    event.preventDefault();
+    setPlace(suggestions[0]);
   });
   input.addEventListener('blur', () => {
     window.setTimeout(() => {
