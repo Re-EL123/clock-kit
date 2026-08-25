@@ -28,12 +28,13 @@ async function clock(kind) {
     const login = await api('auth', 'login', { body: { email: email.value, password: password.value } });
     saveSession(login.session, login.user);
     const geo = await captureLocation();
+    if (!geo.ok) toast(geo.message, 'err');
     const data = await api('clock', kind, {
       body: {
         siteId: siteId || undefined,
         qrToken: qr.value || undefined,
         source: qr.value ? 'QR' : 'KIOSK',
-        ...(geo ? { location: geo } : {}),
+        ...(geo.ok ? { location: geo.location } : {}),
       },
       idempotent: true,
     });

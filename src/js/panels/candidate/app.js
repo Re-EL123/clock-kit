@@ -7,7 +7,12 @@ import { bootPanel, refreshPanel } from '../../runtime.js';
 import { ClockFace, StatusChip } from '../../components/clock-card.js';
 import { hoursTrendChart, reviewChart, leaveBalanceChart, leaveStatusChart } from '../../components/charts.js';
 import { icon } from '../../icons.js';
-import { captureLocation } from '../../geolocation.js';
+import {
+  assignmentGeofence,
+  captureLocation,
+  evaluateGeofence,
+  geofenceUserMessage,
+} from '../../geolocation.js';
 import { flushQueue, pendingCount, queueClock } from '../../offline.js';
 import { AccountForm } from '../../components/account-form.js';
 import { AlertsPanel } from '../../components/alerts-panel.js';
@@ -21,11 +26,42 @@ const NAV = [
   { view: 'profile', label: 'Profile' },
 ];
 
-async function mutateClock(action, body = {}) {
-  const location = await captureLocation();
+async function mutateClock(action, body = {}, assignment = null) {
   const payload = { ...body, source: 'APP' };
-  if (location) payload.location = location;
   if (!payload.siteId) delete payload.siteId;
+
+  const fence = assignmentGeofence(assignment);
+  const needsGps = action === 'clock-in' || action === 'clock-out';
+  if (needsGps && fence.mode !== 'DISABLED') {
+    const captured = await captureLocation();
+    if (!captured.ok) {
+      if (action === 'clock-in') {
+        const err = new Error(captured.message);
+        err.code = captured.code;
+        throw err;
+      }
+      toast(captured.message, 'err');
+    } else {
+      payload.location = captured.location;
+      if (action === 'clock-in') {
+        const geo = evaluateGeofence({
+          mode: fence.mode,
+          radiusM: fence.radiusM,
+          siteLat: fence.siteLat,
+          siteLng: fence.siteLng,
+          lat: captured.location.latitude,
+          lng: captured.location.longitude,
+          accuracy: captured.location.accuracy,
+        });
+        if (!geo.ok) {
+          const err = new Error(geofenceUserMessage(geo.result));
+          err.code = geo.result;
+          throw err;
+        }
+      }
+    }
+  }
+
   if (!navigator.onLine) {
     queueClock(action, payload);
     toast('Saved locally — PENDING SYNC', 'ok');
@@ -80,7 +116,7 @@ async function home(user) {
           class: 'btn btn-primary',
           onClick: async () => {
             try {
-              const result = await mutateClock('clock-in', { siteId: assignment.site_id });
+              const result = await mutateClock('clock-in', { siteId: assignment.site_id }, assignment);
               if (!result?.pending) toast('Clocked in');
               refreshPanel();
             } catch (e) {
@@ -96,7 +132,7 @@ async function home(user) {
         class: 'btn btn-gold',
         onClick: async () => {
             try {
-              const result = await mutateClock('start-break', { type: 'MEAL' });
+              const result = await mutateClock('start-break', { type: 'MEAL' }, assignment);
               if (!result?.pending) toast('Break started');
               refreshPanel();
           } catch (e) {
@@ -108,7 +144,7 @@ async function home(user) {
         class: 'btn btn-danger',
         onClick: async () => {
             try {
-              const result = await mutateClock('clock-out');
+              const result = await mutateClock('clock-out', {}, assignment);
               if (!result?.pending) toast('Clocked out');
               refreshPanel();
           } catch (e) {
@@ -123,7 +159,7 @@ async function home(user) {
         class: 'btn btn-primary',
         onClick: async () => {
             try {
-              const result = await mutateClock('end-break');
+              const result = await mutateClock('end-break', {}, assignment);
               if (!result?.pending) toast('Break ended');
               refreshPanel();
           } catch (e) {
@@ -146,6 +182,13 @@ async function home(user) {
     el('div', { class: 'icon-label', style: 'justify-content:center' }, [icon('sites', { size: 16 }), site?.name || 'No site assigned']),
     pending ? el('div', { class: 'pending' }, [icon('timer', { size: 16 }), `${pending} PENDING SYNC`]) : null,
     actions,
+    state === 'OFF_DUTY' && assignment?.site_id && assignmentGeofence(assignment).mode !== 'DISABLED'
+      ? el('p', {
+        class: 'muted',
+        style: 'text-align:center;margin-top:0.85rem',
+        text: 'Clock-in uses this device’s GPS. Allow location if the browser asks.',
+      })
+      : null,
   ]);
 }
 
