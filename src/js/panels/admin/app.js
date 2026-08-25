@@ -14,6 +14,13 @@ import { AccountForm } from '../../components/account-form.js';
 import { AlertsPanel } from '../../components/alerts-panel.js';
 import { SiteForm } from '../../components/site-form.js';
 import { formatPublished } from '../../legal-format.js';
+import { setView } from '../../router.js';
+import {
+  GUIDE_AUDIENCE_LABEL,
+  GUIDE_KIND_LABEL,
+  GuidesLibrary,
+  downloadGuide,
+} from '../../components/guides-panel.js';
 
 const NAV = [
   { view: 'dashboard', label: 'Dashboard' },
@@ -27,6 +34,7 @@ const NAV = [
   { view: 'security', label: 'Security' },
   { view: 'health', label: 'Health' },
   { view: 'legal', label: 'Legal' },
+  { view: 'guides', label: 'Guides' },
   { view: 'notifications', label: 'Alerts' },
   { view: 'profile', label: 'Account' },
 ];
@@ -875,6 +883,113 @@ async function legal() {
   ]);
 }
 
+const GUIDE_AUDIENCES = ['ORG_OWNER', 'ORG_ADMIN', 'ORG_MANAGER', 'ORG_VIEWER', 'HOST'];
+
+function selectedGuide() {
+  const params = new URLSearchParams(location.search);
+  const kind = params.get('kind') === 'MANUAL' ? 'MANUAL' : 'SOP';
+  const audience = GUIDE_AUDIENCES.includes(params.get('audience')) ? params.get('audience') : 'ORG_OWNER';
+  return { kind, audience };
+}
+
+async function guides() {
+  const data = await api('admin', 'guides', { body: {} });
+  const selected = selectedGuide();
+  const current = (data.documents || []).find((doc) => doc.kind === selected.kind && doc.audience === selected.audience)
+    || data.documents?.[0];
+  const title = el('input', { class: 'input' });
+  title.value = current?.title || GUIDE_KIND_LABEL[selected.kind];
+  const body = el('textarea', { class: 'input legal-editor' });
+  body.value = current?.body || '';
+  const err = el('div', { class: 'form-error' });
+  const kindInput = selectInput(
+    [
+      { value: 'SOP', label: 'Standard operating procedure' },
+      { value: 'MANUAL', label: 'Training manual' },
+    ],
+    selected.kind,
+  );
+  const audienceInput = selectInput(
+    GUIDE_AUDIENCES.map((value) => ({ value, label: GUIDE_AUDIENCE_LABEL[value] })),
+    selected.audience,
+  );
+  function pick() {
+    setView('guides', { kind: kindInput.value, audience: audienceInput.value });
+    refreshPanel();
+  }
+  kindInput.addEventListener('change', pick);
+  audienceInput.addEventListener('change', pick);
+  const history = (data.history || [])
+    .filter((row) => row.kind === selected.kind && row.audience === selected.audience)
+    .slice(0, 6);
+
+  return el('div', { class: 'grid' }, [
+    el('div', { class: 'card', style: 'padding:1rem' }, [
+      el('h2', { text: 'Role-specific PDFs' }),
+      el('p', {
+        class: 'muted',
+        text: 'Each organisation role and each host gets a branded standard operating procedure and a training manual. Publishing a new version updates the PDF everyone downloads.',
+      }),
+      field('Document', kindInput),
+      field('Role', audienceInput),
+      field('Title', title),
+      field('Document text', body),
+      el('p', { class: 'muted', text: 'Use ## headings for sections. The PDF cover, contents, and Clock-Kit branding are built from this text.' }),
+      err,
+      actions([
+        el('button', {
+          class: 'btn btn-primary',
+          type: 'button',
+          onClick: () => {
+            const sheet = ConfirmationSheet({
+              message: `Publish a new ${GUIDE_KIND_LABEL[selected.kind].toLowerCase()} for ${GUIDE_AUDIENCE_LABEL[selected.audience]}?`,
+              confirmLabel: 'Publish',
+              onCancel: () => sheet.remove(),
+              onConfirm: async () => {
+                sheet.remove();
+                err.textContent = '';
+                try {
+                  await api('admin', 'publish-guide', {
+                    body: {
+                      kind: selected.kind,
+                      audience: selected.audience,
+                      title: title.value.trim(),
+                      body: body.value,
+                    },
+                  });
+                  toast('Published. The branded PDF now uses this text.');
+                  refreshPanel();
+                } catch (e) {
+                  err.textContent = e.message;
+                  toast(e.message, 'err');
+                }
+              },
+            });
+            document.body.append(sheet);
+          },
+        }, ['Publish new version']),
+        smBtn('Download PDF', async () => {
+          try {
+            await downloadGuide('admin', selected.kind, selected.audience);
+          } catch (e) {
+            toast(e.message, 'err');
+          }
+        }),
+      ]),
+      history.length
+        ? el('ul', { class: 'muted legal-history' }, history.map((row) =>
+          el('li', { text: `Version ${row.version}${row.publishedAt ? ` · ${formatPublished(row.publishedAt)}` : ''}` }),
+        ))
+        : null,
+    ]),
+    el('div', { class: 'card', style: 'padding:1rem' }, [
+      el('h2', { text: 'All role PDFs' }),
+      el('p', { class: 'muted', text: 'Owners and admins can download organisation and host PDFs. Managers, viewers, and hosts only receive their own role.' }),
+    ]),
+    GuidesLibrary({ documents: data.documents, fn: 'admin' }),
+  ]);
+}
+
 function currentBillingMonth() {
   const parts = Object.fromEntries(
     new Intl.DateTimeFormat('en-ZA', { timeZone: 'Africa/Johannesburg', year: 'numeric', month: '2-digit' })
@@ -1346,6 +1461,7 @@ await bootPanel({
     security,
     health,
     legal,
+    guides,
     billing,
     notifications: AlertsPanel,
     profile: profileView,

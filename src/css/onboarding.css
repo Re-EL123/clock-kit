@@ -142,6 +142,75 @@ button.linkish {
   font-size: 0.85rem;
 }
 
+.guide-library {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.guide-group-title {
+  margin: 0 0 0.65rem;
+  color: var(--ck-navy);
+  font-size: 1.05rem;
+}
+
+.guide-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 0.9rem;
+}
+
+.guide-card {
+  padding: 1rem;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.guide-card h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  color: var(--ck-navy);
+}
+
+.guide-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.guide-kind {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.guide-kind.is-sop {
+  background: var(--ck-navy);
+  color: #fff;
+}
+
+.guide-kind.is-manual {
+  background: var(--ck-gold);
+  color: var(--ck-navy);
+}
+
+.guide-preview {
+  margin: 0 0 0.4rem;
+  max-height: 4.6rem;
+  overflow: hidden;
+  color: var(--ck-charcoal);
+  font-size: 0.9rem;
+}
+
+.guide-card .btn {
+  justify-self: start;
+}
+
 @media (max-width: 860px) {
   .ck-tour-card {
     left: 1rem;

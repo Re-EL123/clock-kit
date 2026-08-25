@@ -3,6 +3,7 @@ import {
   Activity,
   AlertTriangle,
   Bell,
+  BookOpen,
   Building2,
   CalendarDays,
   Check,
@@ -52,6 +53,7 @@ const ICONS = {
   audit: ScrollText,
   billing: FileSpreadsheet,
   bell: Bell,
+  book: BookOpen,
   'building-2': Building2,
   calendar: CalendarDays,
   candidates: UserRound,
@@ -124,6 +126,7 @@ export const VIEW_ICONS = {
   alerts: 'bell',
   profile: 'profile',
   legal: 'file-text',
+  guides: 'book',
 };
 
 export function icon(name, { size = 20, className = '', stroke = 2 } = {}) {

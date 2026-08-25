@@ -26,10 +26,11 @@ const SECTION_FOR = {
   settings: 'Records',
   security: 'System',
   health: 'System',
+  legal: 'System',
+  guides: 'System',
   notifications: 'Account',
   alerts: 'Account',
   profile: 'Account',
-  legal: 'System',
 };
 
 const ROLE_LABEL = {

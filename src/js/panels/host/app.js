@@ -10,12 +10,14 @@ import { Modal } from '../../components/modal.js';
 import { AccountForm } from '../../components/account-form.js';
 import { AlertsPanel } from '../../components/alerts-panel.js';
 import { nationalitySelect } from '../../nationalities.js';
+import { GuidesPanel } from '../../components/guides-panel.js';
 
 const NAV = [
   { view: 'dashboard', label: 'Dashboard' },
   { view: 'candidates', label: 'Candidates' },
   { view: 'attendance', label: 'Attendance' },
   { view: 'schedule', label: 'Schedule' },
+  { view: 'guides', label: 'Guides' },
   { view: 'notifications', label: 'Alerts' },
   { view: 'profile', label: 'Profile' },
 ];
@@ -283,6 +285,7 @@ await bootPanel({
     candidates,
     attendance,
     schedule,
+    guides: () => GuidesPanel({ fn: 'host' }),
     notifications: AlertsPanel,
     profile: () => AccountForm({ user, showIdentity: false }),
   },
