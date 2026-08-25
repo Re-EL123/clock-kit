@@ -1,7 +1,7 @@
 import { api } from '../api.js';
 import { el, formatTime, toast } from '../utils/dom.js';
 import { table } from './sidebar.js';
-import { enablePushNotifications, installLabel, promptInstall, pushStatus } from '../pwa.js';
+import { enablePushNotifications, installIconName, installLabel, promptInstall, pushStatus } from '../pwa.js';
 import { icon } from '../icons.js';
 
 function refresh() {
@@ -25,7 +25,7 @@ export async function AlertsPanel() {
             class: 'btn btn-primary',
             type: 'button',
             onClick: () => promptInstall(),
-          }, [icon('smartphone', { size: 16 }), installLabel()])
+          }, [icon(installIconName(), { size: 16 }), installLabel()])
           : null,
         status.canEnable
           ? el('button', {

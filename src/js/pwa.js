@@ -4,6 +4,7 @@ import { TOKEN_KEY, withBase } from './config.js';
 import { icon } from './icons.js';
 import { playSound } from './sound.js';
 import { Modal } from './components/modal.js';
+import { detectDevice, installGuide, shouldAskNotificationPermission } from './device.js';
 
 const PUSH_CACHE = 'clock-kit-push';
 const INSTALL_DISMISS_KEY = 'ck_install_dismissed_at';
@@ -11,27 +12,26 @@ const INSTALL_DISMISS_MS = 7 * 24 * 60 * 60 * 1000;
 
 let deferredPrompt;
 let started = false;
+let listeningForInstall = false;
 
 export function standalone() {
   return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 }
 
 export function isAppleMobile() {
-  const ua = navigator.userAgent || '';
-  if (/iphone|ipad|ipod/i.test(ua)) return true;
-  return navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
+  return detectDevice().ios;
 }
 
 function onKiosk() {
   return location.pathname.includes('/kiosk');
 }
 
-function isAndroid() {
-  return /android/i.test(navigator.userAgent || '');
-}
-
 function pushSupported() {
   return 'Notification' in window && 'PushManager' in window && 'serviceWorker' in navigator;
+}
+
+export function currentInstallGuide() {
+  return installGuide(detectDevice(), { hasNativePrompt: Boolean(deferredPrompt) });
 }
 
 export function needsInstall() {
@@ -39,8 +39,11 @@ export function needsInstall() {
 }
 
 export function installLabel() {
-  if (isAppleMobile() || isAndroid()) return 'Add to Home Screen';
-  return deferredPrompt ? 'Install app' : 'Install Clock-Kit';
+  return currentInstallGuide().label;
+}
+
+export function installIconName() {
+  return currentInstallGuide().icon || 'smartphone';
 }
 
 function installDismissed() {
@@ -88,49 +91,78 @@ function urlBase64ToUint8Array(base64String) {
   return output;
 }
 
-function installSteps() {
-  if (isAppleMobile()) {
-    return [
-      'Tap Share (the square with the arrow).',
-      'Tap Add to Home Screen, then Add.',
-      'Open Clock-Kit from the Home Screen icon — not from Safari.',
-      'In Alerts, tap Enable background alerts and allow notifications.',
-    ];
+function notificationPermission() {
+  if (!('Notification' in window)) return 'unsupported';
+  return Notification.permission;
+}
+
+function canAskNotifications() {
+  return shouldAskNotificationPermission(detectDevice(), {
+    standalone: standalone(),
+    permission: notificationPermission(),
+  });
+}
+
+async function askNotificationPermission() {
+  if (!('Notification' in window)) return 'unsupported';
+  if (Notification.permission === 'granted') return 'granted';
+  if (Notification.permission === 'denied') return 'denied';
+  if (!shouldAskNotificationPermission(detectDevice(), {
+    standalone: standalone(),
+    permission: 'default',
+  })) {
+    return Notification.permission;
   }
-  if (isAndroid()) {
-    return [
-      'Tap Install app, or open the browser menu and choose Install app / Add to Home screen.',
-      'Open Clock-Kit from the Home Screen icon.',
-      'In Alerts, tap Enable background alerts and allow notifications.',
-    ];
+  try {
+    return await Notification.requestPermission();
+  } catch {
+    return Notification.permission;
   }
-  return [
-    'Tap Install Clock-Kit, or use the install icon in the address bar (Chrome or Edge).',
-    'Open the installed Clock-Kit app.',
-    'In Alerts, tap Enable background alerts and allow notifications.',
-  ];
+}
+
+function onBeforeInstallPrompt(event) {
+  event.preventDefault();
+  deferredPrompt = event;
+  fillPwaSlots();
+  if (document.querySelector('.main') && !document.querySelector('.ck-install-banner')) {
+    mountInstallBanner();
+  }
+}
+
+function listenForInstallPrompt() {
+  if (listeningForInstall || typeof window === 'undefined') return;
+  listeningForInstall = true;
+  window.addEventListener('beforeinstallprompt', onBeforeInstallPrompt);
 }
 
 export function showInstallGuide() {
   document.querySelector('.more-sheet-backdrop')?.click();
   closeInstallGuide();
-  const native = Boolean(deferredPrompt);
+  const guide = currentInstallGuide();
+  const askAlerts = canAskNotifications();
   const node = Modal({
-    title: isAppleMobile() || isAndroid() ? 'Add to Home Screen' : 'Install Clock-Kit',
+    title: guide.title,
     onClose: closeInstallGuide,
     children: [
-      el('p', {
-        text: 'Install Clock-Kit on this phone, tablet, or computer so alerts still arrive when the app is closed.',
-      }),
-      el('ol', { class: 'install-steps' }, installSteps().map((step) => el('li', { text: step }))),
+      el('p', { class: 'install-detected muted', text: `Detected: ${guide.detected}` }),
+      el('p', { class: 'install-summary', text: guide.summary }),
+      el('ol', { class: 'install-steps' }, guide.steps.map((step) => el('li', { text: step }))),
+      guide.note ? el('p', { class: 'install-note muted', text: guide.note }) : null,
       el('div', { class: 'modal-actions' }, [
         el('button', { class: 'btn', type: 'button', onClick: closeInstallGuide }, ['Close']),
-        native
+        askAlerts
+          ? el('button', {
+            class: guide.canNativePrompt ? 'btn' : 'btn btn-primary',
+            type: 'button',
+            onClick: () => enablePushNotifications().then(() => closeInstallGuide()),
+          }, [icon('bell', { size: 16 }), 'Allow notifications'])
+          : null,
+        guide.canNativePrompt
           ? el('button', {
             class: 'btn btn-primary',
             type: 'button',
             onClick: () => promptInstall(),
-          }, [icon('plus', { size: 16 }), installLabel()])
+          }, [icon(guide.icon, { size: 16 }), guide.label])
           : null,
       ]),
     ],
@@ -140,43 +172,72 @@ export function showInstallGuide() {
 }
 
 export async function promptInstall() {
-  if (standalone()) return { ok: true, installed: true };
-  if (deferredPrompt) {
+  if (standalone()) {
+    return subscribePush({ interactive: true });
+  }
+
+  let outcomePromise = Promise.resolve(null);
+  const promptEvent = deferredPrompt;
+  if (promptEvent?.prompt) {
     try {
-      deferredPrompt.prompt();
-      const choice = await deferredPrompt.userChoice;
+      promptEvent.prompt();
       deferredPrompt = null;
-      closeInstallGuide();
-      if (choice.outcome === 'accepted') {
-        toast('Clock-Kit is installing. Open it from the Home Screen, then enable background alerts.', 'ok');
-        return { ok: true };
-      }
+      outcomePromise = promptEvent.userChoice.then((choice) => choice?.outcome || null);
     } catch {
       deferredPrompt = null;
-      showInstallGuide();
-      return { ok: false, guided: true };
+      outcomePromise = Promise.resolve('error');
     }
-    fillPwaSlots();
-    if (!document.querySelector('.ck-install-banner')) mountInstallBanner();
-    return { ok: false };
   }
-  showInstallGuide();
-  return { ok: false, guided: true };
+
+  const permissionPromise = askNotificationPermission();
+  const [outcome, permission] = await Promise.all([outcomePromise, permissionPromise]);
+  closeInstallGuide();
+  if (permission === 'granted') await subscribePush({ interactive: false });
+
+  if (outcome === 'accepted') {
+    toast(
+      permission === 'granted'
+        ? 'Clock-Kit is installing. Notifications are allowed on this device.'
+        : 'Clock-Kit is installing. Allow notifications if the browser still asks.',
+      'ok',
+    );
+    hideInstallUi();
+    return { ok: true, installed: true, permission };
+  }
+
+  if (!outcome || outcome === 'error') {
+    showInstallGuide();
+    if (permission === 'granted') {
+      toast('Notifications are allowed. Follow the steps to put Clock-Kit on this device.', 'ok');
+    } else if (permission === 'denied') {
+      toast('Notifications were blocked. You can allow Clock-Kit in the browser settings.', 'err');
+    }
+    return { ok: false, guided: true, permission };
+  }
+
+  fillPwaSlots();
+  if (!document.querySelector('.ck-install-banner')) mountInstallBanner();
+  if (permission === 'granted') {
+    toast('Notifications are allowed. You can still install Clock-Kit from the button or browser menu.', 'ok');
+  }
+  return { ok: false, dismissed: true, permission };
 }
 
 function installButton() {
+  const guide = currentInstallGuide();
   return el('button', {
     class: 'btn btn-primary install-btn',
     type: 'button',
     onClick: () => promptInstall(),
-  }, [icon(isAppleMobile() ? 'share' : 'smartphone', { size: 16 }), installLabel()]);
+  }, [icon(guide.icon, { size: 16 }), guide.label]);
 }
 
 function renderInstall(slot) {
   if (!slot || !needsInstall() || installDismissed()) return;
+  const guide = currentInstallGuide();
   if (slot.classList.contains('pwa-slot-card')) {
     slot.replaceChildren(
-      el('p', { class: 'muted', text: 'Add Clock-Kit to your Home Screen so alerts work when you leave the browser.' }),
+      el('p', { class: 'muted', text: guide.summary }),
       installButton(),
     );
     return;
@@ -193,16 +254,15 @@ export function mountInstallBanner() {
   if (!needsInstall() || installDismissed()) return;
   const main = document.querySelector('.main');
   if (!main) return;
+  const guide = currentInstallGuide();
   const banner = el('div', { class: 'ck-install-banner card', role: 'status' }, [
-    el('p', {
-      text: 'Install Clock-Kit or add it to your Home Screen so you still get alerts on this phone, tablet, or computer when the app is closed.',
-    }),
+    el('p', { text: guide.summary }),
     el('div', { class: 'btn-row' }, [
       el('button', {
         class: 'btn btn-primary',
         type: 'button',
         onClick: () => promptInstall(),
-      }, [icon(isAppleMobile() ? 'share' : 'smartphone', { size: 16 }), installLabel()]),
+      }, [icon(guide.icon, { size: 16 }), guide.label]),
       el('button', {
         class: 'btn',
         type: 'button',
@@ -262,7 +322,8 @@ async function subscribePush({ interactive = false } = {}) {
       return { ok: false, reason: 'denied' };
     }
     if (Notification.permission !== 'granted') {
-      const permission = await Notification.requestPermission();
+      if (!interactive) return { ok: false, reason: 'permission' };
+      const permission = await askNotificationPermission();
       if (permission !== 'granted') {
         if (interactive) toast('Allow notifications to get alerts when Clock-Kit is in the background.', 'err');
         return { ok: false, reason: permission };
@@ -290,11 +351,29 @@ async function subscribePush({ interactive = false } = {}) {
 }
 
 export async function enablePushNotifications() {
+  if (detectDevice().operaMini) {
+    showInstallGuide();
+    return { ok: false, reason: 'opera-mini' };
+  }
   if (isAppleMobile() && !standalone()) {
     showInstallGuide();
     return { ok: false, reason: 'ios-install' };
   }
-  return subscribePush({ interactive: true });
+  const permission = await askNotificationPermission();
+  if (permission !== 'granted') {
+    if (permission === 'denied') {
+      toast('Alerts are blocked. Allow notifications for Clock-Kit in your browser or system settings.', 'err');
+    } else {
+      toast('Allow notifications to get alerts when Clock-Kit is in the background.', 'err');
+    }
+    return { ok: false, reason: permission };
+  }
+  const result = await subscribePush({ interactive: true });
+  if (result.reason === 'skipped') {
+    toast('Notifications are allowed for Clock-Kit on this browser.', 'ok');
+    return { ok: true, permission: 'granted', subscribed: false };
+  }
+  return result;
 }
 
 export async function unsubscribePush() {
@@ -316,25 +395,33 @@ export async function unsubscribePush() {
 }
 
 export async function pushStatus() {
+  const device = detectDevice();
+  const guide = currentInstallGuide();
   if (onKiosk()) {
     return { canEnable: false, canInstall: false, enabled: false, hint: 'The kiosk does not receive personal alerts.' };
   }
-  if (!pushSupported() && !isAppleMobile()) {
+  if (device.operaMini) {
     return {
       canEnable: false,
       canInstall: needsInstall(),
       enabled: false,
-      hint: 'This browser does not support push alerts. Use Chrome, Edge, Firefox, or Safari 16.4+.',
+      hint: guide.summary,
+    };
+  }
+  if (!pushSupported() && !device.ios) {
+    return {
+      canEnable: false,
+      canInstall: needsInstall(),
+      enabled: false,
+      hint: 'This browser does not support push alerts. Use Chrome, Edge, Firefox, Samsung Internet, Huawei Browser, or Safari 16.4+.',
     };
   }
   if (needsInstall()) {
     return {
-      canEnable: !isAppleMobile(),
+      canEnable: !device.ios && pushSupported(),
       canInstall: true,
       enabled: false,
-      hint: isAppleMobile()
-        ? 'Add Clock-Kit to your Home Screen, open it from the icon, then enable alerts. Safari only delivers background alerts from the installed app.'
-        : 'Install Clock-Kit or add it to your Home Screen so alerts keep working when you leave the browser. Then enable background alerts.',
+      hint: guide.summary,
     };
   }
   if (Notification.permission === 'denied') {
@@ -398,13 +485,8 @@ function handleNavigate(href) {
 export function startPwa() {
   if (started) return;
   started = true;
+  listenForInstallPrompt();
   registerServiceWorker().then((registration) => registration?.update?.());
-  window.addEventListener('beforeinstallprompt', (event) => {
-    event.preventDefault();
-    deferredPrompt = event;
-    fillPwaSlots();
-    mountInstallBanner();
-  });
   window.addEventListener('appinstalled', () => {
     deferredPrompt = null;
     try {
@@ -413,7 +495,6 @@ export function startPwa() {
       /* ignore */
     }
     hideInstallUi();
-    toast('Clock-Kit is installed. Open it from the Home Screen, then enable background alerts.', 'ok');
     subscribePush();
   });
   if (navigator.serviceWorker) {
@@ -449,9 +530,6 @@ export function startPwa() {
     if (document.visibilityState === 'visible') refreshSubscription();
   });
   window.addEventListener('pageshow', refreshSubscription);
-  const unlockPush = () => {
-    subscribePush();
-    document.removeEventListener('pointerdown', unlockPush);
-  };
-  document.addEventListener('pointerdown', unlockPush, { once: true });
 }
+
+listenForInstallPrompt();
