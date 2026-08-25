@@ -21,8 +21,28 @@
     <link rel="icon" type="image/png" sizes="192x192" href="%BASE_URL%assets/logo/clock-kit-icon-192.png" />
     <link rel="apple-touch-icon" href="%BASE_URL%assets/logo/clock-kit-icon-180.png" />
     <link rel="manifest" href="%BASE_URL%manifest.webmanifest" />
+    <link rel="preload" as="image" href="%BASE_URL%assets/login/workplace.jpg" />
+    <style>
+      .auth-stage {
+        background: #1a2438 url('%BASE_URL%assets/login/workplace.jpg') center / cover no-repeat;
+      }
+    </style>
   </head>
-  <body>
+  <body class="auth-page">
+    <div class="auth-stage" aria-hidden="true">
+      <video
+        class="auth-video"
+        autoplay
+        muted
+        loop
+        playsinline
+        webkit-playsinline
+        preload="auto"
+        poster="%BASE_URL%assets/login/workplace.jpg"
+      >
+        <source src="%BASE_URL%assets/login/workplace.mp4" type="video/mp4" />
+      </video>
+    </div>
     <div id="ck-splash" class="ck-splash" role="dialog" aria-label="Clock-Kit">
       <div class="ck-splash-inner">
         <div class="clock-wrap splash-clock">
@@ -33,6 +53,28 @@
       </div>
     </div>
     <div id="app"></div>
+    <p class="auth-credit">
+      Video by
+      <a href="https://pixabay.com/users/km007_-23606303/?utm_source=link-attribution&utm_medium=referral&utm_campaign=video&utm_content=91744" rel="noopener noreferrer" target="_blank">Moses Justin</a>
+      from
+      <a href="https://pixabay.com//?utm_source=link-attribution&utm_medium=referral&utm_campaign=video&utm_content=91744" rel="noopener noreferrer" target="_blank">Pixabay</a>
+    </p>
+    <script>
+      (function () {
+        var video = document.querySelector('.auth-video');
+        if (!video) return;
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          video.removeAttribute('autoplay');
+          video.pause();
+          return;
+        }
+        var ready = function () { video.classList.add('is-ready'); };
+        video.addEventListener('playing', ready, { once: true });
+        video.addEventListener('canplay', ready, { once: true });
+        var play = video.play();
+        if (play && play.catch) play.catch(function () {});
+      })();
+    </script>
     <script src="%BASE_URL%splash-boot.js"></script>
     <script type="module" src="/src/js/panels/login.js"></script>
   </body>
