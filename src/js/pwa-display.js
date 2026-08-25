@@ -69,6 +69,26 @@ export function isAppInstalled({
   return displayModeInstalled(match, nav) || rememberedInstalled(storage);
 }
 
+export function installAndAlertFlags({
+  needsInstall = false,
+  permission = 'unsupported',
+  subscribed = false,
+  ios = false,
+  standalone = false,
+  pushSupported = false,
+} = {}) {
+  const enabled = permission === 'granted' && Boolean(subscribed);
+  return {
+    enabled,
+    canInstall: Boolean(needsInstall) && !enabled,
+    canEnable: Boolean(pushSupported)
+      && permission !== 'denied'
+      && permission !== 'unsupported'
+      && !enabled
+      && (!ios || standalone),
+  };
+}
+
 export async function relatedAppsInstalled(getApps) {
   const fn = getApps
     || (typeof navigator !== 'undefined' ? navigator.getInstalledRelatedApps?.bind(navigator) : null);

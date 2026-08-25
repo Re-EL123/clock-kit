@@ -1,7 +1,7 @@
 import { el, viewParam } from './utils/dom.js';
 import { shell, replaceShellContent, closeMoreSheet } from './components/sidebar.js';
 import { armSounds } from './sound.js';
-import { startPwa } from './pwa.js';
+import { startPwa, mountInstallBanner } from './pwa.js';
 import { PanelLoader, beginPaint, endPaint } from './busy.js';
 import { startOnboarding } from './onboarding.js';
 
@@ -40,6 +40,7 @@ export async function bootPanel({ title, items, user, views, defaultView }) {
       closeMoreSheet();
     } finally {
       endPaint();
+      mountInstallBanner();
     }
   }
 

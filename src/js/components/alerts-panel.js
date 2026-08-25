@@ -24,7 +24,10 @@ export async function AlertsPanel() {
           ? el('button', {
             class: 'btn btn-primary',
             type: 'button',
-            onClick: () => promptInstall(),
+            onClick: async () => {
+              await promptInstall();
+              refresh();
+            },
           }, [icon(installIconName(), { size: 16 }), installLabel()])
           : null,
         status.canEnable

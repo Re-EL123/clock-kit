@@ -3,6 +3,7 @@ import {
   INSTALLED_KEY,
   clearInstalledMemory,
   displayModeInstalled,
+  installAndAlertFlags,
   isAppInstalled,
   markInstalled,
   relatedAppsInstalled,
@@ -53,6 +54,36 @@ describe('remembered install', () => {
       nav: { standalone: false },
       storage,
     })).toBe(true);
+  });
+});
+
+describe('installAndAlertFlags', () => {
+  it('hides install and enable after the app is installed and alerts are on', () => {
+    expect(installAndAlertFlags({
+      needsInstall: false,
+      permission: 'granted',
+      subscribed: true,
+      pushSupported: true,
+    })).toEqual({ canInstall: false, canEnable: false, enabled: true });
+  });
+
+  it('hides enable when notifications are already granted and subscribed, even if install was not remembered', () => {
+    expect(installAndAlertFlags({
+      needsInstall: true,
+      permission: 'granted',
+      subscribed: true,
+      pushSupported: true,
+    })).toEqual({ canInstall: false, canEnable: false, enabled: true });
+  });
+
+  it('does not ask iOS Safari for alerts until the home-screen app is open', () => {
+    expect(installAndAlertFlags({
+      needsInstall: true,
+      permission: 'default',
+      ios: true,
+      standalone: false,
+      pushSupported: true,
+    })).toMatchObject({ canInstall: true, canEnable: false, enabled: false });
   });
 });
 

@@ -8,6 +8,7 @@ import { detectDevice, installGuide, shouldAskNotificationPermission } from './d
 import {
   clearInstalledMemory,
   displayModeInstalled,
+  installAndAlertFlags,
   isAppInstalled,
   markInstalled,
   relatedAppsInstalled,
@@ -210,6 +211,7 @@ export async function promptInstall() {
   if (permission === 'granted') await subscribePush({ interactive: false });
 
   if (outcome === 'accepted') {
+    markInstalled();
     toast(
       permission === 'granted'
         ? 'Clock-Kit is installing. Notifications are allowed on this device.'
@@ -267,6 +269,7 @@ export function fillPwaSlots() {
 export function mountInstallBanner() {
   document.querySelectorAll('.ck-install-banner').forEach((node) => node.remove());
   if (!needsInstall() || installDismissed()) return;
+  if (new URLSearchParams(location.search).get('view') === 'notifications') return;
   const main = document.querySelector('.main');
   if (!main) return;
   const guide = currentInstallGuide();
@@ -412,21 +415,20 @@ export async function unsubscribePush() {
 export async function pushStatus() {
   const device = detectDevice();
   const guide = currentInstallGuide();
+  const installNeeded = needsInstall();
   if (onKiosk()) {
     return { canEnable: false, canInstall: false, enabled: false, hint: 'The kiosk does not receive personal alerts.' };
   }
   if (device.operaMini) {
     return {
-      canEnable: false,
-      canInstall: needsInstall(),
-      enabled: false,
+      ...installAndAlertFlags({ needsInstall: installNeeded }),
       hint: guide.summary,
     };
   }
   if (!pushSupported() && !device.ios) {
     return {
       canEnable: false,
-      canInstall: needsInstall(),
+      canInstall: installNeeded,
       enabled: false,
       hint: 'This browser does not support push alerts. Use Chrome, Edge, Firefox, Samsung Internet, Huawei Browser, or Safari 16.4+.',
     };
@@ -436,7 +438,7 @@ export async function pushStatus() {
     if (!vapid?.enabled || !vapid.publicKey) {
       return {
         canEnable: false,
-        canInstall: needsInstall(),
+        canInstall: installNeeded,
         enabled: false,
         hint: 'Background alerts are not configured on the server yet.',
       };
@@ -444,45 +446,47 @@ export async function pushStatus() {
   } catch {
     return {
       canEnable: false,
-      canInstall: needsInstall(),
+      canInstall: installNeeded,
       enabled: false,
       hint: 'Background alerts are not configured on the server yet.',
     };
   }
-  if (needsInstall()) {
-    return {
-      canEnable: !device.ios && pushSupported(),
-      canInstall: true,
-      enabled: false,
-      hint: guide.summary,
-    };
-  }
-  if (Notification.permission === 'denied') {
-    return {
-      canEnable: false,
-      canInstall: false,
-      enabled: false,
-      hint: 'Alerts are blocked for this site. Allow notifications in your browser or system settings, then return here.',
-    };
-  }
+
+  const permission = notificationPermission();
+  let subscribed = false;
   try {
     const registration = await navigator.serviceWorker.ready;
-    const subscription = await registration.pushManager.getSubscription();
-    if (Notification.permission === 'granted' && subscription) {
-      return {
-        canEnable: false,
-        canInstall: false,
-        enabled: true,
-        hint: 'Background alerts are on for this phone, tablet, or computer. You will get them even when Clock-Kit is closed.',
-      };
-    }
+    subscribed = Boolean(await registration.pushManager.getSubscription());
   } catch {
     /* fall through */
   }
+
+  const flags = installAndAlertFlags({
+    needsInstall: installNeeded,
+    permission,
+    subscribed,
+    ios: device.ios,
+    standalone: standalone(),
+    pushSupported: pushSupported() || device.ios,
+  });
+
+  if (flags.enabled) {
+    return {
+      ...flags,
+      hint: 'Background alerts are on for this phone, tablet, or computer. You will get them even when Clock-Kit is closed.',
+    };
+  }
+  if (permission === 'denied') {
+    return {
+      ...flags,
+      hint: 'Alerts are blocked for this site. Allow notifications in your browser or system settings, then return here.',
+    };
+  }
+  if (flags.canInstall) {
+    return { ...flags, hint: guide.summary };
+  }
   return {
-    canEnable: true,
-    canInstall: false,
-    enabled: false,
+    ...flags,
     hint: 'Turn on alerts so you still get updates when Clock-Kit is in the background or closed.',
   };
 }
