@@ -31,9 +31,9 @@
   }
 }
 
-@media (min-width: 720px) {
-  .page-body > .grid:has(> .card):has(.table-wrap) {
-    grid-template-columns: minmax(240px, 24rem) minmax(0, 1fr);
+@media (min-width: 900px) {
+  .page-body > .grid:has(> .card:first-child):has(.list-view) {
+    grid-template-columns: minmax(240px, 22rem) minmax(0, 1fr);
     align-items: start;
   }
 }
@@ -185,7 +185,7 @@
 @media (max-width: 640px) {
   .grid-4,
   .grid-2,
-  .page-body > .grid:has(> .card):has(.table-wrap) {
+  .page-body > .grid:has(> .card):has(.list-view) {
     grid-template-columns: minmax(0, 1fr);
   }
 
@@ -249,86 +249,19 @@
     width: 100%;
   }
 
-  .table-wrap {
-    overflow: visible;
-    padding: 0.1rem;
-    box-shadow: none;
-    background: transparent;
+  .list-card .btn-row {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: stretch;
   }
 
-  .table-wrap table,
-  .table-wrap thead,
-  .table-wrap tbody,
-  .table-wrap th,
-  .table-wrap td,
-  .table-wrap tr {
-    display: block;
-    width: 100%;
+  .list-card .btn-row .btn {
+    width: auto;
+    flex: 1 1 5.5rem;
   }
 
-  .table-wrap table {
-    min-width: 0;
-  }
-
-  .table-wrap thead {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-  }
-
-  .table-wrap tr {
-    margin: 0 0 0.75rem;
-    padding: 0.2rem 0;
-    border-radius: var(--radius-sm);
-    box-shadow: var(--shadow-raised);
-    background: var(--ck-light);
-  }
-
-  .table-wrap td {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.55rem 0.85rem;
-    border-bottom: 1px solid rgba(59, 66, 79, 0.08);
-    text-align: right;
-    overflow-wrap: anywhere;
-  }
-
-  .table-wrap td:last-child {
-    border-bottom: 0;
-  }
-
-  .table-wrap td::before {
-    content: attr(data-label);
-    font-size: 0.7rem;
-    font-weight: 800;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--ck-grey);
-    text-align: left;
-    flex: 0 0 38%;
-  }
-
-  .table-wrap td:not([data-label])::before,
-  .table-wrap td[data-label=""]::before {
-    content: none;
-  }
-
-  .table-wrap td[colspan] {
-    display: block;
-    text-align: center;
-  }
-
-  .table-wrap td[colspan]::before {
-    content: none;
-  }
-
-  .table-wrap td .btn-row {
-    flex: 1;
-    justify-content: flex-end;
+  .list-card-facts {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 

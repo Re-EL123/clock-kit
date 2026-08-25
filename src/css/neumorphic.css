@@ -11,8 +11,7 @@
 .inset,
 .input,
 .input-wrap,
-.search,
-.table-wrap {
+.search {
   background: var(--ck-light);
   box-shadow: var(--shadow-inset);
   border-radius: var(--radius-sm);
@@ -20,7 +19,7 @@
 
 .card,
 .stat,
-.table-wrap {
+.list-card {
   min-width: 0;
 }
 

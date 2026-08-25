@@ -39,7 +39,7 @@
 
 .stat,
 .card,
-.table-wrap {
+.list-card {
   animation: rise-in 500ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
@@ -132,7 +132,7 @@
   .auth-card,
   .stat,
   .card,
-  .table-wrap,
+  .list-card,
   .clock-wrap.is-live .clock-face,
   .clock-wrap.is-break .clock-face,
   .chip-working,

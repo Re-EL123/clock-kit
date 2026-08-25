@@ -134,7 +134,7 @@ async function attendance() {
     reviewChart(sessions),
     table(
       ['Candidate', 'ID / passport', 'Sponsor', 'In', 'Out', 'Review', 'By', 'Actions'],
-      (data.sessions || []).map((s) => [
+      sessions.map((s) => [
         `${s.candidates?.first_name || ''} ${s.candidates?.last_name || ''}`,
         s.candidates?.id_number || '—',
         s.candidates?.sponsor_name || '—',

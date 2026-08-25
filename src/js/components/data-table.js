@@ -1,1 +1,1 @@
-export { table as DataTable } from './sidebar.js';
+export { table as DataTable } from './list-view.js';

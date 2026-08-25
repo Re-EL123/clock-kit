@@ -280,21 +280,4 @@ export function replaceShellContent(root, { view, heading, content, items = [] }
   }
 }
 
-export function table(headers, rows) {
-  return el('div', { class: 'table-wrap' }, [
-    el('table', {}, [
-      el('thead', {}, [el('tr', {}, headers.map((h) => el('th', { text: h })))]),
-      el(
-        'tbody',
-        {},
-        rows.length
-          ? rows.map((r) => el('tr', {}, r.map((c, i) => el('td', { dataset: { label: String(headers[i] || '') } }, [c]))))
-          : [el('tr', {}, [el('td', { colSpan: String(headers.length) }, [EmptyHint()])])],
-      ),
-    ]),
-  ]);
-}
-
-function EmptyHint() {
-  return el('div', { class: 'empty' }, [icon('clipboard', { size: 28 }), 'No records']);
-}
+export { table } from './list-view.js';
