@@ -724,13 +724,31 @@ async function billing() {
       el('p', { text: `VAT 15% ${quote.vatLabel || 'R0.00'}` }),
       el('p', { text: `Total ${quote.totalLabel || 'R0.00'}` }),
     ]),
+    el('div', { class: 'card', style: 'padding:1rem' }, [
+      el('h2', { text: 'Pay into this account' }),
+      el('p', {
+        class: 'muted',
+        text: 'Use the payment reference on each invoice so Clock-Kit can match your payment.',
+      }),
+      data.payee?.accountName || data.payee?.sellerName
+        ? el('p', { text: `Account name: ${data.payee.accountName || data.payee.sellerName}` })
+        : null,
+      data.payee?.bankName ? el('p', { text: `Bank: ${data.payee.bankName}` }) : null,
+      data.payee?.accountNumber ? el('p', { text: `Account number: ${data.payee.accountNumber}` }) : null,
+      data.payee?.branchCode ? el('p', { text: `Branch code: ${data.payee.branchCode}` }) : null,
+      data.payee?.accountType ? el('p', { text: `Account type: ${data.payee.accountType}` }) : null,
+      data.payee?.swiftCode ? el('p', { text: `SWIFT: ${data.payee.swiftCode}` }) : null,
+      data.payee?.sellerAddress ? el('p', { text: data.payee.sellerAddress }) : null,
+      data.payee?.paymentInstructions ? el('p', { class: 'muted', text: data.payee.paymentInstructions }) : null,
+    ]),
     table(
-      ['Invoice', 'Period', 'Billed', 'Total', 'Status', 'Actions'],
+      ['Invoice', 'Period', 'Billed', 'Total', 'Reference', 'Status', 'Actions'],
       invoices.map((invoice) => [
         invoice.invoice_number,
         `${invoice.period_start} – ${invoice.period_end}`,
         String(invoice.billed_candidates),
         `R${((Number(invoice.total_cents) || 0) / 100).toFixed(2)}`,
+        invoice.payment_reference || invoice.invoice_number,
         invoice.status_label || invoice.status,
         el('button', {
           class: 'btn',

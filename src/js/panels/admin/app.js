@@ -952,6 +952,7 @@ async function billing() {
   const quotes = overview.organisations || [];
   const invoices = journal.invoices || [];
   const plans = overview.plans || {};
+  const payee = overview.payee || {};
   const ngo = plans.NGO || {};
   const priv = plans.PRIVATE || {};
   const dueCents = quotes.reduce((sum, row) => sum + Number(row.quote?.totalCents || 0), 0);
@@ -975,6 +976,26 @@ async function billing() {
   ngoFloor.value = randInputValue(ngo.floorCents ?? 15000);
   privateUnit.value = randInputValue(priv.unitCents ?? 4500);
   privateFloor.value = randInputValue(priv.floorCents ?? 45000);
+  const sellerName = textInput('Legal / trading name');
+  sellerName.value = payee.sellerName || 'Clock-Kit';
+  const sellerVat = textInput('VAT number');
+  sellerVat.value = payee.sellerVat || '';
+  const sellerAddress = textInput('Address');
+  sellerAddress.value = payee.sellerAddress || '';
+  const bankName = textInput('Bank');
+  bankName.value = payee.bankName || '';
+  const accountName = textInput('Account name');
+  accountName.value = payee.accountName || '';
+  const accountNumber = textInput('Account number');
+  accountNumber.value = payee.accountNumber || '';
+  const branchCode = textInput('Branch code');
+  branchCode.value = payee.branchCode || '';
+  const accountType = textInput('Account type');
+  accountType.value = payee.accountType || '';
+  const swiftCode = textInput('SWIFT');
+  swiftCode.value = payee.swiftCode || '';
+  const paymentInstructions = textInput('Payment notes');
+  paymentInstructions.value = payee.paymentInstructions || '';
 
   function editBilling(row) {
     const org = row.organisation;
@@ -1063,6 +1084,45 @@ async function billing() {
       StatCard('Unpaid', unpaidCount),
       StatCard('Not viewed', unviewedCount),
       StatCard('Invoices on file', invoices.length),
+    ]),
+    el('div', { class: 'card', style: 'padding:1rem' }, [
+      el('h2', { text: 'Account payments should be made to' }),
+      el('p', {
+        class: 'muted',
+        text: 'This bank account and the invoice payment reference appear on every tax invoice PDF.',
+      }),
+      field('Legal / trading name', sellerName),
+      field('VAT number', sellerVat),
+      field('Address', sellerAddress),
+      field('Bank', bankName),
+      field('Account name', accountName),
+      field('Account number', accountNumber),
+      field('Branch code', branchCode),
+      field('Account type', accountType),
+      field('SWIFT / BIC', swiftCode),
+      field('Payment notes', paymentInstructions),
+      smBtn('Save payee account', async () => {
+        try {
+          await api('admin', 'billing-set-payee', {
+            body: {
+              sellerName: sellerName.value.trim() || 'Clock-Kit',
+              sellerVat: sellerVat.value.trim() || null,
+              sellerAddress: sellerAddress.value.trim() || null,
+              bankName: bankName.value.trim() || null,
+              accountName: accountName.value.trim() || null,
+              accountNumber: accountNumber.value.trim() || null,
+              branchCode: branchCode.value.trim() || null,
+              accountType: accountType.value.trim() || null,
+              swiftCode: swiftCode.value.trim() || null,
+              paymentInstructions: paymentInstructions.value.trim() || null,
+            },
+          });
+          toast('Payee account saved');
+          refreshPanel();
+        } catch (e) {
+          toast(e.message, 'err');
+        }
+      }, 'btn-primary'),
     ]),
     el('div', { class: 'card', style: 'padding:1rem' }, [
       el('h2', { text: 'Default plan rates' }),
@@ -1167,15 +1227,16 @@ async function billing() {
     ),
     el('div', { class: 'card', style: 'padding:1rem' }, [
       el('h2', { text: 'Invoice journal' }),
-      el('p', { class: 'muted', text: 'Every invoice. Change payment status with the dropdown. Viewed shows whether the organisation owner or admin opened the bill.' }),
+      el('p', { class: 'muted', text: 'Every invoice. Change payment status with the dropdown. Reference is what the organisation must use when paying. Viewed shows whether the organisation owner or admin opened the bill.' }),
     ]),
     table(
-      ['Invoice', 'Organisation', 'Period', 'Total', 'Status', 'Viewed', 'Actions'],
+      ['Invoice', 'Organisation', 'Period', 'Total', 'Reference', 'Status', 'Viewed', 'Actions'],
       invoices.map((invoice) => [
         invoice.invoice_number,
         invoice.organisations?.name || '',
         `${invoice.period_start} – ${invoice.period_end}`,
         randLabel(invoice.total_cents),
+        invoice.payment_reference || invoice.invoice_number,
         (() => {
           const node = selectInput(INVOICE_STATUS_OPTIONS, invoice.status);
           node.addEventListener('change', async () => {
@@ -1191,6 +1252,31 @@ async function billing() {
                 return;
               }
             }
+            if (next === 'PAID') {
+              node.value = invoice.status;
+              openForm({
+                title: `Record payment · ${invoice.invoice_number}`,
+                submitLabel: 'Mark as paid',
+                fields: [
+                  {
+                    name: 'receivedReference',
+                    label: 'Bank / statement reference',
+                    value: invoice.received_reference || invoice.payment_reference || invoice.invoice_number,
+                  },
+                ],
+                onSubmit: async (values) => {
+                  await api('admin', 'billing-set-status', {
+                    body: {
+                      invoiceId: invoice.id,
+                      status: 'PAID',
+                      receivedReference: values.receivedReference.trim() || null,
+                    },
+                  });
+                  toast(`${invoice.invoice_number} is paid`);
+                },
+              });
+              return;
+            }
             try {
               await api('admin', 'billing-set-status', { body: { invoiceId: invoice.id, status: next } });
               toast(`${invoice.invoice_number} is ${invoiceStatusLabel(next).toLowerCase()}`);
@@ -1204,6 +1290,28 @@ async function billing() {
         })(),
         viewedLabel(invoice),
         actions([
+          smBtn('Reference', () => {
+            openForm({
+              title: `Payment reference · ${invoice.invoice_number}`,
+              fields: [
+                {
+                  name: 'paymentReference',
+                  label: 'Payment reference',
+                  value: invoice.payment_reference || invoice.invoice_number,
+                },
+              ],
+              onSubmit: async (values) => {
+                await api('admin', 'billing-set-status', {
+                  body: {
+                    invoiceId: invoice.id,
+                    status: invoice.status,
+                    paymentReference: values.paymentReference.trim(),
+                  },
+                });
+                toast('Payment reference saved');
+              },
+            });
+          }),
           smBtn('PDF', async () => {
             try {
               await downloadInvoicePdf('admin', invoice.id);
