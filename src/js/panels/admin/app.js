@@ -103,6 +103,11 @@ function openForm({ title, fields, submitLabel = 'Save', onSubmit }) {
     inputs[item.name] = input;
     return field(item.label, input);
   });
+  fields.forEach((item) => {
+    if (typeof item.onChange === 'function') {
+      inputs[item.name].addEventListener('change', () => item.onChange(inputs[item.name], inputs));
+    }
+  });
   const modal = Modal({
     title,
     onClose: () => modal.remove(),
@@ -178,7 +183,11 @@ async function dashboard() {
 }
 
 async function organisations() {
-  const data = await api('admin', 'list-organisations', { body: {} });
+  const [data, rateData] = await Promise.all([
+    api('admin', 'list-organisations', { body: {} }),
+    api('admin', 'billing-plans', { body: {} }).catch(() => ({ plans: {} })),
+  ]);
+  const plans = rateData.plans || {};
   const name = textInput('Organisation name');
   const ownerName = textInput('Owner name');
   const ownerEmail = textInput('Owner email', 'email');
@@ -186,11 +195,21 @@ async function organisations() {
   const ownerConfirm = textInput('Confirm password', 'password');
   const billingType = selectInput(
     [
-      { value: 'PRIVATE', label: 'Private — R45 per candidate / month, floor R450' },
-      { value: 'NGO', label: 'NGO — R15 per candidate / month, floor R150' },
+      { value: 'PRIVATE', label: planOptionLabel('PRIVATE', plans) },
+      { value: 'NGO', label: planOptionLabel('NGO', plans) },
     ],
     'PRIVATE',
   );
+  const unitRate = textInput('Unit rate in rand');
+  const floorRate = textInput('Monthly floor in rand');
+  function fillCreateRates() {
+    const plan = plans[billingType.value] || plans.PRIVATE;
+    if (!plan) return;
+    unitRate.value = randInputValue(plan.unitCents);
+    floorRate.value = randInputValue(plan.floorCents);
+  }
+  fillCreateRates();
+  billingType.addEventListener('change', fillCreateRates);
   return el('div', { class: 'grid' }, [
     el('div', { class: 'card', style: 'padding:1rem' }, [
       el('h2', { text: 'Create organisation account' }),
@@ -201,6 +220,8 @@ async function organisations() {
       field('Owner password', ownerPassword),
       field('Confirm password', ownerConfirm),
       field('Billing plan', billingType),
+      field('Rate per active candidate (R)', unitRate),
+      field('Monthly floor (R)', floorRate),
       el('button', {
         class: 'btn btn-primary',
         onClick: async () => {
@@ -218,6 +239,8 @@ async function organisations() {
                 ownerName: ownerName.value.trim(),
                 ownerPassword: ownerPassword.value,
                 billingType: billingType.value,
+                billingUnitCents: centsFromRand(unitRate.value, 'Unit rate'),
+                billingFloorCents: centsFromRand(floorRate.value, 'Monthly floor'),
               },
             });
             toast('Organisation account created. The owner can sign in now.');
@@ -229,9 +252,10 @@ async function organisations() {
       }, ['Create organisation']),
     ]),
     table(
-      ['Name', 'Status', 'Timezone', 'Actions'],
+      ['Name', 'Plan', 'Status', 'Timezone', 'Actions'],
       (data.organisations || []).map((o) => [
         o.name,
+        o.billing_type === 'NGO' ? 'NGO' : 'Private',
         o.status,
         o.timezone,
         actions([
@@ -261,6 +285,31 @@ async function organisations() {
                     { value: 'true', label: 'On' },
                   ],
                 },
+                {
+                  name: 'billingType',
+                  label: 'Billing plan',
+                  value: o.billing_type || 'PRIVATE',
+                  options: [
+                    { value: 'NGO', label: planOptionLabel('NGO', plans) },
+                    { value: 'PRIVATE', label: planOptionLabel('PRIVATE', plans) },
+                  ],
+                  onChange: (_input, inputs) => {
+                    const plan = plans[inputs.billingType.value];
+                    if (!plan) return;
+                    inputs.billingUnitRate.value = randInputValue(plan.unitCents);
+                    inputs.billingFloorRate.value = randInputValue(plan.floorCents);
+                  },
+                },
+                {
+                  name: 'billingUnitRate',
+                  label: 'Rate per active candidate (R)',
+                  value: randInputValue(o.billing_unit_cents),
+                },
+                {
+                  name: 'billingFloorRate',
+                  label: 'Monthly floor (R)',
+                  value: randInputValue(o.billing_floor_cents),
+                },
               ],
               onSubmit: async (values) => {
                 if (!values.name.trim()) throw new Error('Name is required');
@@ -273,6 +322,9 @@ async function organisations() {
                     registrationNumber: values.registrationNumber.trim() || undefined,
                     status: values.status,
                     legalHold: values.legalHold === 'true',
+                    billingType: values.billingType,
+                    billingUnitCents: centsFromRand(values.billingUnitRate, 'Unit rate'),
+                    billingFloorCents: centsFromRand(values.billingFloorRate, 'Monthly floor'),
                   },
                 });
                 toast('Organisation updated');
@@ -828,6 +880,24 @@ function randLabel(cents) {
   return `R${((Number(cents) || 0) / 100).toFixed(2)}`;
 }
 
+function randInputValue(cents) {
+  return ((Number(cents) || 0) / 100).toFixed(2);
+}
+
+function centsFromRand(value, label) {
+  const cleaned = String(value || '').trim().replace(/^[Rr]/, '').replace(/\s/g, '').replace(/,/g, '');
+  const n = Number(cleaned);
+  if (!Number.isFinite(n) || n < 0) throw new Error(`${label} must be a rand amount`);
+  return Math.round(n * 100);
+}
+
+function planOptionLabel(type, plans) {
+  const plan = plans?.[type];
+  const name = type === 'NGO' ? 'NGO' : 'Private';
+  if (!plan) return name;
+  return `${name} — ${plan.unitLabel} per candidate, floor ${plan.floorLabel}`;
+}
+
 const INVOICE_STATUS_OPTIONS = [
   { value: 'PENDING', label: 'Pending' },
   { value: 'UNPAID', label: 'Unpaid' },
@@ -861,6 +931,9 @@ async function billing() {
   ]);
   const quotes = overview.organisations || [];
   const invoices = journal.invoices || [];
+  const plans = overview.plans || {};
+  const ngo = plans.NGO || {};
+  const priv = plans.PRIVATE || {};
   const dueCents = quotes.reduce((sum, row) => sum + Number(row.quote?.totalCents || 0), 0);
   const unpaidCount = invoices.filter((invoice) => invoice.status === 'UNPAID' || invoice.status === 'OVERDUE').length;
   const unviewedCount = invoices.filter((invoice) => !invoice.org_viewed && invoice.status !== 'VOID').length;
@@ -874,6 +947,14 @@ async function billing() {
       refreshPanel();
     },
   });
+  const ngoUnit = textInput('NGO unit rate');
+  const ngoFloor = textInput('NGO floor');
+  const privateUnit = textInput('Private unit rate');
+  const privateFloor = textInput('Private floor');
+  ngoUnit.value = randInputValue(ngo.unitCents ?? 1500);
+  ngoFloor.value = randInputValue(ngo.floorCents ?? 15000);
+  privateUnit.value = randInputValue(priv.unitCents ?? 4500);
+  privateFloor.value = randInputValue(priv.floorCents ?? 45000);
 
   function editBilling(row) {
     const org = row.organisation;
@@ -885,9 +966,25 @@ async function billing() {
           label: 'Plan',
           value: org.billing_type || 'PRIVATE',
           options: [
-            { value: 'NGO', label: 'NGO — R15 per candidate, floor R150' },
-            { value: 'PRIVATE', label: 'Private — R45 per candidate, floor R450' },
+            { value: 'NGO', label: planOptionLabel('NGO', plans) },
+            { value: 'PRIVATE', label: planOptionLabel('PRIVATE', plans) },
           ],
+          onChange: (_input, inputs) => {
+            const plan = plans[inputs.billingType.value];
+            if (!plan) return;
+            inputs.billingUnitRate.value = randInputValue(plan.unitCents);
+            inputs.billingFloorRate.value = randInputValue(plan.floorCents);
+          },
+        },
+        {
+          name: 'billingUnitRate',
+          label: 'Rate per active candidate (R)',
+          value: randInputValue(org.billing_unit_cents ?? row.quote?.unitCents),
+        },
+        {
+          name: 'billingFloorRate',
+          label: 'Monthly floor (R)',
+          value: randInputValue(org.billing_floor_cents ?? row.quote?.floorCents),
         },
         {
           name: 'billingVisibleToOrg',
@@ -909,6 +1006,8 @@ async function billing() {
             organisationId: org.id,
             billingType: values.billingType,
             billingVisibleToOrg: values.billingVisibleToOrg === 'true',
+            billingUnitCents: centsFromRand(values.billingUnitRate, 'Unit rate'),
+            billingFloorCents: centsFromRand(values.billingFloorRate, 'Monthly floor'),
             npoNumber: values.npoNumber.trim() || null,
             vatNumber: values.vatNumber.trim() || null,
             billingEmail: values.billingEmail.trim() || null,
@@ -946,10 +1045,37 @@ async function billing() {
       StatCard('Invoices on file', invoices.length),
     ]),
     el('div', { class: 'card', style: 'padding:1rem' }, [
+      el('h2', { text: 'Default plan rates' }),
+      el('p', {
+        class: 'muted',
+        text: 'These amounts apply when you create an organisation or switch its plan. You can still set a different rate on each organisation. VAT stays 15%. Floor is not charged when no candidates were active.',
+      }),
+      field('NGO rate per active candidate (R)', ngoUnit),
+      field('NGO monthly floor (R)', ngoFloor),
+      field('Private rate per active candidate (R)', privateUnit),
+      field('Private monthly floor (R)', privateFloor),
+      smBtn('Save default rates', async () => {
+        try {
+          await api('admin', 'billing-set-plans', {
+            body: {
+              ngoUnitCents: centsFromRand(ngoUnit.value, 'NGO unit rate'),
+              ngoFloorCents: centsFromRand(ngoFloor.value, 'NGO floor'),
+              privateUnitCents: centsFromRand(privateUnit.value, 'Private unit rate'),
+              privateFloorCents: centsFromRand(privateFloor.value, 'Private floor'),
+            },
+          });
+          toast('Default rates saved');
+          refreshPanel();
+        } catch (e) {
+          toast(e.message, 'err');
+        }
+      }, 'btn-primary'),
+    ]),
+    el('div', { class: 'card', style: 'padding:1rem' }, [
       el('h2', { text: 'Subscription billing' }),
       el('p', {
         class: 'muted',
-        text: 'NGO R15 per active candidate (floor R150). Private R45 per active candidate (floor R450). VAT 15%. Floor is not charged when no candidates were active. The organisation owner always sees this bill. You choose whether the organisation admin sees it too.',
+        text: 'The organisation owner always sees this bill. You choose whether the organisation admin sees it too. Change plan type and rates on each organisation with Settings.',
       }),
       field('Month', monthInput),
       actions([
@@ -985,10 +1111,11 @@ async function billing() {
       ]),
     ]),
     table(
-      ['Organisation', 'Plan', 'Active', 'Subtotal', 'VAT', 'Total', 'Admin can see', 'Actions'],
+      ['Organisation', 'Plan', 'Rate', 'Active', 'Subtotal', 'VAT', 'Total', 'Admin can see', 'Actions'],
       quotes.map((row) => [
         row.organisation.name,
         row.organisation.billing_type === 'NGO' ? 'NGO' : 'Private',
+        `${row.quote.unitLabel} / floor ${row.quote.floorLabel}`,
         String(row.activeCandidates),
         row.quote.subtotalLabel,
         row.quote.vatLabel,

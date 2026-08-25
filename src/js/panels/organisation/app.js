@@ -683,7 +683,7 @@ async function billing() {
     el('div', { class: 'card', style: 'padding:1rem' }, [
       el('h2', { text: 'This month' }),
       el('p', {
-        text: `${preview.period?.label || ''} · ${org.billing_type === 'NGO' ? 'NGO' : 'Private'} plan`,
+        text: `${preview.period?.label || ''} · ${org.billing_type === 'NGO' ? 'NGO' : 'Private'} plan · ${quote.unitLabel} per candidate`,
       }),
       el('p', { text: `${preview.activeCandidates || 0} active candidate${preview.activeCandidates === 1 ? '' : 's'}` }),
       quote.floorApplied
