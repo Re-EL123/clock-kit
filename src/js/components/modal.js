@@ -14,3 +14,11 @@ export function Modal({ title, children = [], onClose, dismissible = true, wide 
     ]),
   ]);
 }
+
+export function dismissModal(node) {
+  if (!node) return;
+  const target = node.classList?.contains('modal-backdrop')
+    ? node
+    : node.closest?.('.modal-backdrop');
+  target?.remove();
+}

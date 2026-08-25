@@ -1,6 +1,7 @@
 import { el, toast } from '../utils/dom.js';
 import { api, persistUser, currentUser } from '../api.js';
 import { nationalitySelect } from '../nationalities.js';
+import { dismissModal } from './modal.js';
 
 export function AccountForm({ user, candidate = null, showIdentity = false }) {
   const name = el('input', { class: 'input', value: user.displayName || user.display_name || '' });
@@ -35,6 +36,7 @@ export function AccountForm({ user, candidate = null, showIdentity = false }) {
           const data = await api('auth', 'update-profile', { body });
           if (data.user) persistUser({ ...currentUser(), ...data.user });
           toast('Details saved');
+          dismissModal(error);
           window.dispatchEvent(new Event('ck:profile-saved'));
         } catch (err) {
           error.textContent = err.message;

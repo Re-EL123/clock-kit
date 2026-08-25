@@ -2,6 +2,7 @@ import { el, toast } from '../utils/dom.js';
 import { AddressPicker } from './address-picker.js';
 import { fieldError, clearFieldError, requireValue, shake } from '../forms.js';
 import { isCoords } from '../geocode.js';
+import { dismissModal } from './modal.js';
 
 function field(label, input) {
   return el('div', { class: 'field' }, [el('span', { text: label }), input]);
@@ -90,6 +91,7 @@ export function SiteForm({ hosts = [], site = null, submitLabel = 'Save site', o
           geofenceMode: mode.value,
           geofenceRadiusM: radiusM,
         });
+        dismissModal(form);
       } catch (e) {
         err.textContent = e.message;
         toast(e.message, 'err');

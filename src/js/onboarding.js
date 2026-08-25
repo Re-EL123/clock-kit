@@ -1,6 +1,6 @@
 import { el, toast } from './utils/dom.js';
 import { api, persistUser, currentUser } from './api.js';
-import { Modal } from './components/modal.js';
+import { Modal, dismissModal } from './components/modal.js';
 import { AccountForm } from './components/account-form.js';
 import { startTour } from './tour.js';
 import { withBase } from './config.js';
@@ -73,17 +73,20 @@ function showLegalModal(checklist) {
           el('button', {
             class: 'btn btn-primary',
             type: 'button',
-            onClick: async () => {
+            onClick: async (ev) => {
+              const btn = ev.currentTarget;
               if (!agree.checked) {
                 err.textContent = 'Tick the box to confirm you have read both documents.';
                 return;
               }
+              btn.disabled = true;
               try {
                 const data = await api('auth', 'accept-legal', { body: {} });
                 if (data.user) persistUser({ ...currentUser(), ...data.user });
-                node.remove();
+                dismissModal(node);
                 resolve(true);
               } catch (e) {
+                btn.disabled = false;
                 err.textContent = e.message;
                 toast(e.message, 'err');
               }
@@ -214,16 +217,19 @@ export async function startOnboarding({ user, items }) {
     }
   }
 
-  const replay = () => startTour({ user: nextUser, items, onDone: () => refreshChecklist({ popup: true }) });
+  const replay = () => startTour({ user: nextUser, items, onDone: () => refreshChecklist({ popup: false }) });
   window.addEventListener('ck:tour', replay);
-  window.addEventListener('ck:profile-saved', () => refreshChecklist({ popup: false }));
+  window.addEventListener('ck:profile-saved', () => {
+    document.querySelector('.ck-reminder-modal')?.remove();
+    refreshChecklist({ popup: false });
+  });
   schedulePeriodic(nextUser);
 
   if (!checklist.onboardingCompleted) {
     startTour({
       user: nextUser,
       items,
-      onDone: () => refreshChecklist({ popup: true }),
+      onDone: () => refreshChecklist({ popup: false }),
     });
     return;
   }

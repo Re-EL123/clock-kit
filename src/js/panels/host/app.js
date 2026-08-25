@@ -61,9 +61,10 @@ function openReviewModal(session, { title, decision, requireComment, includeTime
       includeTimes ? field('Clock out', clockOut) : null,
       field(requireComment ? 'Reason' : 'Note', comment),
       el('div', { class: 'modal-actions' }, [
-        el('button', { class: 'btn', onClick: () => node.remove() }, ['Cancel']),
+        el('button', { class: 'btn', type: 'button', onClick: () => node.remove() }, ['Cancel']),
         el('button', {
           class: 'btn btn-primary',
+          type: 'button',
           onClick: async () => {
             try {
               const body = { comment: comment.value.trim() };
