@@ -1,0 +1,48 @@
+.chart-card {
+  padding: 1rem 1.1rem 0.9rem;
+  min-width: 0;
+}
+
+.chart-card h3 {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--ck-navy);
+}
+
+.chart-card > .muted {
+  margin: 0.2rem 0 0.75rem;
+  font-size: 0.8rem;
+}
+
+.chart-wrap {
+  position: relative;
+  height: 240px;
+}
+
+.chart-wrap.is-donut {
+  height: 260px;
+}
+
+.chart-wrap.is-wide {
+  height: 280px;
+}
+
+.chart-card .empty {
+  min-height: 8rem;
+}
+
+.grid-charts {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 720px) {
+  .grid-charts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .chart-wrap,
+  .chart-wrap.is-donut,
+  .chart-wrap.is-wide {
+    height: 220px;
+  }
+}

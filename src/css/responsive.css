@@ -8,7 +8,7 @@
   }
 
   .brand-wordmark {
-    font-size: 1.02rem;
+    width: min(132px, 100%);
   }
 
   .nav-link {
@@ -35,6 +35,13 @@
   .page-body > .grid:has(> .card):has(.table-wrap) {
     grid-template-columns: minmax(240px, 24rem) minmax(0, 1fr);
     align-items: start;
+  }
+}
+
+@media (max-width: 720px) {
+  .grid-charts,
+  .grid.grid-charts {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 

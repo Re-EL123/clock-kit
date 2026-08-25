@@ -5,6 +5,7 @@ import { el, toast, formatTime, downloadBase64, downloadText } from '../../utils
 import { table } from '../../components/sidebar.js';
 import { bootPanel, refreshPanel } from '../../runtime.js';
 import { StatCard } from '../../components/clock-card.js';
+import { hoursTrendChart, leaveStatusChart, reviewChart, todayMixChart, attentionChart, weekComboChart, timesheetCharts } from '../../components/charts.js';
 import { can } from '../../permissions.js';
 import { isEmail, isPassword } from '../../validators.js';
 import { nationalitySelect } from '../../nationalities.js';
@@ -75,6 +76,11 @@ async function dashboard() {
       StatCard('Pending leave', a.pendingLeave, '?view=approvals'),
       StatCard('Absent', t.absent),
     ]),
+    el('div', { class: 'grid grid-2 grid-charts' }, [
+      todayMixChart(t),
+      attentionChart(a),
+    ]),
+    weekComboChart(data.week),
   ]);
 }
 
@@ -454,33 +460,44 @@ async function schedules() {
 
 async function attendance() {
   const data = await api('attendance', 'attendance', { body: {} });
-  return table(
-    ['Date', 'Candidate', 'ID / passport', 'Sponsor', 'Host', 'In', 'Out', 'Host review', 'Reviewed by'],
-    (data.sessions || []).map((s) => [
-      s.clocked_in_at?.slice(0, 10),
-      `${s.candidates?.first_name || ''} ${s.candidates?.last_name || ''}`,
-      s.candidates?.id_number || '—',
-      s.candidates?.sponsor_name || '—',
-      s.hosts?.name || '—',
-      formatTime(s.host_corrected_in_at || s.clocked_in_at),
-      formatTime(s.host_corrected_out_at || s.clocked_out_at),
-      s.host_review_status === 'CONFIRMED' ? 'Confirmed' : s.host_review_status === 'REJECTED' ? 'Rejected' : 'Unreviewed',
-      s.host_reviewer?.display_name || '—',
+  const sessions = data.sessions || [];
+  return el('div', { class: 'grid' }, [
+    el('div', { class: 'grid grid-2 grid-charts' }, [
+      reviewChart(sessions),
+      hoursTrendChart(sessions, { title: 'Recent hours' }),
     ]),
-  );
+    table(
+      ['Date', 'Candidate', 'ID / passport', 'Sponsor', 'Host', 'In', 'Out', 'Host review', 'Reviewed by'],
+      sessions.map((s) => [
+        s.clocked_in_at?.slice(0, 10),
+        `${s.candidates?.first_name || ''} ${s.candidates?.last_name || ''}`,
+        s.candidates?.id_number || '—',
+        s.candidates?.sponsor_name || '—',
+        s.hosts?.name || '—',
+        formatTime(s.host_corrected_in_at || s.clocked_in_at),
+        formatTime(s.host_corrected_out_at || s.clocked_out_at),
+        s.host_review_status === 'CONFIRMED' ? 'Confirmed' : s.host_review_status === 'REJECTED' ? 'Rejected' : 'Unreviewed',
+        s.host_reviewer?.display_name || '—',
+      ]),
+    ),
+  ]);
 }
 
 async function leaveView() {
   const data = await api('leave', 'list', { body: {} });
-  return table(
-    ['Candidate', 'Dates', 'Hours', 'Status'],
-    (data.requests || []).map((r) => [
-      `${r.candidates?.first_name || ''} ${r.candidates?.last_name || ''}`,
-      `${r.start_date} → ${r.end_date}`,
-      String(r.hours),
-      r.status,
-    ]),
-  );
+  const requests = data.requests || [];
+  return el('div', { class: 'grid' }, [
+    leaveStatusChart(requests),
+    table(
+      ['Candidate', 'Dates', 'Hours', 'Status'],
+      requests.map((r) => [
+        `${r.candidates?.first_name || ''} ${r.candidates?.last_name || ''}`,
+        `${r.start_date} → ${r.end_date}`,
+        String(r.hours),
+        r.status,
+      ]),
+    ),
+  ]);
 }
 
 function reviewButtons(canAct, onApprove, onReject) {
@@ -583,6 +600,20 @@ async function reports() {
     };
   }
 
+  const preview = el('div', { class: 'grid' });
+  async function renderPreview() {
+    try {
+      const data = await api('attendance', 'timesheet', { body: payload() });
+      preview.replaceChildren(timesheetCharts(data));
+    } catch (err) {
+      preview.replaceChildren(el('p', { class: 'muted', text: err.message || 'Charts will appear when this period has attendance.' }));
+    }
+  }
+  period.addEventListener('change', renderPreview);
+  date.addEventListener('change', renderPreview);
+  candidate.addEventListener('change', renderPreview);
+  renderPreview();
+
   return el('div', { class: 'grid' }, [
     el('div', { class: 'card', style: 'padding:1rem' }, [
       el('h2', { text: 'Timesheets' }),
@@ -620,6 +651,7 @@ async function reports() {
         }, ['Download CSV']),
       ]),
     ]),
+    preview,
   ]);
 }
 

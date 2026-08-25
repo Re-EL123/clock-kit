@@ -5,6 +5,7 @@ import { el, formatTime, toast, toDateTimeLocal } from '../../utils/dom.js';
 import { table } from '../../components/sidebar.js';
 import { bootPanel, refreshPanel } from '../../runtime.js';
 import { StatCard } from '../../components/clock-card.js';
+import { todayMixChart, weekComboChart, reviewChart } from '../../components/charts.js';
 import { Modal } from '../../components/modal.js';
 import { AccountForm } from '../../components/account-form.js';
 import { AlertsPanel } from '../../components/alerts-panel.js';
@@ -92,11 +93,18 @@ function openReviewModal(session, { title, decision, requireComment, includeTime
 async function dashboard() {
   const data = await api('host', 'dashboard', { body: {} });
   const t = data.today || {};
-  return el('div', { class: 'grid grid-4' }, [
-    StatCard('Scheduled', t.scheduled),
-    StatCard('Present', data.presentNow ?? t.present),
-    StatCard('On break', t.onBreak),
-    StatCard('On leave', t.onLeave),
+  return el('div', { class: 'grid' }, [
+    el('div', { class: 'grid grid-4' }, [
+      StatCard('Scheduled', t.scheduled),
+      StatCard('Present', data.presentNow ?? t.present),
+      StatCard('On break', t.onBreak),
+      StatCard('On leave', t.onLeave),
+    ]),
+    el('div', { class: 'grid grid-2 grid-charts' }, [
+      todayMixChart(t, { presentNow: data.presentNow }),
+      reviewChart(data.sessions || [], { title: 'Today’s reviews' }),
+    ]),
+    weekComboChart(data.week, { subtitle: 'Hours and clock-ins at this workplace' }),
   ]);
 }
 
@@ -117,11 +125,13 @@ async function candidates() {
 
 async function attendance() {
   const data = await api('host', 'attendance', { body: {} });
+  const sessions = data.sessions || [];
   return el('div', { class: 'grid' }, [
     el('p', {
       class: 'muted',
       text: 'Confirm or reject each student’s attendance. If you confirmed the wrong day, change it. Use Correct times when the clock times are wrong.',
     }),
+    reviewChart(sessions),
     table(
       ['Candidate', 'ID / passport', 'Sponsor', 'In', 'Out', 'Review', 'By', 'Actions'],
       (data.sessions || []).map((s) => [

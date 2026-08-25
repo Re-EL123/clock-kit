@@ -5,6 +5,7 @@ import { el, formatTime, toast } from '../../utils/dom.js';
 import { table } from '../../components/sidebar.js';
 import { bootPanel, refreshPanel } from '../../runtime.js';
 import { StatCard } from '../../components/clock-card.js';
+import { ChartCard, weekComboChart, doughnutFromCounts, countBy } from '../../components/charts.js';
 import { Modal } from '../../components/modal.js';
 import { ConfirmationSheet } from '../../components/confirmation-sheet.js';
 import { isEmail, isPassword } from '../../validators.js';
@@ -131,11 +132,47 @@ function openForm({ title, fields, submitLabel = 'Save', onSubmit }) {
 
 async function dashboard() {
   const stats = await api('admin', 'platform-stats', { body: {} });
-  return el('div', { class: 'grid grid-4' }, [
-    StatCard('Organisations', stats.organisations, '?view=organisations'),
-    StatCard('Active candidates', stats.activeCandidates),
-    StatCard('Hosts', stats.hosts, '?view=hosts'),
-    StatCard('Clocked in today', stats.clockedInToday),
+  const roleLabels = {
+    CANDIDATE: 'Candidates',
+    HOST: 'Hosts',
+    ORG_OWNER: 'Owners',
+    ORG_ADMIN: 'Admins',
+    ORG_MANAGER: 'Managers',
+    ORG_VIEWER: 'Viewers',
+    PLATFORM_ADMIN: 'Platform',
+  };
+  const roles = stats.roles || {};
+  const roleKeys = Object.keys(roleLabels).filter((key) => Number(roles[key]) > 0);
+  return el('div', { class: 'grid' }, [
+    el('div', { class: 'grid grid-4' }, [
+      StatCard('Organisations', stats.organisations, '?view=organisations'),
+      StatCard('Active candidates', stats.activeCandidates),
+      StatCard('Hosts', stats.hosts, '?view=hosts'),
+      StatCard('Clocked in today', stats.clockedInToday),
+    ]),
+    el('div', { class: 'grid grid-2 grid-charts' }, [
+      ChartCard({
+        title: 'People on the platform',
+        subtitle: 'Active organisations, hosts, and candidates',
+        type: 'doughnut',
+        ...doughnutFromCounts({
+          Organisations: stats.organisations,
+          Hosts: stats.hosts,
+          Candidates: stats.activeCandidates,
+          'Clocked in': stats.clockedInToday,
+        }),
+        colors: ['#21396a', '#f5bf48', '#3b424f', '#ba133a'],
+      }),
+      ChartCard({
+        title: 'Accounts by role',
+        subtitle: 'Who can sign in',
+        type: 'polarArea',
+        labels: roleKeys.map((key) => roleLabels[key]),
+        values: roleKeys.map((key) => Number(roles[key] || 0)),
+        empty: 'No user accounts yet.',
+      }),
+    ]),
+    weekComboChart(stats.week, { title: 'Platform clock-ins', subtitle: 'Hours and clock-ins across every organisation' }),
   ]);
 }
 
@@ -625,10 +662,21 @@ async function assignments() {
 
 async function security() {
   const data = await api('admin', 'security-events', { body: {} });
-  return table(
-    ['When', 'Action', 'Entity'],
-    (data.events || []).map((e) => [formatTime(e.created_at), e.action, e.entity_type]),
-  );
+  const events = data.events || [];
+  const byAction = countBy(events, (row) => row.action || row.entity_type || 'Event');
+  return el('div', { class: 'grid' }, [
+    ChartCard({
+      title: 'Recent security events',
+      subtitle: 'What has been happening on the platform',
+      type: 'doughnut',
+      ...doughnutFromCounts(byAction),
+      empty: 'No security events yet.',
+    }),
+    table(
+      ['When', 'Action', 'Entity'],
+      events.map((e) => [formatTime(e.created_at), e.action, e.entity_type]),
+    ),
+  ]);
 }
 
 async function health() {

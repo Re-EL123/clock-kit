@@ -5,6 +5,7 @@ import { el, formatTime, liveText, nowClock, toast } from '../../utils/dom.js';
 import { table } from '../../components/sidebar.js';
 import { bootPanel, refreshPanel } from '../../runtime.js';
 import { ClockFace, StatusChip } from '../../components/clock-card.js';
+import { hoursTrendChart, reviewChart, leaveBalanceChart, leaveStatusChart } from '../../components/charts.js';
 import { icon } from '../../icons.js';
 import { captureLocation } from '../../geolocation.js';
 import { flushQueue, pendingCount, queueClock } from '../../offline.js';
@@ -150,21 +151,28 @@ async function home(user) {
 
 async function attendance() {
   const data = await api('attendance', 'attendance', { body: {} });
-  return table(
-    ['When', 'Host', 'Site', 'In', 'Out', 'Host review'],
-    (data.sessions || []).map((s) => [
-      s.clocked_in_at?.slice(0, 10),
-      s.hosts?.name || '—',
-      s.sites?.name || '',
-      formatTime(s.host_corrected_in_at || s.clocked_in_at),
-      formatTime(s.host_corrected_out_at || s.clocked_out_at),
-      s.host_review_status === 'CONFIRMED'
-        ? `Confirmed${s.host_reviewer?.display_name ? ` by ${s.host_reviewer.display_name}` : ''}`
-        : s.host_review_status === 'REJECTED'
-          ? `Rejected${s.host_reviewer?.display_name ? ` by ${s.host_reviewer.display_name}` : ''}`
-          : 'Unreviewed',
+  const sessions = data.sessions || [];
+  return el('div', { class: 'grid' }, [
+    el('div', { class: 'grid grid-2 grid-charts' }, [
+      reviewChart(sessions, { title: 'Your host reviews' }),
+      hoursTrendChart(sessions, { title: 'Your hours' }),
     ]),
-  );
+    table(
+      ['When', 'Host', 'Site', 'In', 'Out', 'Host review'],
+      sessions.map((s) => [
+        s.clocked_in_at?.slice(0, 10),
+        s.hosts?.name || '—',
+        s.sites?.name || '',
+        formatTime(s.host_corrected_in_at || s.clocked_in_at),
+        formatTime(s.host_corrected_out_at || s.clocked_out_at),
+        s.host_review_status === 'CONFIRMED'
+          ? `Confirmed${s.host_reviewer?.display_name ? ` by ${s.host_reviewer.display_name}` : ''}`
+          : s.host_review_status === 'REJECTED'
+            ? `Rejected${s.host_reviewer?.display_name ? ` by ${s.host_reviewer.display_name}` : ''}`
+            : 'Unreviewed',
+      ]),
+    ),
+  ]);
 }
 
 async function leave() {
@@ -212,11 +220,13 @@ async function leave() {
     ]),
     el('div', {}, [
       el('h3', { text: 'Balances' }),
+      leaveBalanceChart(balances.balances || []),
       table(
         ['Type', 'Available'],
         (balances.balances || []).map((b) => [b.leave_types?.name || '', String(b.available_hours)]),
       ),
       el('h3', { class: 'mt', text: 'Requests' }),
+      leaveStatusChart(reqs.requests || []),
       table(
         ['Dates', 'Hours', 'Status'],
         (reqs.requests || []).map((r) => [`${r.start_date} → ${r.end_date}`, String(r.hours), r.status]),
