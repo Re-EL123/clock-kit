@@ -21,6 +21,7 @@ import {
   GuidesLibrary,
   downloadGuide,
 } from '../../components/guides-panel.js';
+import { HelpPanel } from '../../components/help-panel.js';
 
 const NAV = [
   { view: 'dashboard', label: 'Dashboard' },
@@ -35,6 +36,7 @@ const NAV = [
   { view: 'health', label: 'Health' },
   { view: 'legal', label: 'Legal' },
   { view: 'guides', label: 'Guides' },
+  { view: 'help', label: 'Help' },
   { view: 'notifications', label: 'Alerts' },
   { view: 'profile', label: 'Account' },
 ];
@@ -1462,6 +1464,7 @@ await bootPanel({
     health,
     legal,
     guides,
+    help: () => HelpPanel({ fn: 'admin', editable: true, user }),
     billing,
     notifications: AlertsPanel,
     profile: profileView,

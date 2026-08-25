@@ -11,6 +11,7 @@ import { AccountForm } from '../../components/account-form.js';
 import { AlertsPanel } from '../../components/alerts-panel.js';
 import { nationalitySelect } from '../../nationalities.js';
 import { GuidesPanel } from '../../components/guides-panel.js';
+import { HelpPanel } from '../../components/help-panel.js';
 
 const NAV = [
   { view: 'dashboard', label: 'Dashboard' },
@@ -18,6 +19,7 @@ const NAV = [
   { view: 'attendance', label: 'Attendance' },
   { view: 'schedule', label: 'Schedule' },
   { view: 'guides', label: 'Guides' },
+  { view: 'help', label: 'Help' },
   { view: 'notifications', label: 'Alerts' },
   { view: 'profile', label: 'Profile' },
 ];
@@ -286,6 +288,7 @@ await bootPanel({
     attendance,
     schedule,
     guides: () => GuidesPanel({ fn: 'host' }),
+    help: () => HelpPanel({ fn: 'system', user }),
     notifications: AlertsPanel,
     profile: () => AccountForm({ user, showIdentity: false }),
   },

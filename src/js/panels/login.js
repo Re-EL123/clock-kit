@@ -53,6 +53,12 @@ const card = el('div', { class: 'auth-card card' }, [
     submit,
   ]),
   el('p', { class: 'legal-switch' }, [
+    el('a', { href: withBase('faq.html') }, ['FAQs']),
+    ' · ',
+    el('a', { href: withBase('support.html') }, ['Support']),
+    ' · ',
+    el('a', { href: withBase('feedback.html') }, ['Feedback']),
+    ' · ',
     el('a', { href: withBase('terms.html') }, ['Terms']),
     ' · ',
     el('a', { href: withBase('privacy.html') }, ['Privacy']),

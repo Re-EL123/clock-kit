@@ -7,6 +7,7 @@ const STEPS = {
     { view: 'attendance', title: 'Attendance', body: 'Your days, host, and host review status are listed here.' },
     { view: 'leave', title: 'Leave', body: 'Request leave and watch the status until your organisation reviews it.' },
     { view: 'schedule', title: 'Schedule', body: 'See the shifts your organisation published for you.' },
+    { view: 'help', title: 'Help', body: 'FAQs, support contacts, and a form to send feedback to Clock-Kit.' },
     { view: 'profile', title: 'Profile', body: 'Keep your phone, ID or passport, and nationality up to date.' },
   ],
   HOST: [
@@ -14,6 +15,7 @@ const STEPS = {
     { view: 'candidates', title: 'Candidates', body: 'Students placed with you. Edit name, ID, or role if the details are wrong.' },
     { view: 'attendance', title: 'Attendance', body: 'Confirm, reject, or correct each day’s clock times.' },
     { view: 'guides', title: 'Guides', body: 'Download the host SOP and training manual as branded PDFs.' },
+    { view: 'help', title: 'Help', body: 'FAQs, support contacts, and a form to send feedback to Clock-Kit.' },
     { view: 'profile', title: 'Account', body: 'Add a phone number so we can reach you.' },
   ],
   ORG_OWNER: [
@@ -23,6 +25,7 @@ const STEPS = {
     { view: 'approvals', title: 'Approvals', body: 'Leave and correction requests wait here until you decide.' },
     { view: 'reports', title: 'Reports', body: 'Download weekly or monthly timesheet PDFs.' },
     { view: 'guides', title: 'Guides', body: 'Download the branded SOP and training manual PDFs for your role, and for hosts if you are an owner or admin.' },
+    { view: 'help', title: 'Help', body: 'FAQs, support contacts, and a form to send feedback to Clock-Kit.' },
     { view: 'profile', title: 'Account', body: 'Add a phone number so we can reach you.' },
   ],
   PLATFORM_ADMIN: [
@@ -30,6 +33,7 @@ const STEPS = {
     { view: 'organisations', title: 'Organisations', body: 'Create organisations and owner logins. There is no self-signup.' },
     { view: 'legal', title: 'Legal', body: 'Edit Terms and the Privacy Policy. Publishing a new version asks every user to accept it again.' },
     { view: 'guides', title: 'Guides', body: 'Edit the branded SOP and training-manual PDF for each organisation role and for hosts.' },
+    { view: 'help', title: 'Help', body: 'Edit FAQs, support contacts, and the feedback form. Inbox is messages people send.' },
     { view: 'profile', title: 'Account', body: 'Add a phone number so we can reach you.' },
     { view: 'health', title: 'Health', body: 'Check that the API and database are responding.' },
   ],

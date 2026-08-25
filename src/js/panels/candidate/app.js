@@ -16,12 +16,14 @@ import {
 import { flushQueue, pendingCount, queueClock } from '../../offline.js';
 import { AccountForm } from '../../components/account-form.js';
 import { AlertsPanel } from '../../components/alerts-panel.js';
+import { HelpPanel } from '../../components/help-panel.js';
 
 const NAV = [
   { view: 'home', label: 'Home' },
   { view: 'attendance', label: 'Attendance' },
   { view: 'leave', label: 'Leave' },
   { view: 'schedule', label: 'Schedule' },
+  { view: 'help', label: 'Help' },
   { view: 'notifications', label: 'Alerts' },
   { view: 'profile', label: 'Profile' },
 ];
@@ -311,6 +313,7 @@ await bootPanel({
     attendance,
     leave,
     schedule,
+    help: () => HelpPanel({ fn: 'system', user }),
     notifications: AlertsPanel,
     profile,
   },

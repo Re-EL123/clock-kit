@@ -28,6 +28,7 @@ const SECTION_FOR = {
   health: 'System',
   legal: 'System',
   guides: 'System',
+  help: 'System',
   notifications: 'Account',
   alerts: 'Account',
   profile: 'Account',
@@ -173,6 +174,9 @@ function accountCard(user, title) {
 
 function legalLinks() {
   return el('div', { class: 'sidebar-legal' }, [
+    el('a', { href: withBase('faq.html') }, ['FAQs']),
+    el('a', { href: withBase('support.html') }, ['Support']),
+    el('a', { href: withBase('feedback.html') }, ['Feedback']),
     el('a', { href: withBase('terms.html') }, ['Terms']),
     el('a', { href: withBase('privacy.html') }, ['Privacy']),
     el('button', {

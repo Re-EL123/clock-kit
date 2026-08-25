@@ -33,6 +33,9 @@ export async function api(fn, action, { method = 'POST', body, idempotent, idemp
       && !location.pathname.includes('/kiosk')
       && !location.pathname.includes('terms.html')
       && !location.pathname.includes('privacy.html')
+      && !location.pathname.includes('faq.html')
+      && !location.pathname.includes('support.html')
+      && !location.pathname.includes('feedback.html')
     ) {
         location.href = withBase('login.html');
       }

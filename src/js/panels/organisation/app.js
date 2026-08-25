@@ -14,6 +14,7 @@ import { AlertsPanel } from '../../components/alerts-panel.js';
 import { SiteForm } from '../../components/site-form.js';
 import { Modal } from '../../components/modal.js';
 import { GuidesPanel } from '../../components/guides-panel.js';
+import { HelpPanel } from '../../components/help-panel.js';
 
 const NAV = [
   { view: 'dashboard', label: 'Dashboard' },
@@ -31,11 +32,12 @@ const NAV = [
   { view: 'billing', label: 'Billing' },
   { view: 'settings', label: 'Settings' },
   { view: 'guides', label: 'Guides' },
+  { view: 'help', label: 'Help' },
   { view: 'notifications', label: 'Alerts' },
   { view: 'profile', label: 'Account' },
 ];
 
-const MANAGER_VIEWS = ['dashboard', 'candidates', 'assignments', 'attendance', 'leave', 'approvals', 'reports', 'guides', 'notifications', 'profile'];
+const MANAGER_VIEWS = ['dashboard', 'candidates', 'assignments', 'attendance', 'leave', 'approvals', 'reports', 'guides', 'help', 'notifications', 'profile'];
 
 function navFor(role) {
   if (role === 'ORG_MANAGER') return NAV.filter((item) => MANAGER_VIEWS.includes(item.view));
@@ -802,6 +804,7 @@ const allViews = {
   billing,
   settings,
   guides: () => GuidesPanel({ fn: 'organisation' }),
+  help: () => HelpPanel({ fn: 'system', user }),
   notifications: AlertsPanel,
   profile: profileView,
 };

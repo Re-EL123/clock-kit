@@ -127,6 +127,7 @@ export const VIEW_ICONS = {
   profile: 'profile',
   legal: 'file-text',
   guides: 'book',
+  help: 'help',
 };
 
 export function icon(name, { size = 20, className = '', stroke = 2 } = {}) {

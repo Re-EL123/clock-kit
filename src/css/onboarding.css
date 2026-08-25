@@ -211,6 +211,88 @@ button.linkish {
   justify-self: start;
 }
 
+.help-block {
+  padding: 1rem;
+}
+
+.help-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.85rem;
+}
+
+.help-tab {
+  border: 0;
+  background: var(--ck-light);
+  color: var(--ck-navy);
+  font: inherit;
+  font-weight: 700;
+  padding: 0.4rem 0.8rem;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.help-tab.is-active {
+  background: var(--ck-navy);
+  color: #fff;
+}
+
+.faq-group h3 {
+  margin: 0 0 0.5rem;
+  color: var(--ck-navy);
+  font-size: 0.95rem;
+}
+
+.faq-item {
+  margin: 0 0 0.45rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.faq-item summary {
+  cursor: pointer;
+  font-weight: 700;
+  color: var(--ck-navy);
+}
+
+.faq-item p {
+  margin: 0.45rem 0 0;
+}
+
+.help-dl {
+  display: grid;
+  grid-template-columns: 6.5rem 1fr;
+  gap: 0.35rem 0.8rem;
+  margin: 0.8rem 0;
+}
+
+.help-dl dt {
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ck-navy);
+}
+
+.help-dl dd {
+  margin: 0;
+}
+
+.faq-admin-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: flex-start;
+  padding: 0.65rem 0;
+  border-top: 1px solid rgba(33, 57, 106, 0.12);
+}
+
+.faq-admin-row:first-of-type {
+  border-top: 0;
+}
+
 @media (max-width: 860px) {
   .ck-tour-card {
     left: 1rem;
