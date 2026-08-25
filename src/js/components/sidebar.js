@@ -74,6 +74,51 @@ function grouped(items) {
   return { groups, showHeadings: named.size > 1 };
 }
 
+const SIDEBAR_KEY = 'ck_sidebar_collapsed';
+
+function readCollapsed() {
+  try {
+    return localStorage.getItem(SIDEBAR_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function writeCollapsed(collapsed) {
+  try {
+    localStorage.setItem(SIDEBAR_KEY, collapsed ? '1' : '0');
+  } catch {
+    /* ignore */
+  }
+}
+
+function setToggleUi(btn, collapsed) {
+  btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+  btn.setAttribute('aria-label', collapsed ? 'Expand sidebar' : 'Collapse sidebar');
+  btn.title = collapsed ? 'Expand menu' : 'Collapse menu';
+  btn.replaceChildren(icon(collapsed ? 'chevrons-right' : 'chevrons-left', { size: 18 }));
+}
+
+function applyCollapsed(root, collapsed) {
+  root.classList.toggle('is-sidebar-collapsed', collapsed);
+  root.querySelector('.sidebar')?.classList.toggle('is-collapsed', collapsed);
+  const btn = root.querySelector('.sidebar-toggle');
+  if (btn) setToggleUi(btn, collapsed);
+}
+
+function collapseToggle() {
+  const btn = el('button', { class: 'sidebar-toggle', type: 'button' });
+  setToggleUi(btn, readCollapsed());
+  btn.addEventListener('click', () => {
+    const root = btn.closest('.shell');
+    if (!root) return;
+    const next = !root.classList.contains('is-sidebar-collapsed');
+    applyCollapsed(root, next);
+    writeCollapsed(next);
+  });
+  return btn;
+}
+
 function navLink(item, view) {
   const active = item.view === view;
   return el('a', {
@@ -115,10 +160,11 @@ function brandLockup(title, homeView) {
 }
 
 function accountCard(user, title) {
-  return el('div', { class: 'sidebar-user' }, [
+  const name = user.displayName || user.email || 'Signed in';
+  return el('div', { class: 'sidebar-user', title: name }, [
     el('span', { class: 'sidebar-avatar', 'aria-hidden': 'true', text: initials(user) }),
     el('span', { class: 'sidebar-user-meta' }, [
-      el('strong', { text: user.displayName || user.email || 'Signed in' }),
+      el('strong', { text: name }),
       el('span', { class: 'muted', text: ROLE_LABEL[user.role] || title }),
     ]),
   ]);
@@ -137,16 +183,29 @@ function legalLinks() {
 }
 
 function signOutButton() {
-  return el('button', { class: 'btn sign-out', type: 'button', onClick: () => Auth.logout() }, [
+  return el('button', {
+    class: 'btn sign-out',
+    type: 'button',
+    title: 'Sign out',
+    'aria-label': 'Sign out',
+    onClick: () => Auth.logout(),
+  }, [
     icon('log-out', { size: 18 }),
-    'Sign out',
+    el('span', { class: 'sign-out-label', text: 'Sign out' }),
   ]);
 }
 
 export function Sidebar({ title, items, view, user }) {
   const homeView = items[0]?.view || 'dashboard';
-  return el('aside', { class: 'sidebar', 'aria-label': 'Clock-Kit' }, [
-    brandLockup(title, homeView),
+  const collapsed = readCollapsed();
+  return el('aside', {
+    class: `sidebar${collapsed ? ' is-collapsed' : ''}`,
+    'aria-label': 'Clock-Kit',
+  }, [
+    el('div', { class: 'sidebar-head' }, [
+      brandLockup(title, homeView),
+      collapseToggle(),
+    ]),
     el('nav', { class: 'sidebar-nav', 'aria-label': `${title} navigation` }, navGroups(items, view)),
     el('div', { class: 'sidebar-foot' }, [
       el('div', { class: 'pwa-slot' }),
@@ -253,7 +312,7 @@ export function shell({ title, items, view, heading, user, content }) {
     ]),
     liveClock(),
   ]);
-  return el('div', { class: 'shell' }, [
+  return el('div', { class: `shell${readCollapsed() ? ' is-sidebar-collapsed' : ''}` }, [
     Sidebar({ title, items, view, user }),
     el('div', { class: 'shell-main' }, [
       el('main', { class: 'main' }, [topbar, stage]),

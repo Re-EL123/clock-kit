@@ -1,8 +1,14 @@
 .shell {
+  --ck-sidebar: 280px;
   display: grid;
-  grid-template-columns: 280px minmax(0, 1fr);
+  grid-template-columns: var(--ck-sidebar) minmax(0, 1fr);
   min-height: 100vh;
   min-height: 100dvh;
+  transition: grid-template-columns 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.shell.is-sidebar-collapsed {
+  --ck-sidebar: 5.6rem;
 }
 
 .shell-main {
@@ -21,15 +27,46 @@
     linear-gradient(180deg, rgba(33, 57, 106, 0.08), transparent 7.5rem),
     var(--ck-light);
   box-shadow: 8px 0 24px rgba(59, 66, 79, 0.06);
+  z-index: 5;
+}
+
+.sidebar-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.4rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid rgba(33, 57, 106, 0.1);
+}
+
+.sidebar-toggle {
+  width: 36px;
+  height: 36px;
+  margin-top: 0.45rem;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 12px;
+  background: var(--ck-light);
+  box-shadow: var(--shadow-raised);
+  color: var(--ck-navy);
+  cursor: pointer;
+}
+
+.sidebar-toggle:hover,
+.sidebar-toggle:focus-visible {
+  background: rgba(33, 57, 106, 0.08);
+  outline: 0;
 }
 
 .brand {
   display: flex;
   gap: 0.75rem;
   align-items: center;
-  padding: 0.35rem 0.35rem 0.85rem;
+  min-width: 0;
+  padding: 0.35rem 0.35rem 0;
   color: inherit;
-  border-bottom: 1px solid rgba(33, 57, 106, 0.1);
 }
 
 .brand-mark {
@@ -216,6 +253,86 @@
   width: 100%;
   padding: 0.7rem 1rem;
   color: var(--ck-red);
+}
+
+.sidebar.is-collapsed {
+  padding-inline: 0.5rem;
+  overflow-x: visible;
+  overflow-y: auto;
+}
+
+.sidebar.is-collapsed .sidebar-head {
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55rem;
+  padding-bottom: 0.65rem;
+}
+
+.sidebar.is-collapsed .sidebar-toggle {
+  margin-top: 0;
+}
+
+.sidebar.is-collapsed .brand {
+  padding: 0;
+  justify-content: center;
+}
+
+.sidebar.is-collapsed .brand-copy,
+.sidebar.is-collapsed .nav-section-label,
+.sidebar.is-collapsed .sidebar-user-meta,
+.sidebar.is-collapsed .sidebar-legal,
+.sidebar.is-collapsed .pwa-slot,
+.sidebar.is-collapsed .sign-out-label {
+  display: none;
+}
+
+.sidebar.is-collapsed .sidebar-nav {
+  overflow: visible;
+}
+
+.sidebar.is-collapsed .nav-link {
+  justify-content: center;
+  padding: 0.42rem 0.3rem;
+  gap: 0;
+}
+
+.sidebar.is-collapsed .nav-link:hover:not(.active) {
+  transform: none;
+}
+
+.sidebar.is-collapsed .nav-label {
+  position: absolute;
+  left: calc(100% + 0.55rem);
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 40;
+  padding: 0.35rem 0.65rem;
+  border-radius: 10px;
+  background: var(--ck-navy);
+  color: var(--ck-white);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+  white-space: nowrap;
+  box-shadow: var(--shadow-raised);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.sidebar.is-collapsed .nav-link:hover .nav-label,
+.sidebar.is-collapsed .nav-link:focus-visible .nav-label {
+  opacity: 1;
+}
+
+.sidebar.is-collapsed .sidebar-user {
+  justify-content: center;
+  padding: 0.2rem 0;
+}
+
+.sidebar.is-collapsed .btn.sign-out {
+  padding: 0.7rem 0.4rem;
+  justify-content: center;
 }
 
 .install-btn {
