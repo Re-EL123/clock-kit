@@ -22,6 +22,7 @@ const SECTION_FOR = {
   approvals: 'Time',
   reports: 'Records',
   audit: 'Records',
+  billing: 'Records',
   settings: 'Records',
   security: 'System',
   health: 'System',

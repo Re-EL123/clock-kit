@@ -27,6 +27,7 @@ const NAV = [
   { view: 'approvals', label: 'Approvals' },
   { view: 'reports', label: 'Reports' },
   { view: 'audit', label: 'Audit' },
+  { view: 'billing', label: 'Billing' },
   { view: 'settings', label: 'Settings' },
   { view: 'notifications', label: 'Alerts' },
   { view: 'profile', label: 'Account' },
@@ -36,7 +37,7 @@ const MANAGER_VIEWS = ['dashboard', 'candidates', 'assignments', 'attendance', '
 
 function navFor(role) {
   if (role === 'ORG_MANAGER') return NAV.filter((item) => MANAGER_VIEWS.includes(item.view));
-  if (role === 'ORG_VIEWER') return NAV.filter((item) => item.view !== 'audit');
+  if (role === 'ORG_VIEWER') return NAV.filter((item) => item.view !== 'audit' && item.view !== 'billing');
   return NAV;
 }
 
@@ -663,6 +664,61 @@ async function audit() {
   );
 }
 
+async function billing() {
+  const data = await api('organisation', 'billing', { body: {} });
+  if (!data.visible) {
+    return el('div', { class: 'card', style: 'padding:1rem' }, [
+      el('h2', { text: 'Billing' }),
+      el('p', {
+        class: 'muted',
+        text: 'The platform administrator has not shared this organisation’s bill with organisation admins yet.',
+      }),
+    ]);
+  }
+  const preview = data.preview || {};
+  const quote = preview.quote || {};
+  const org = preview.organisation || {};
+  const invoices = data.invoices || [];
+  return el('div', { class: 'grid' }, [
+    el('div', { class: 'card', style: 'padding:1rem' }, [
+      el('h2', { text: 'This month' }),
+      el('p', {
+        text: `${preview.period?.label || ''} · ${org.billing_type === 'NGO' ? 'NGO' : 'Private'} plan`,
+      }),
+      el('p', { text: `${preview.activeCandidates || 0} active candidate${preview.activeCandidates === 1 ? '' : 's'}` }),
+      quote.floorApplied
+        ? el('p', { class: 'muted', text: `Monthly floor applied (${quote.floorLabel})` })
+        : null,
+      el('p', { text: `Subtotal (ex VAT) ${quote.subtotalLabel || 'R0.00'}` }),
+      el('p', { text: `VAT 15% ${quote.vatLabel || 'R0.00'}` }),
+      el('p', { text: `Total ${quote.totalLabel || 'R0.00'}` }),
+    ]),
+    table(
+      ['Invoice', 'Period', 'Candidates', 'Total', 'Status', 'Actions'],
+      invoices.map((invoice) => [
+        invoice.invoice_number,
+        `${invoice.period_start} – ${invoice.period_end}`,
+        String(invoice.billed_candidates),
+        `R${((Number(invoice.total_cents) || 0) / 100).toFixed(2)}`,
+        invoice.status_label || invoice.status,
+        el('button', {
+          class: 'btn',
+          style: 'padding:.45rem .75rem;font-size:.8rem',
+          onClick: async () => {
+            try {
+              const file = await api('organisation', 'billing-invoice-pdf', { body: { invoiceId: invoice.id } });
+              downloadBase64(file.filename || 'invoice.pdf', file.pdfBase64);
+              toast('Invoice downloaded');
+            } catch (e) {
+              toast(e.message, 'err');
+            }
+          },
+        }, ['Download PDF']),
+      ]),
+    ),
+  ]);
+}
+
 async function settings() {
   const data = await api('organisation', 'settings', { body: {} });
   return el('div', { class: 'card', style: 'padding:1rem' }, [
@@ -692,6 +748,7 @@ const allViews = {
   approvals,
   reports,
   audit,
+  billing,
   settings,
   notifications: AlertsPanel,
   profile: profileView,

@@ -18,6 +18,7 @@ const MATRIX = {
   setHostSponsorVisibility: ['PLATFORM_ADMIN'],
   exportAttendance: ['ORG_OWNER', 'ORG_ADMIN', 'ORG_MANAGER'],
   viewAudit: ['PLATFORM_ADMIN', 'ORG_OWNER', 'ORG_ADMIN'],
+  viewBilling: ['PLATFORM_ADMIN', 'ORG_OWNER', 'ORG_ADMIN'],
 };
 
 export function can(role, permission) {

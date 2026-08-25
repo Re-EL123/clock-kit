@@ -1,7 +1,7 @@
 import '../../../css/app.css';
 import { Auth } from '../../auth.js';
 import { api } from '../../api.js';
-import { el, formatTime, toast } from '../../utils/dom.js';
+import { el, formatTime, toast, downloadBase64, href } from '../../utils/dom.js';
 import { table } from '../../components/sidebar.js';
 import { bootPanel, refreshPanel } from '../../runtime.js';
 import { StatCard } from '../../components/clock-card.js';
@@ -18,6 +18,7 @@ import { formatPublished } from '../../legal-format.js';
 const NAV = [
   { view: 'dashboard', label: 'Dashboard' },
   { view: 'organisations', label: 'Organisations' },
+  { view: 'billing', label: 'Billing' },
   { view: 'users', label: 'Users' },
   { view: 'hosts', label: 'Hosts' },
   { view: 'candidates', label: 'Candidates' },
@@ -183,6 +184,13 @@ async function organisations() {
   const ownerEmail = textInput('Owner email', 'email');
   const ownerPassword = textInput('Owner password', 'password');
   const ownerConfirm = textInput('Confirm password', 'password');
+  const billingType = selectInput(
+    [
+      { value: 'PRIVATE', label: 'Private — R45 per candidate / month, floor R450' },
+      { value: 'NGO', label: 'NGO — R15 per candidate / month, floor R150' },
+    ],
+    'PRIVATE',
+  );
   return el('div', { class: 'grid' }, [
     el('div', { class: 'card', style: 'padding:1rem' }, [
       el('h2', { text: 'Create organisation account' }),
@@ -192,6 +200,7 @@ async function organisations() {
       field('Owner email', ownerEmail),
       field('Owner password', ownerPassword),
       field('Confirm password', ownerConfirm),
+      field('Billing plan', billingType),
       el('button', {
         class: 'btn btn-primary',
         onClick: async () => {
@@ -208,6 +217,7 @@ async function organisations() {
                 ownerEmail: ownerEmail.value.trim(),
                 ownerName: ownerName.value.trim(),
                 ownerPassword: ownerPassword.value,
+                billingType: billingType.value,
               },
             });
             toast('Organisation account created. The owner can sign in now.');
@@ -793,6 +803,271 @@ async function legal() {
   ]);
 }
 
+function currentBillingMonth() {
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat('en-ZA', { timeZone: 'Africa/Johannesburg', year: 'numeric', month: '2-digit' })
+      .formatToParts(new Date())
+      .filter((part) => part.type !== 'literal')
+      .map((part) => [part.type, part.value]),
+  );
+  return `${parts.year}-${parts.month}`;
+}
+
+function monthToPeriod(ym) {
+  const [year, month] = String(ym || '').split('-').map(Number);
+  if (!year || !month) return monthToPeriod(currentBillingMonth());
+  const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  const pad = (value) => String(value).padStart(2, '0');
+  return {
+    periodStart: `${year}-${pad(month)}-01`,
+    periodEnd: `${year}-${pad(month)}-${pad(lastDay)}`,
+  };
+}
+
+function randLabel(cents) {
+  return `R${((Number(cents) || 0) / 100).toFixed(2)}`;
+}
+
+const INVOICE_STATUS_OPTIONS = [
+  { value: 'PENDING', label: 'Pending' },
+  { value: 'UNPAID', label: 'Unpaid' },
+  { value: 'PAID', label: 'Paid' },
+  { value: 'OVERDUE', label: 'Overdue' },
+  { value: 'VOID', label: 'Void' },
+];
+
+function invoiceStatusLabel(status) {
+  return INVOICE_STATUS_OPTIONS.find((item) => item.value === status)?.label || status;
+}
+
+function viewedLabel(invoice) {
+  if (!invoice.org_viewed_at) return 'Not viewed';
+  const who = invoice.org_viewed_by_name || invoice.org_viewed_by_role || 'organisation';
+  return `Viewed ${formatTime(invoice.org_viewed_at)} · ${who}`;
+}
+
+async function downloadInvoicePdf(fn, invoiceId) {
+  const data = await api(fn, 'billing-invoice-pdf', { body: { invoiceId } });
+  downloadBase64(data.filename || 'invoice.pdf', data.pdfBase64);
+  toast('Invoice downloaded');
+}
+
+async function billing() {
+  const month = new URLSearchParams(location.search).get('month') || currentBillingMonth();
+  const period = monthToPeriod(month);
+  const [overview, journal] = await Promise.all([
+    api('admin', 'billing-overview', { body: period }),
+    api('admin', 'billing-list', { body: {} }),
+  ]);
+  const quotes = overview.organisations || [];
+  const invoices = journal.invoices || [];
+  const dueCents = quotes.reduce((sum, row) => sum + Number(row.quote?.totalCents || 0), 0);
+  const unpaidCount = invoices.filter((invoice) => invoice.status === 'UNPAID' || invoice.status === 'OVERDUE').length;
+  const unviewedCount = invoices.filter((invoice) => !invoice.org_viewed && invoice.status !== 'VOID').length;
+
+  const monthInput = el('input', {
+    class: 'input',
+    type: 'month',
+    value: month,
+    onChange: () => {
+      history.replaceState({ view: 'billing' }, '', href('billing', { month: monthInput.value }));
+      refreshPanel();
+    },
+  });
+
+  function editBilling(row) {
+    const org = row.organisation;
+    openForm({
+      title: `Billing — ${org.name}`,
+      fields: [
+        {
+          name: 'billingType',
+          label: 'Plan',
+          value: org.billing_type || 'PRIVATE',
+          options: [
+            { value: 'NGO', label: 'NGO — R15 per candidate, floor R150' },
+            { value: 'PRIVATE', label: 'Private — R45 per candidate, floor R450' },
+          ],
+        },
+        {
+          name: 'billingVisibleToOrg',
+          label: 'Organisation admin can see this bill',
+          value: org.billing_visible_to_org ? 'true' : 'false',
+          options: [
+            { value: 'false', label: 'Hidden from organisation admin' },
+            { value: 'true', label: 'Visible to organisation admin' },
+          ],
+        },
+        { name: 'npoNumber', label: 'NPO / PBO number', value: org.npo_number || '' },
+        { name: 'vatNumber', label: 'VAT number', value: org.vat_number || '' },
+        { name: 'billingEmail', label: 'Billing email', type: 'email', value: org.billing_email || '' },
+        { name: 'billingAddress', label: 'Billing address', value: org.billing_address || '' },
+      ],
+      onSubmit: async (values) => {
+        await api('admin', 'billing-set-settings', {
+          body: {
+            organisationId: org.id,
+            billingType: values.billingType,
+            billingVisibleToOrg: values.billingVisibleToOrg === 'true',
+            npoNumber: values.npoNumber.trim() || null,
+            vatNumber: values.vatNumber.trim() || null,
+            billingEmail: values.billingEmail.trim() || null,
+            billingAddress: values.billingAddress.trim() || null,
+          },
+        });
+        toast('Billing settings saved');
+      },
+    });
+  }
+
+  async function issueOne(row) {
+    const ok = await confirmAction(
+      `Issue a tax invoice for ${row.organisation.name} covering ${overview.period.label}?`,
+      { confirmLabel: 'Issue invoice' },
+    );
+    if (!ok) return;
+    try {
+      const data = await api('admin', 'billing-issue', {
+        body: { organisationId: row.organisation.id, ...period },
+        idempotent: true,
+      });
+      toast(data.replayed ? `Already issued as ${data.invoice.invoice_number}` : `Issued ${data.invoice.invoice_number}`);
+      refreshPanel();
+    } catch (e) {
+      toast(e.message, 'err');
+    }
+  }
+
+  return el('div', { class: 'grid' }, [
+    el('div', { class: 'grid grid-4' }, [
+      StatCard('Due this month', randLabel(dueCents)),
+      StatCard('Unpaid', unpaidCount),
+      StatCard('Not viewed', unviewedCount),
+      StatCard('Invoices on file', invoices.length),
+    ]),
+    el('div', { class: 'card', style: 'padding:1rem' }, [
+      el('h2', { text: 'Subscription billing' }),
+      el('p', {
+        class: 'muted',
+        text: 'NGO R15 per active candidate (floor R150). Private R45 per active candidate (floor R450). VAT 15%. Floor is not charged when no candidates were active. The organisation owner always sees this bill. You choose whether the organisation admin sees it too.',
+      }),
+      field('Month', monthInput),
+      actions([
+        smBtn('Download Excel journal', async () => {
+          try {
+            const data = await api('admin', 'billing-journal', { body: {} });
+            downloadBase64(data.filename, data.excelBase64, data.mime || 'application/vnd.ms-excel');
+            toast('Journal downloaded');
+          } catch (e) {
+            toast(e.message, 'err');
+          }
+        }),
+        smBtn('Issue all due invoices', async () => {
+          const due = quotes.filter((row) => Number(row.quote?.totalCents) > 0);
+          const ok = await confirmAction(
+            `Issue invoices for ${due.length} organisation(s) for ${overview.period.label}? Already issued periods are reused.`,
+            { confirmLabel: 'Issue invoices' },
+          );
+          if (!ok) return;
+          try {
+            for (const row of due) {
+              await api('admin', 'billing-issue', {
+                body: { organisationId: row.organisation.id, ...period },
+                idempotent: true,
+              });
+            }
+            toast('Invoices issued');
+            refreshPanel();
+          } catch (e) {
+            toast(e.message, 'err');
+          }
+        }, 'btn-primary'),
+      ]),
+    ]),
+    table(
+      ['Organisation', 'Plan', 'Active', 'Subtotal', 'VAT', 'Total', 'Admin can see', 'Actions'],
+      quotes.map((row) => [
+        row.organisation.name,
+        row.organisation.billing_type === 'NGO' ? 'NGO' : 'Private',
+        String(row.activeCandidates),
+        row.quote.subtotalLabel,
+        row.quote.vatLabel,
+        row.quote.floorApplied ? `${row.quote.totalLabel} (floor)` : row.quote.totalLabel,
+        row.organisation.billing_visible_to_org ? 'Yes' : 'No',
+        actions([
+          smBtn('Settings', () => editBilling(row)),
+          smBtn(row.organisation.billing_visible_to_org ? 'Hide from admin' : 'Show to admin', async () => {
+            try {
+              await api('admin', 'billing-set-settings', {
+                body: {
+                  organisationId: row.organisation.id,
+                  billingVisibleToOrg: !row.organisation.billing_visible_to_org,
+                },
+              });
+              toast(row.organisation.billing_visible_to_org
+                ? 'Bill hidden from the organisation admin'
+                : 'Organisation admin can now see this bill');
+              refreshPanel();
+            } catch (e) {
+              toast(e.message, 'err');
+            }
+          }),
+          smBtn('Issue invoice', () => issueOne(row)),
+        ]),
+      ]),
+    ),
+    el('div', { class: 'card', style: 'padding:1rem' }, [
+      el('h2', { text: 'Invoice journal' }),
+      el('p', { class: 'muted', text: 'Every invoice. Change payment status with the dropdown. Viewed shows whether the organisation owner or admin opened the bill.' }),
+    ]),
+    table(
+      ['Invoice', 'Organisation', 'Period', 'Total', 'Status', 'Viewed', 'Actions'],
+      invoices.map((invoice) => [
+        invoice.invoice_number,
+        invoice.organisations?.name || '',
+        `${invoice.period_start} – ${invoice.period_end}`,
+        randLabel(invoice.total_cents),
+        (() => {
+          const node = selectInput(INVOICE_STATUS_OPTIONS, invoice.status);
+          node.addEventListener('change', async () => {
+            const next = node.value;
+            if (next === invoice.status) return;
+            if (next === 'VOID') {
+              const ok = await confirmAction(
+                `Void ${invoice.invoice_number}? You can issue a replacement for that period.`,
+                { danger: true, confirmLabel: 'Void' },
+              );
+              if (!ok) {
+                node.value = invoice.status;
+                return;
+              }
+            }
+            try {
+              await api('admin', 'billing-set-status', { body: { invoiceId: invoice.id, status: next } });
+              toast(`${invoice.invoice_number} is ${invoiceStatusLabel(next).toLowerCase()}`);
+              refreshPanel();
+            } catch (e) {
+              node.value = invoice.status;
+              toast(e.message, 'err');
+            }
+          });
+          return node;
+        })(),
+        viewedLabel(invoice),
+        actions([
+          smBtn('PDF', async () => {
+            try {
+              await downloadInvoicePdf('admin', invoice.id);
+            } catch (e) {
+              toast(e.message, 'err');
+            }
+          }),
+        ]),
+      ]),
+    ),
+  ]);
+}
+
 async function profileView() {
   return AccountForm({ user, showIdentity: false });
 }
@@ -814,6 +1089,7 @@ await bootPanel({
     security,
     health,
     legal,
+    billing,
     notifications: AlertsPanel,
     profile: profileView,
   },
