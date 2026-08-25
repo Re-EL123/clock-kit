@@ -55,7 +55,7 @@ async function clock(kind) {
 const result = el('div', { class: 'center' });
 const card = el('div', { class: 'card hero-surface kiosk-card' }, [
   el('div', { class: 'kiosk-brand' }, [
-    el('img', { src: withBase('assets/logo/clock-kit-mark.svg'), alt: 'Clock-Kit', width: '72', height: '72' }),
+    el('img', { src: withBase('assets/logo/clock-kit-icon.svg'), alt: 'Clock-Kit', width: '72', height: '72' }),
     el('h1', { text: 'CLOCK-KIT' }),
     digital,
     el('div', { class: 'clock-wrap is-live' }, [ClockFace()]),

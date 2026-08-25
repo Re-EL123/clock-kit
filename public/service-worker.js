@@ -1,5 +1,5 @@
 const BASE = new URL('./', self.location).pathname;
-const CACHE = 'clock-kit-shell-v7';
+const CACHE = 'clock-kit-shell-v8';
 const PUSH_CACHE = 'clock-kit-push';
 const SHELL = [
   '',
@@ -15,6 +15,9 @@ const SHELL = [
   'splash.css',
   'splash-boot.js',
   'manifest.webmanifest',
+  'assets/logo/clock-kit-icon.svg',
+  'assets/logo/clock-kit-text.svg',
+  'assets/logo/clock-kit-full-logo.svg',
   'assets/logo/clock-kit-mark.svg',
   'assets/logo/clock-kit-light.svg',
   'assets/logo/clock-kit-icon-180.png',

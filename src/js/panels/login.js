@@ -19,9 +19,9 @@ const submit = el('button', { class: 'btn btn-primary', type: 'submit' }, [
 
 const card = el('div', { class: 'auth-card card' }, [
   el('img', {
-    src: withBase('assets/logo/clock-kit-light.svg'),
+    src: withBase('assets/logo/clock-kit-full-logo.svg'),
     alt: 'Clock-Kit',
-    width: '280',
+    width: '220',
   }),
   el('h1', { text: 'Sign in' }),
   el('p', { class: 'muted', text: 'Use the email and password set by your platform admin or organisation. There is no self-signup.' }),

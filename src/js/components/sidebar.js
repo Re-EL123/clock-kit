@@ -100,13 +100,14 @@ function navGroups(items, view) {
 function brandLockup(title, homeView) {
   return el('a', { class: 'brand', href: href(homeView), 'aria-label': 'Clock-Kit home' }, [
     el('span', { class: 'brand-mark' }, [
-      el('img', { src: withBase('assets/logo/clock-kit-mark.svg'), alt: '' }),
+      el('img', { src: withBase('assets/logo/clock-kit-icon.svg'), alt: '' }),
     ]),
     el('span', { class: 'brand-copy' }, [
-      el('strong', { class: 'brand-wordmark' }, [
-        el('span', { class: 'ck-navy', text: 'Clock' }),
-        el('span', { class: 'ck-red', text: '-Kit' }),
-      ]),
+      el('img', {
+        class: 'brand-wordmark',
+        src: withBase('assets/logo/clock-kit-text.svg'),
+        alt: 'Clock-Kit',
+      }),
       el('span', { class: 'brand-role', text: title }),
     ]),
   ]);

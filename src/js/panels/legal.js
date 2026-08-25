@@ -16,7 +16,7 @@ function render({ title, version, publishedAt, sections }) {
   const card = el('div', { class: 'auth-card card legal-card' }, [
     el('a', { href: withBase('login.html'), class: 'muted' }, ['← Sign in']),
     el('img', {
-      src: withBase('assets/logo/clock-kit-light.svg'),
+      src: withBase('assets/logo/clock-kit-full-logo.svg'),
       alt: 'Clock-Kit',
       width: '220',
     }),
