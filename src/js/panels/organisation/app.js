@@ -55,10 +55,21 @@ function requireAccountFields({ email, password, confirm }) {
   if (password !== confirm) throw new Error('Passwords do not match');
 }
 
+function tallyFromCandidates(rows) {
+  const tally = { active: 0, inactive: 0, total: 0 };
+  for (const row of rows || []) {
+    tally.total += 1;
+    if (row.status === 'active') tally.active += 1;
+    else tally.inactive += 1;
+  }
+  return tally;
+}
+
 async function dashboard() {
   const data = await api('organisation', 'dashboard', { body: {} });
   const t = data.today || {};
   const a = data.attention || {};
+  const roster = data.roster || {};
   return el('div', { class: 'grid' }, [
     user.role === 'ORG_MANAGER'
       ? el('p', { class: 'muted', text: 'You only see students assigned to you.' })
@@ -66,16 +77,21 @@ async function dashboard() {
         ? el('p', { class: 'muted', text: 'View only. You cannot create records or approve requests.' })
         : null,
     el('div', { class: 'grid grid-4' }, [
+      StatCard('Candidates', roster.total ?? 0, '?view=candidates'),
+      StatCard('Active', roster.active ?? 0, '?view=candidates'),
+      StatCard('Inactive', roster.inactive ?? 0, '?view=candidates'),
       StatCard('Scheduled', t.scheduled, '?view=attendance'),
+    ]),
+    el('div', { class: 'grid grid-4' }, [
       StatCard('Present', t.present, '?view=attendance'),
       StatCard('On break', t.onBreak),
       StatCard('On leave', t.onLeave, '?view=leave'),
+      StatCard('Absent', t.absent),
     ]),
     el('div', { class: 'grid grid-4' }, [
       StatCard('Missing clock-outs', a.missingClockOuts, '?view=attendance'),
       StatCard('Corrections', a.pendingCorrections, '?view=approvals'),
       StatCard('Pending leave', a.pendingLeave, '?view=approvals'),
-      StatCard('Absent', t.absent),
     ]),
     el('div', { class: 'grid grid-2 grid-charts' }, [
       todayMixChart(t),
@@ -131,6 +147,12 @@ async function candidates() {
     ]);
   }
 
+  const roster = data.roster || tallyFromCandidates(data.candidates);
+  const summary = el('div', { class: 'grid grid-4' }, [
+    StatCard('Candidates', roster.total ?? 0),
+    StatCard('Active', roster.active ?? 0),
+    StatCard('Inactive', roster.inactive ?? 0),
+  ]);
   const list = table(
     ['Ref', 'Name', 'ID / passport', 'Sponsor', 'Nationality', 'Email', 'Manager', 'Status'],
     (data.candidates || []).map((c) => [
@@ -148,16 +170,19 @@ async function candidates() {
   if (user.role === 'ORG_MANAGER') {
     return el('div', { class: 'grid' }, [
       el('p', { class: 'muted', text: 'You only see candidates assigned to you.' }),
+      summary,
       list,
     ]);
   }
   if (!can(user.role, 'createCandidate')) {
     return el('div', { class: 'grid' }, [
       el('p', { class: 'muted', text: 'View only. You cannot create candidates or assign managers.' }),
+      summary,
       list,
     ]);
   }
   return el('div', { class: 'grid' }, [
+    summary,
     el('div', { class: 'card', style: 'padding:1rem' }, [
       el('h2', { text: 'Create candidate account' }),
       el('p', { class: 'muted', text: 'The candidate signs in with this email and password. Assign a manager so they only manage this student.' }),
@@ -679,13 +704,19 @@ async function billing() {
   const quote = preview.quote || {};
   const org = preview.organisation || {};
   const invoices = data.invoices || [];
+  const roster = preview.roster || {};
   return el('div', { class: 'grid' }, [
+    el('div', { class: 'grid grid-4' }, [
+      StatCard('Candidates', roster.total ?? 0, '?view=candidates'),
+      StatCard('Active', roster.active ?? 0, '?view=candidates'),
+      StatCard('Inactive', roster.inactive ?? 0, '?view=candidates'),
+      StatCard('Billed this month', preview.activeCandidates || 0),
+    ]),
     el('div', { class: 'card', style: 'padding:1rem' }, [
       el('h2', { text: 'This month' }),
       el('p', {
         text: `${preview.period?.label || ''} · ${org.billing_type === 'NGO' ? 'NGO' : 'Private'} plan · ${quote.unitLabel} per candidate`,
       }),
-      el('p', { text: `${preview.activeCandidates || 0} active candidate${preview.activeCandidates === 1 ? '' : 's'}` }),
       quote.floorApplied
         ? el('p', { class: 'muted', text: `Monthly floor applied (${quote.floorLabel})` })
         : null,
@@ -694,7 +725,7 @@ async function billing() {
       el('p', { text: `Total ${quote.totalLabel || 'R0.00'}` }),
     ]),
     table(
-      ['Invoice', 'Period', 'Candidates', 'Total', 'Status', 'Actions'],
+      ['Invoice', 'Period', 'Billed', 'Total', 'Status', 'Actions'],
       invoices.map((invoice) => [
         invoice.invoice_number,
         `${invoice.period_start} – ${invoice.period_end}`,

@@ -64,6 +64,16 @@ function actions(buttons) {
   return el('div', { class: 'btn-row' }, buttons);
 }
 
+function tallyFromCandidates(rows) {
+  const tally = { active: 0, inactive: 0, total: 0 };
+  for (const row of rows || []) {
+    tally.total += 1;
+    if (row.status === 'active') tally.active += 1;
+    else tally.inactive += 1;
+  }
+  return tally;
+}
+
 function confirmAction(message, { danger = false, confirmLabel = 'Confirm' } = {}) {
   return new Promise((resolve) => {
     const node = ConfirmationSheet({
@@ -152,20 +162,20 @@ async function dashboard() {
   return el('div', { class: 'grid' }, [
     el('div', { class: 'grid grid-4' }, [
       StatCard('Organisations', stats.organisations, '?view=organisations'),
-      StatCard('Active candidates', stats.activeCandidates),
       StatCard('Hosts', stats.hosts, '?view=hosts'),
-      StatCard('Clocked in today', stats.clockedInToday),
+      StatCard('Active candidates', stats.activeCandidates, '?view=candidates'),
+      StatCard('Inactive candidates', stats.inactiveCandidates, '?view=candidates'),
     ]),
     el('div', { class: 'grid grid-2 grid-charts' }, [
       ChartCard({
         title: 'People on the platform',
-        subtitle: 'Active organisations, hosts, and candidates',
+        subtitle: 'Organisations, hosts, and candidate status',
         type: 'doughnut',
         ...doughnutFromCounts({
           Organisations: stats.organisations,
           Hosts: stats.hosts,
-          Candidates: stats.activeCandidates,
-          'Clocked in': stats.clockedInToday,
+          Active: stats.activeCandidates,
+          Inactive: stats.inactiveCandidates,
         }),
         colors: ['#21396a', '#f5bf48', '#3b424f', '#ba133a'],
       }),
@@ -252,10 +262,12 @@ async function organisations() {
       }, ['Create organisation']),
     ]),
     table(
-      ['Name', 'Plan', 'Status', 'Timezone', 'Actions'],
+      ['Name', 'Plan', 'Active', 'Inactive', 'Status', 'Timezone', 'Actions'],
       (data.organisations || []).map((o) => [
         o.name,
         o.billing_type === 'NGO' ? 'NGO' : 'Private',
+        String(o.candidate_active ?? 0),
+        String(o.candidate_inactive ?? 0),
         o.status,
         o.timezone,
         actions([
@@ -671,9 +683,16 @@ async function candidatesView() {
     api('admin', 'users', { body: { role: 'ORG_MANAGER' } }),
   ]);
   const managers = (people.users || []).filter((u) => u.status !== 'suspended');
-  return table(
-    ['Name', 'Reference', 'ID / passport', 'Sponsor', 'Nationality', 'Organisation', 'Manager', 'Status'],
-    (data.candidates || []).map((c) => {
+  const roster = data.roster || tallyFromCandidates(data.candidates);
+  return el('div', { class: 'grid' }, [
+    el('div', { class: 'grid grid-4' }, [
+      StatCard('Candidates', roster.total ?? 0),
+      StatCard('Active', roster.active ?? 0),
+      StatCard('Inactive', roster.inactive ?? 0),
+    ]),
+    table(
+      ['Name', 'Reference', 'ID / passport', 'Sponsor', 'Nationality', 'Organisation', 'Manager', 'Status'],
+      (data.candidates || []).map((c) => {
       const orgManagers = managers.filter((m) => m.organisation_id === c.organisation_id);
       const sel = el('select', { class: 'input' }, [
         el('option', { value: '', text: 'Unassigned' }),
@@ -704,7 +723,8 @@ async function candidatesView() {
         c.status,
       ];
     }),
-  );
+    ),
+  ]);
 }
 
 async function sites() {
@@ -1111,11 +1131,13 @@ async function billing() {
       ]),
     ]),
     table(
-      ['Organisation', 'Plan', 'Rate', 'Active', 'Subtotal', 'VAT', 'Total', 'Admin can see', 'Actions'],
+      ['Organisation', 'Plan', 'Rate', 'Active', 'Inactive', 'Billed', 'Subtotal', 'VAT', 'Total', 'Admin can see', 'Actions'],
       quotes.map((row) => [
         row.organisation.name,
         row.organisation.billing_type === 'NGO' ? 'NGO' : 'Private',
         `${row.quote.unitLabel} / floor ${row.quote.floorLabel}`,
+        String(row.roster?.active ?? 0),
+        String(row.roster?.inactive ?? 0),
         String(row.activeCandidates),
         row.quote.subtotalLabel,
         row.quote.vatLabel,

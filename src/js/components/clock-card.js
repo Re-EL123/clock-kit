@@ -4,6 +4,10 @@ import { icon } from '../icons.js';
 const STAT_ICONS = {
   Organisations: 'organisations',
   'Active candidates': 'candidates',
+  'Inactive candidates': 'user',
+  Candidates: 'candidates',
+  Active: 'user-check',
+  Inactive: 'user',
   Hosts: 'hosts',
   'Clocked in today': 'activity',
   Scheduled: 'calendar',
@@ -14,6 +18,7 @@ const STAT_ICONS = {
   Corrections: 'clipboard',
   'Pending leave': 'leave',
   Absent: 'user',
+  'Billed this month': 'clipboard',
 };
 
 export function ClockFace() {
