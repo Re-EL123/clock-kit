@@ -552,10 +552,55 @@ async function users() {
 
 async function hosts() {
   const data = await api('admin', 'list-hosts', { body: {} });
-  return table(
-    ['Host', 'Organisation', 'Sites', 'Status'],
-    (data.hosts || []).map((h) => [h.name, h.organisations?.name || '—', String(h.sites?.length || 0), h.status]),
-  );
+  const hostsList = data.hosts || [];
+  const boxes = hostsList.map((h) => {
+    const box = el('input', {
+      type: 'checkbox',
+      'data-host-id': h.id,
+    });
+    box.checked = Boolean(h.show_sponsor);
+    return el('label', { class: 'check-row' }, [
+      box,
+      el('span', { text: `${h.name} · ${h.organisations?.name || 'Organisation'}` }),
+    ]);
+  });
+  const list = el('div', { class: 'check-list' }, boxes);
+  return el('div', { class: 'grid' }, [
+    el('div', { class: 'card', style: 'padding:1rem' }, [
+      el('h2', { text: 'Show sponsor to hosts' }),
+      el('p', {
+        class: 'muted',
+        text: 'Sponsor stays on organisation and platform records. Hosts cannot edit it. Tick a workplace to show the name on that host’s candidate and attendance lists.',
+      }),
+      hostsList.length ? list : el('p', { class: 'muted', text: 'Create a host first.' }),
+      hostsList.length
+        ? el('button', {
+          class: 'btn btn-primary',
+          type: 'button',
+          onClick: async () => {
+            try {
+              const hostIds = [...list.querySelectorAll('input[type="checkbox"]:checked')].map((box) => box.dataset.hostId);
+              await api('admin', 'set-sponsor-visibility', { body: { hostIds } });
+              toast('Sponsor visibility updated');
+              refreshPanel();
+            } catch (e) {
+              toast(e.message, 'err');
+            }
+          },
+        }, ['Save visibility'])
+        : null,
+    ]),
+    table(
+      ['Host', 'Organisation', 'Sites', 'Sponsor', 'Status'],
+      hostsList.map((h) => [
+        h.name,
+        h.organisations?.name || '—',
+        String(h.sites?.length || 0),
+        h.show_sponsor ? 'Visible' : 'Hidden',
+        h.status,
+      ]),
+    ),
+  ]);
 }
 
 async function candidatesView() {

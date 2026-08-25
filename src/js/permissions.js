@@ -15,6 +15,7 @@ const MATRIX = {
   correctionApproval: ['ORG_OWNER', 'ORG_ADMIN', 'ORG_MANAGER'],
   hostConfirmAttendance: ['HOST'],
   updateHostCandidate: ['HOST'],
+  setHostSponsorVisibility: ['PLATFORM_ADMIN'],
   exportAttendance: ['ORG_OWNER', 'ORG_ADMIN', 'ORG_MANAGER'],
   viewAudit: ['PLATFORM_ADMIN', 'ORG_OWNER', 'ORG_ADMIN'],
 };

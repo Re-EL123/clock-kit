@@ -11,7 +11,7 @@ const STEPS = {
   ],
   HOST: [
     { view: 'dashboard', title: 'Dashboard', body: 'See who is scheduled and present at your workplace today.' },
-    { view: 'candidates', title: 'Candidates', body: 'Students placed with you. Edit name, ID, sponsor, or role if the details are wrong.' },
+    { view: 'candidates', title: 'Candidates', body: 'Students placed with you. Edit name, ID, or role if the details are wrong.' },
     { view: 'attendance', title: 'Attendance', body: 'Confirm, reject, or correct each day’s clock times.' },
     { view: 'profile', title: 'Account', body: 'Add a phone number so we can reach you.' },
   ],

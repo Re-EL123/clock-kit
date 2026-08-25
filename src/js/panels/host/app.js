@@ -121,8 +121,6 @@ async function candidates() {
     ref.value = candidate.candidate_reference || '';
     const idNumber = el('input', { class: 'input', placeholder: 'ID or passport number' });
     idNumber.value = candidate.id_number || '';
-    const sponsor = el('input', { class: 'input', placeholder: 'Sponsor name' });
-    sponsor.value = candidate.sponsor_name || '';
     const nationality = nationalitySelect(el);
     if (candidate.nationality && ![...nationality.options].some((option) => option.value === candidate.nationality)) {
       nationality.append(el('option', { value: candidate.nationality, text: candidate.nationality }));
@@ -142,7 +140,6 @@ async function candidates() {
         field('Last name', last),
         field('Reference', ref),
         field('ID / passport number', idNumber),
-        field('Sponsor', sponsor),
         field('Nationality', nationality),
         field('Role', role),
         el('div', { class: 'modal-actions' }, [
@@ -155,7 +152,6 @@ async function candidates() {
                 if (!first.value.trim() || !last.value.trim()) throw new Error('Name is required');
                 if (!ref.value.trim()) throw new Error('Reference is required');
                 if (!idNumber.value.trim()) throw new Error('ID or passport number is required');
-                if (!sponsor.value.trim()) throw new Error('Sponsor name is required');
                 if (!nationality.value) throw new Error('Nationality is required');
                 await api('host', 'update-candidate', {
                   body: {
@@ -164,7 +160,6 @@ async function candidates() {
                     lastName: last.value.trim(),
                     candidateReference: ref.value.trim(),
                     idNumber: idNumber.value.trim(),
-                    sponsorName: sponsor.value.trim(),
                     nationality: nationality.value,
                     roleTitle: role.value.trim(),
                   },
@@ -183,18 +178,19 @@ async function candidates() {
     document.body.append(node);
   }
 
+  const showSponsor = Boolean(data.showSponsor);
   return el('div', { class: 'grid' }, [
     el('p', {
       class: 'muted',
-      text: 'Students placed at your workplace. Edit a record if the name, ID, sponsor, or role is wrong.',
+      text: 'Students placed at your workplace. Edit a record if the name, ID, or role is wrong.',
     }),
     table(
-      ['Name', 'Reference', 'ID / passport', 'Sponsor', 'Nationality', 'Role', 'Edit'],
+      ['Name', 'Reference', 'ID / passport', ...(showSponsor ? ['Sponsor'] : []), 'Nationality', 'Role', 'Edit'],
       (data.candidates || []).map((c) => [
         `${c.first_name} ${c.last_name}`,
         c.candidate_reference,
         c.id_number || '—',
-        c.sponsor_name || '—',
+        ...(showSponsor ? [c.sponsor_name || '—'] : []),
         c.nationality || '—',
         c.assignment?.role_title || '',
         el('button', {
@@ -210,6 +206,7 @@ async function candidates() {
 async function attendance() {
   const data = await api('host', 'attendance', { body: {} });
   const sessions = data.sessions || [];
+  const showSponsor = Boolean(data.showSponsor);
   return el('div', { class: 'grid' }, [
     el('p', {
       class: 'muted',
@@ -217,11 +214,11 @@ async function attendance() {
     }),
     reviewChart(sessions),
     table(
-      ['Candidate', 'ID / passport', 'Sponsor', 'In', 'Out', 'Review', 'By', 'Actions'],
+      ['Candidate', 'ID / passport', ...(showSponsor ? ['Sponsor'] : []), 'In', 'Out', 'Review', 'By', 'Actions'],
       sessions.map((s) => [
         `${s.candidates?.first_name || ''} ${s.candidates?.last_name || ''}`,
         s.candidates?.id_number || '—',
-        s.candidates?.sponsor_name || '—',
+        ...(showSponsor ? [s.candidates?.sponsor_name || '—'] : []),
         formatTime(s.host_corrected_in_at || s.clocked_in_at),
         formatTime(s.host_corrected_out_at || s.clocked_out_at),
         reviewLabel(s.host_review_status),

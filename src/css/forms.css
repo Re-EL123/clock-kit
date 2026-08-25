@@ -51,6 +51,24 @@ textarea {
   display: none;
 }
 
+.check-list {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0.75rem 0 1rem;
+}
+
+.check-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  font-weight: 600;
+  color: var(--ck-charcoal);
+}
+
+.check-row input {
+  margin-top: 0.2rem;
+}
+
 .field.is-invalid .input,
 .field.is-invalid select,
 .field.is-invalid textarea,
