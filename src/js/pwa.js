@@ -416,6 +416,24 @@ export async function pushStatus() {
       hint: 'This browser does not support push alerts. Use Chrome, Edge, Firefox, Samsung Internet, Huawei Browser, or Safari 16.4+.',
     };
   }
+  try {
+    const vapid = await api('notifications', 'vapid-public-key', { body: {} });
+    if (!vapid?.enabled || !vapid.publicKey) {
+      return {
+        canEnable: false,
+        canInstall: needsInstall(),
+        enabled: false,
+        hint: 'Background alerts are not configured on the server yet.',
+      };
+    }
+  } catch {
+    return {
+      canEnable: false,
+      canInstall: needsInstall(),
+      enabled: false,
+      hint: 'Background alerts are not configured on the server yet.',
+    };
+  }
   if (needsInstall()) {
     return {
       canEnable: !device.ios && pushSupported(),
