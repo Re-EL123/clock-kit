@@ -442,7 +442,12 @@
   text-decoration: underline;
 }
 
-@media (prefers-reduced-motion: reduce) {
+@media (prefers-reduced-motion: reduce),
+  (max-width: 720px),
+  (pointer: coarse),
+  (display-mode: standalone),
+  (display-mode: fullscreen),
+  (display-mode: minimal-ui) {
   .auth-video {
     display: none;
   }

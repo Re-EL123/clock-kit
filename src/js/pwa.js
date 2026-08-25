@@ -5,6 +5,14 @@ import { icon } from './icons.js';
 import { playSound } from './sound.js';
 import { Modal } from './components/modal.js';
 import { detectDevice, installGuide, shouldAskNotificationPermission } from './device.js';
+import {
+  clearInstalledMemory,
+  displayModeInstalled,
+  isAppInstalled,
+  markInstalled,
+  relatedAppsInstalled,
+  rememberedInstalled,
+} from './pwa-display.js';
 
 const PUSH_CACHE = 'clock-kit-push';
 const INSTALL_DISMISS_KEY = 'ck_install_dismissed_at';
@@ -15,7 +23,7 @@ let started = false;
 let listeningForInstall = false;
 
 export function standalone() {
-  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  return displayModeInstalled();
 }
 
 export function isAppleMobile() {
@@ -35,7 +43,7 @@ export function currentInstallGuide() {
 }
 
 export function needsInstall() {
-  return !onKiosk() && !standalone();
+  return !onKiosk() && !isAppInstalled();
 }
 
 export function installLabel() {
@@ -121,6 +129,13 @@ async function askNotificationPermission() {
 }
 
 function onBeforeInstallPrompt(event) {
+  if (displayModeInstalled()) {
+    event.preventDefault();
+    markInstalled();
+    hideInstallUi();
+    return;
+  }
+  if (rememberedInstalled()) clearInstalledMemory();
   event.preventDefault();
   deferredPrompt = event;
   fillPwaSlots();
@@ -503,10 +518,12 @@ function handleNavigate(href) {
 export function startPwa() {
   if (started) return;
   started = true;
+  if (displayModeInstalled()) markInstalled();
   listenForInstallPrompt();
   registerServiceWorker().then((registration) => registration?.update?.());
   window.addEventListener('appinstalled', () => {
     deferredPrompt = null;
+    markInstalled();
     try {
       localStorage.removeItem(INSTALL_DISMISS_KEY);
     } catch {
@@ -514,6 +531,11 @@ export function startPwa() {
     }
     hideInstallUi();
     subscribePush();
+  });
+  relatedAppsInstalled().then((installed) => {
+    if (!installed) return;
+    markInstalled();
+    hideInstallUi();
   });
   if (navigator.serviceWorker) {
     navigator.serviceWorker.addEventListener('message', (event) => {
@@ -537,7 +559,7 @@ export function startPwa() {
 
   const refreshSubscription = () => {
     if (Notification?.permission === 'granted') subscribePush();
-    if (standalone()) hideInstallUi();
+    if (!needsInstall()) hideInstallUi();
     else {
       fillPwaSlots();
       if (!document.querySelector('.ck-install-banner')) mountInstallBanner();

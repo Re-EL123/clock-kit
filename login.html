@@ -32,16 +32,14 @@
     <div class="auth-stage" aria-hidden="true">
       <video
         class="auth-video"
-        autoplay
         muted
         loop
         playsinline
         webkit-playsinline
-        preload="auto"
+        preload="none"
         poster="%BASE_URL%assets/login/workplace.jpg"
-      >
-        <source src="%BASE_URL%assets/login/workplace.mp4" type="video/mp4" />
-      </video>
+        data-src="%BASE_URL%assets/login/workplace.mp4"
+      ></video>
     </div>
     <div id="ck-splash" class="ck-splash" role="dialog" aria-label="Clock-Kit">
       <div class="ck-splash-inner">
@@ -63,11 +61,26 @@
       (function () {
         var video = document.querySelector('.auth-video');
         if (!video) return;
-        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-          video.removeAttribute('autoplay');
-          video.pause();
+        var installed = window.navigator.standalone === true
+          || ['standalone', 'fullscreen', 'minimal-ui', 'window-controls-overlay'].some(function (mode) {
+            try { return window.matchMedia('(display-mode: ' + mode + ')').matches; }
+            catch (e) { return false; }
+          });
+        var saveData = window.navigator.connection && window.navigator.connection.saveData;
+        var canPlay = !installed
+          && !saveData
+          && !window.matchMedia('(prefers-reduced-motion: reduce)').matches
+          && !window.matchMedia('(max-width: 720px)').matches
+          && !window.matchMedia('(pointer: coarse)').matches;
+        if (!canPlay) {
+          video.remove();
           return;
         }
+        var src = document.createElement('source');
+        src.src = video.getAttribute('data-src');
+        src.type = 'video/mp4';
+        video.appendChild(src);
+        video.preload = 'auto';
         var ready = function () { video.classList.add('is-ready'); };
         video.addEventListener('playing', ready, { once: true });
         video.addEventListener('canplay', ready, { once: true });
