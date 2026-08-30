@@ -42,8 +42,16 @@ export const Auth = {
   },
 
   requireRole(...roles) {
-    const user = currentUser();
-    if (!user || !localStorage.getItem(TOKEN_KEY)) {
+    let user;
+    let token;
+    try {
+      user = currentUser();
+      token = localStorage.getItem(TOKEN_KEY);
+    } catch {
+      location.href = withBase('login.html');
+      throw new Error('AUTH_REQUIRED');
+    }
+    if (!user || !token) {
       location.href = withBase('login.html');
       throw new Error('AUTH_REQUIRED');
     }
@@ -55,9 +63,13 @@ export const Auth = {
   },
 
   requireGuest() {
-    const user = currentUser();
-    if (user && localStorage.getItem(TOKEN_KEY)) {
-      location.href = this.home(user.role);
+    try {
+      const user = currentUser();
+      if (user && localStorage.getItem(TOKEN_KEY)) {
+        location.href = this.home(user.role);
+      }
+    } catch {
+      /* stay on the sign-in page */
     }
   },
 };

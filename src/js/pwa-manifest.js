@@ -7,10 +7,16 @@ export function appPath(base, path = '') {
   return `${appBase(base)}${String(path).replace(/^\//, '')}`;
 }
 
-export function buildWebManifest(base = '/') {
+function originRoot(appUrl) {
+  return String(appUrl || '').replace(/\/$/, '');
+}
+
+export function buildWebManifest(base = '/', appUrl = '') {
   const root = appBase(base);
+  const site = originRoot(appUrl);
+  const abs = (path) => (site ? `${site}/${String(path).replace(/^\//, '')}` : appPath(root, path));
   const icon = (file, sizes, purpose = 'any') => ({
-    src: appPath(root, `assets/logo/${file}`),
+    src: abs(`assets/logo/${file}`),
     sizes,
     type: 'image/png',
     purpose,
@@ -22,10 +28,8 @@ export function buildWebManifest(base = '/') {
     lang: 'en',
     description: 'Clock in. Work on. Succeed together.',
     display: 'standalone',
-    display_override: ['standalone', 'minimal-ui', 'browser'],
-    start_url: appPath(root, 'login.html'),
-    scope: root,
-    handle_links: 'preferred',
+    start_url: abs('index.html'),
+    scope: site ? `${site}/` : root,
     prefer_related_applications: false,
     background_color: '#E2DDD8',
     theme_color: '#21396A',
@@ -37,10 +41,4 @@ export function buildWebManifest(base = '/') {
       icon('clock-kit-icon-180.png', '180x180'),
     ],
   };
-}
-
-export function isLaunchPath(pathname, base = '/') {
-  const root = appBase(base);
-  const trimmed = root.replace(/\/$/, '') || '/';
-  return pathname === root || pathname === trimmed || pathname === `${root}index.html`;
 }

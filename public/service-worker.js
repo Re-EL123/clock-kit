@@ -1,5 +1,5 @@
 const BASE = new URL('./', self.location).pathname;
-const CACHE = 'clock-kit-shell-v10';
+const CACHE = 'clock-kit-shell-v11';
 const PUSH_CACHE = 'clock-kit-push';
 const PRECACHE = []; // __CK_PRECACHE__
 const SHELL = [
@@ -27,13 +27,26 @@ const SHELL = [
   'assets/logo/clock-kit-icon-512.png',
 ].map((path) => `${BASE}${path}`);
 
-function isLaunchPath(pathname) {
-  const trimmed = BASE.replace(/\/$/, '') || '/';
-  return pathname === BASE || pathname === trimmed || pathname === `${BASE}index.html`;
-}
-
 function loginUrl() {
   return `${BASE}login.html`;
+}
+
+function cleanResponse(res) {
+  if (!res || !res.redirected) return res;
+  return new Response(res.body, {
+    status: res.status,
+    statusText: res.statusText,
+    headers: res.headers,
+  });
+}
+
+async function putCache(cache, url, res) {
+  if (!res || !res.ok) return;
+  try {
+    await cache.put(url, cleanResponse(res.clone()));
+  } catch {
+    /* ignore */
+  }
 }
 
 function urlBase64ToUint8Array(base64String) {
@@ -49,7 +62,14 @@ self.addEventListener('install', (event) => {
   event.waitUntil((async () => {
     const cache = await caches.open(CACHE);
     const urls = [...new Set([...SHELL, ...PRECACHE])];
-    await Promise.all(urls.map((url) => cache.add(url).catch(() => null)));
+    await Promise.all(urls.map(async (url) => {
+      try {
+        const res = await fetch(url, { redirect: 'follow' });
+        await putCache(cache, url, res);
+      } catch {
+        /* ignore */
+      }
+    }));
     await self.skipWaiting();
   })());
 });
@@ -68,29 +88,27 @@ self.addEventListener('fetch', (event) => {
   if (url.pathname.endsWith('/service-worker.js')) return;
 
   const navigate = req.mode === 'navigate';
-  if (navigate && isLaunchPath(url.pathname)) {
-    event.respondWith(Response.redirect(new URL(loginUrl(), self.location.origin), 302));
-    return;
-  }
 
   event.respondWith((async () => {
     try {
-      const res = await fetch(req);
+      const res = cleanResponse(await fetch(req));
       if (res.ok) {
         const cache = await caches.open(CACHE);
-        cache.put(req, res.clone());
+        putCache(cache, req, res);
       }
       if (navigate && !res.ok) {
-        return (await caches.match(loginUrl()))
+        return (await caches.match(`${BASE}index.html`))
+          || (await caches.match(loginUrl()))
           || (await caches.match(`${BASE}offline.html`))
           || res;
       }
       return res;
     } catch {
       const cached = await caches.match(req);
-      if (cached) return cached;
+      if (cached) return cleanResponse(cached);
       if (navigate) {
-        return (await caches.match(loginUrl()))
+        return (await caches.match(`${BASE}index.html`))
+          || (await caches.match(loginUrl()))
           || (await caches.match(`${BASE}offline.html`));
       }
       return Response.error();
@@ -133,8 +151,8 @@ self.addEventListener('notificationclick', (event) => {
     const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
     const samePanel = windows.find((client) => {
       try {
-        const url = new URL(client.url);
-        return url.origin === dest.origin && url.pathname === dest.pathname;
+        const found = new URL(client.url);
+        return found.origin === dest.origin && found.pathname === dest.pathname;
       } catch {
         return false;
       }

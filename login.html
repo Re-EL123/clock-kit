@@ -61,13 +61,13 @@
       (function () {
         var video = document.querySelector('.auth-video');
         if (!video) return;
-        var installed = window.navigator.standalone === true
-          || ['standalone', 'fullscreen', 'minimal-ui', 'window-controls-overlay'].some(function (mode) {
-            try { return window.matchMedia('(display-mode: ' + mode + ')').matches; }
-            catch (e) { return false; }
-          });
+        var playInBrowserTab = false;
+        try {
+          playInBrowserTab = window.matchMedia('(display-mode: browser)').matches
+            && window.navigator.standalone !== true;
+        } catch (e) {}
         var saveData = window.navigator.connection && window.navigator.connection.saveData;
-        var canPlay = !installed
+        var canPlay = playInBrowserTab
           && !saveData
           && !window.matchMedia('(prefers-reduced-motion: reduce)').matches
           && !window.matchMedia('(max-width: 720px)').matches

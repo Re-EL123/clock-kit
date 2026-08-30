@@ -25,7 +25,7 @@ function collectLaunchUrls(dist) {
 }
 
 function clockKitManifestPlugin(base) {
-  const body = () => `${JSON.stringify(buildWebManifest(base), null, 2)}\n`;
+  const body = () => `${JSON.stringify(buildWebManifest(base, process.env.VITE_APP_URL || ''), null, 2)}\n`;
   const manifestPath = `${base}manifest.webmanifest`.replace(/\/{2,}/g, '/');
   return {
     name: 'clock-kit-manifest',
