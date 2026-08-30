@@ -1,8 +1,10 @@
 const BASE = new URL('./', self.location).pathname;
-const CACHE = 'clock-kit-shell-v9';
+const CACHE = 'clock-kit-shell-v10';
 const PUSH_CACHE = 'clock-kit-push';
+const PRECACHE = []; // __CK_PRECACHE__
 const SHELL = [
   '',
+  'index.html',
   'login.html',
   'offline.html',
   'terms.html',
@@ -25,6 +27,15 @@ const SHELL = [
   'assets/logo/clock-kit-icon-512.png',
 ].map((path) => `${BASE}${path}`);
 
+function isLaunchPath(pathname) {
+  const trimmed = BASE.replace(/\/$/, '') || '/';
+  return pathname === BASE || pathname === trimmed || pathname === `${BASE}index.html`;
+}
+
+function loginUrl() {
+  return `${BASE}login.html`;
+}
+
 function urlBase64ToUint8Array(base64String) {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
@@ -37,7 +48,8 @@ function urlBase64ToUint8Array(base64String) {
 self.addEventListener('install', (event) => {
   event.waitUntil((async () => {
     const cache = await caches.open(CACHE);
-    await Promise.all(SHELL.map((url) => cache.add(url).catch(() => null)));
+    const urls = [...new Set([...SHELL, ...PRECACHE])];
+    await Promise.all(urls.map((url) => cache.add(url).catch(() => null)));
     await self.skipWaiting();
   })());
 });
@@ -54,27 +66,46 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
   if (url.pathname.endsWith('/service-worker.js')) return;
-  event.respondWith(
-    fetch(req)
-      .then((res) => {
-        if (res.ok) {
-          const copy = res.clone();
-          caches.open(CACHE).then((cache) => cache.put(req, copy));
-        }
-        return res;
-      })
-      .catch(() => caches.match(req).then((cached) => cached || caches.match(`${BASE}offline.html`))),
-  );
+
+  const navigate = req.mode === 'navigate';
+  if (navigate && isLaunchPath(url.pathname)) {
+    event.respondWith(Response.redirect(new URL(loginUrl(), self.location.origin), 302));
+    return;
+  }
+
+  event.respondWith((async () => {
+    try {
+      const res = await fetch(req);
+      if (res.ok) {
+        const cache = await caches.open(CACHE);
+        cache.put(req, res.clone());
+      }
+      if (navigate && !res.ok) {
+        return (await caches.match(loginUrl()))
+          || (await caches.match(`${BASE}offline.html`))
+          || res;
+      }
+      return res;
+    } catch {
+      const cached = await caches.match(req);
+      if (cached) return cached;
+      if (navigate) {
+        return (await caches.match(loginUrl()))
+          || (await caches.match(`${BASE}offline.html`));
+      }
+      return Response.error();
+    }
+  })());
 });
 
 self.addEventListener('push', (event) => {
-  let data = { title: 'Clock-Kit', body: 'You have an update', url: `${BASE}login.html` };
+  let data = { title: 'Clock-Kit', body: 'You have an update', url: loginUrl() };
   try {
     if (event.data) data = { ...data, ...event.data.json() };
   } catch {
     if (event.data) data.body = event.data.text();
   }
-  const target = data.url || `${BASE}login.html`;
+  const target = data.url || loginUrl();
   event.waitUntil((async () => {
     const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
     windows
@@ -96,7 +127,7 @@ self.addEventListener('push', (event) => {
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const target = event.notification.data?.url || `${BASE}login.html`;
+  const target = event.notification.data?.url || loginUrl();
   event.waitUntil((async () => {
     const dest = new URL(target, self.location.origin);
     const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });

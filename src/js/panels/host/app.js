@@ -24,8 +24,12 @@ const NAV = [
   { view: 'profile', label: 'Profile' },
 ];
 
-function field(label, input) {
-  return el('div', { class: 'field' }, [el('span', { text: label }), input]);
+function field(label, input, hint) {
+  return el('div', { class: 'field' }, [
+    el('span', { text: label }),
+    input,
+    hint ? el('p', { class: 'field-help', text: hint }) : null,
+  ]);
 }
 
 function reviewLabel(status) {
@@ -121,8 +125,9 @@ async function candidates() {
     first.value = candidate.first_name || '';
     const last = el('input', { class: 'input', placeholder: 'Last name' });
     last.value = candidate.last_name || '';
-    const ref = el('input', { class: 'input', placeholder: 'Reference' });
+    const ref = el('input', { class: 'input', placeholder: 'e.g. CK-1001' });
     ref.value = candidate.candidate_reference || '';
+    ref.title = 'Unique code for this person in the organisation. It appears on timesheets.';
     const idNumber = el('input', { class: 'input', placeholder: 'ID or passport number' });
     idNumber.value = candidate.id_number || '';
     const nationality = nationalitySelect(el);
@@ -142,7 +147,7 @@ async function candidates() {
         }),
         field('First name', first),
         field('Last name', last),
-        field('Reference', ref),
+        field('Reference', ref, 'Unique code for this person in the organisation (student number, employee number, or placement code). It appears on timesheets.'),
         field('ID / passport number', idNumber),
         field('Nationality', nationality),
         field('Role', role),

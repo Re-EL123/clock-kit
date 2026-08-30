@@ -1,7 +1,7 @@
 import '../../../css/app.css';
 import { Auth } from '../../auth.js';
 import { api } from '../../api.js';
-import { el, toast, formatTime, downloadBase64, downloadText } from '../../utils/dom.js';
+import { el, toast, formatTime, downloadBase64, downloadText, href } from '../../utils/dom.js';
 import { table } from '../../components/sidebar.js';
 import { bootPanel, refreshPanel } from '../../runtime.js';
 import { StatCard } from '../../components/clock-card.js';
@@ -15,6 +15,7 @@ import { SiteForm } from '../../components/site-form.js';
 import { Modal } from '../../components/modal.js';
 import { GuidesPanel } from '../../components/guides-panel.js';
 import { HelpPanel } from '../../components/help-panel.js';
+import { setView } from '../../router.js';
 
 const NAV = [
   { view: 'dashboard', label: 'Dashboard' },
@@ -45,8 +46,14 @@ function navFor(role) {
   return NAV;
 }
 
-function field(label, input) {
-  return el('div', { class: 'field' }, [el('span', { text: label }), input]);
+const CANDIDATE_REF_HINT = 'Unique code for this person in your organisation (student number, employee number, or placement code). It appears on timesheets and must not be reused.';
+
+function field(label, input, hint) {
+  return el('div', { class: 'field' }, [
+    el('span', { text: label }),
+    input,
+    hint ? el('p', { class: 'field-help', text: hint }) : null,
+  ]);
 }
 
 function textInput(placeholder, type = 'text') {
@@ -95,7 +102,7 @@ async function dashboard() {
     el('div', { class: 'grid grid-4' }, [
       StatCard('Missing clock-outs', a.missingClockOuts, '?view=attendance'),
       StatCard('Corrections', a.pendingCorrections, '?view=approvals'),
-      StatCard('Pending leave', a.pendingLeave, '?view=approvals'),
+      StatCard('Pending leave', a.pendingLeave, '?view=leave&status=PENDING'),
     ]),
     el('div', { class: 'grid grid-2 grid-charts' }, [
       todayMixChart(t),
@@ -117,7 +124,8 @@ async function candidates() {
   const nationality = nationalitySelect(el);
   const sponsor = textInput('Sponsor name');
   const email = textInput('Email', 'email');
-  const ref = textInput('Reference');
+  const ref = textInput('e.g. CK-1001');
+  ref.title = CANDIDATE_REF_HINT;
   const password = textInput('Password', 'password');
   const confirm = textInput('Confirm password', 'password');
   const managerSel = el('select', { class: 'input' }, [
@@ -190,7 +198,7 @@ async function candidates() {
     el('div', { class: 'card', style: 'padding:1rem' }, [
       el('h2', { text: 'Create candidate account' }),
       el('p', { class: 'muted', text: 'The candidate signs in with this email and password. Assign a manager so they only manage this student.' }),
-      field('Reference', ref),
+      field('Reference', ref, CANDIDATE_REF_HINT),
       field('First name', first),
       field('Last name', last),
       field('ID / passport number', idNumber),
@@ -513,28 +521,75 @@ async function attendance() {
   ]);
 }
 
+function leaveStatusLabel(status) {
+  if (status === 'PENDING') return 'Waiting';
+  if (status === 'APPROVED') return 'Approved';
+  if (status === 'REJECTED') return 'Rejected';
+  if (status === 'CANCELLED') return 'Cancelled';
+  return status || '';
+}
+
 async function leaveView() {
   const data = await api('leave', 'list', { body: {} });
   const requests = data.requests || [];
+  const filter = new URLSearchParams(location.search).get('status') || '';
+  const visible = ['PENDING', 'APPROVED', 'REJECTED', 'CANCELLED'].includes(filter)
+    ? requests.filter((row) => row.status === filter)
+    : requests;
+  const canAct = can(user.role, 'leaveApproval');
+  const statusFilter = el('select', { class: 'input' }, [
+    el('option', { value: '', text: 'All requests' }),
+    el('option', { value: 'PENDING', text: 'Waiting for a decision' }),
+    el('option', { value: 'APPROVED', text: 'Approved' }),
+    el('option', { value: 'REJECTED', text: 'Rejected' }),
+    el('option', { value: 'CANCELLED', text: 'Cancelled' }),
+  ]);
+  statusFilter.value = filter;
+  statusFilter.addEventListener('change', () => {
+    if (statusFilter.value) setView('leave', { status: statusFilter.value });
+    else setView('leave');
+    refreshPanel();
+  });
+
   return el('div', { class: 'grid' }, [
+    el('div', { class: 'card', style: 'padding:1rem' }, [
+      el('h2', { text: 'Leave' }),
+      el('p', {
+        class: 'muted',
+        text: canAct
+          ? 'Approve or reject waiting requests here. Attendance time corrections stay on Approvals.'
+          : 'Leave requests for your organisation. You can view them; owners, admins, and managers decide.',
+      }),
+      field('Show', statusFilter),
+    ]),
     leaveStatusChart(requests),
     table(
-      ['Candidate', 'Dates', 'Hours', 'Status'],
-      requests.map((r) => [
-        `${r.candidates?.first_name || ''} ${r.candidates?.last_name || ''}`,
+      ['Candidate', 'Type', 'Dates', 'Hours', 'Status', 'Actions'],
+      visible.map((r) => [
+        `${r.candidates?.first_name || ''} ${r.candidates?.last_name || ''}`.trim() || '—',
+        r.leave_types?.name || '—',
         `${r.start_date} → ${r.end_date}`,
         String(r.hours),
-        r.status,
+        leaveStatusLabel(r.status),
+        r.status === 'PENDING' && canAct
+          ? el('div', { class: 'btn-row' }, reviewButtons(
+            true,
+            () => api('leave', 'approve', { body: { id: r.id } }),
+            () => api('leave', 'reject', { body: { id: r.id } }),
+            true,
+          ))
+          : el('span', { class: 'muted', text: r.status === 'PENDING' ? 'Waiting' : '—' }),
       ]),
     ),
   ]);
 }
 
-function reviewButtons(canAct, onApprove, onReject) {
+function reviewButtons(canAct, onApprove, onReject, compact = false) {
   if (!canAct) return [el('p', { class: 'muted mt', text: 'View only' })];
+  const gap = compact ? '' : ' mt';
   return [
     el('button', {
-      class: 'btn btn-primary mt',
+      class: `btn btn-primary${gap}`,
       onClick: async () => {
         try {
           await onApprove();
@@ -545,7 +600,7 @@ function reviewButtons(canAct, onApprove, onReject) {
       },
     }, ['Approve']),
     el('button', {
-      class: 'btn mt',
+      class: `btn${gap}`,
       onClick: async () => {
         try {
           await onReject();
@@ -565,34 +620,54 @@ async function approvals() {
   ]);
   const canLeave = can(user.role, 'leaveApproval');
   const canCorr = can(user.role, 'correctionApproval');
-  return el('div', { class: 'grid grid-2' }, [
-    el('div', {}, [
-      el('h3', { text: 'Leave' }),
-      ...(leave.requests || []).map((r) =>
-        el('div', { class: 'card', style: 'padding:1rem;margin-bottom:.6rem' }, [
-          el('strong', { text: `${r.candidates?.first_name} ${r.candidates?.last_name}` }),
-          el('div', { text: `${r.start_date} → ${r.end_date}` }),
-          ...reviewButtons(
-            canLeave,
-            () => api('leave', 'approve', { body: { id: r.id } }),
-            () => api('leave', 'reject', { body: { id: r.id } }),
-          ),
-        ]),
-      ),
+  const waitingLeave = leave.requests || [];
+  return el('div', { class: 'grid' }, [
+    el('div', { class: 'card', style: 'padding:1rem' }, [
+      el('h2', { text: 'Approvals' }),
+      el('p', {
+        class: 'muted',
+        text: 'This page is for attendance time corrections. Leave requests are approved on Leave so you can see the full history next to each request.',
+      }),
+      waitingLeave.length
+        ? el('p', {}, [
+          el('a', { href: href('leave', { status: 'PENDING' }) }, [
+            `${waitingLeave.length} leave request${waitingLeave.length === 1 ? '' : 's'} waiting on Leave`,
+          ]),
+        ])
+        : el('p', { class: 'muted', text: 'No leave is waiting.' }),
     ]),
     el('div', {}, [
-      el('h3', { text: 'Corrections' }),
-      ...(corr.corrections || []).map((c) =>
-        el('div', { class: 'card', style: 'padding:1rem;margin-bottom:.6rem' }, [
-          el('div', { text: `ORIGINAL ${formatTime(c.attendance_sessions?.clocked_out_at)}` }),
-          el('div', { text: c.reason }),
-          ...reviewButtons(
-            canCorr,
-            () => api('attendance', 'approve-correction', { body: { id: c.id } }),
-            () => api('attendance', 'reject-correction', { body: { id: c.id } }),
+      el('h3', { text: 'Attendance corrections' }),
+      (corr.corrections || []).length
+        ? (corr.corrections || []).map((c) =>
+          el('div', { class: 'card', style: 'padding:1rem;margin-bottom:.6rem' }, [
+            el('div', { text: `ORIGINAL ${formatTime(c.attendance_sessions?.clocked_out_at)}` }),
+            el('div', { text: c.reason }),
+            ...reviewButtons(
+              canCorr,
+              () => api('attendance', 'approve-correction', { body: { id: c.id } }),
+              () => api('attendance', 'reject-correction', { body: { id: c.id } }),
+            ),
+          ]),
+        )
+        : [el('p', { class: 'muted', text: 'No corrections waiting.' })],
+      canLeave && waitingLeave.length
+        ? el('div', { class: 'mt' }, [
+          el('h3', { text: 'Leave still waiting' }),
+          el('p', { class: 'muted', text: 'You can decide these here or on Leave.' }),
+          ...waitingLeave.map((r) =>
+            el('div', { class: 'card', style: 'padding:1rem;margin-bottom:.6rem' }, [
+              el('strong', { text: `${r.candidates?.first_name} ${r.candidates?.last_name}` }),
+              el('div', { text: `${r.start_date} → ${r.end_date}` }),
+              ...reviewButtons(
+                canLeave,
+                () => api('leave', 'approve', { body: { id: r.id } }),
+                () => api('leave', 'reject', { body: { id: r.id } }),
+              ),
+            ]),
           ),
-        ]),
-      ),
+        ])
+        : null,
     ]),
   ]);
 }

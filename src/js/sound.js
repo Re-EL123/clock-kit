@@ -1,16 +1,32 @@
 import { reducedMotion } from './motion.js';
 import { armBusy } from './busy.js';
 
-const STORAGE = 'ck_sounds';
+export const SOUNDS_KEY = 'ck_sounds';
 let ctx;
 
-function enabled() {
+export function soundsPreference(storage) {
   try {
-    if (localStorage.getItem(STORAGE) === 'off') return false;
+    const store = storage || localStorage;
+    return store.getItem(SOUNDS_KEY) !== 'off';
+  } catch {
+    return true;
+  }
+}
+
+export function setSoundsEnabled(on, storage) {
+  try {
+    (storage || localStorage).setItem(SOUNDS_KEY, on ? 'on' : 'off');
   } catch {
     /* ignore */
   }
-  return !reducedMotion();
+}
+
+export function soundsEnabled(storage) {
+  return soundsPreference(storage) && !reducedMotion();
+}
+
+function enabled() {
+  return soundsEnabled();
 }
 
 function audio() {

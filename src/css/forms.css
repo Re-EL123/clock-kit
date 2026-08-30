@@ -47,6 +47,14 @@ textarea {
   color: var(--ck-red);
 }
 
+.field-help {
+  margin: 0.15rem 0 0;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--ck-slate);
+  line-height: 1.35;
+}
+
 .field-hint:empty {
   display: none;
 }

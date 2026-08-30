@@ -41,8 +41,14 @@ const NAV = [
   { view: 'profile', label: 'Account' },
 ];
 
-function field(label, input) {
-  return el('div', { class: 'field' }, [el('span', { text: label }), input]);
+const CANDIDATE_REF_HINT = 'Unique code for this person in the organisation (student number, employee number, or placement code). It appears on timesheets and must not be reused.';
+
+function field(label, input, hint) {
+  return el('div', { class: 'field' }, [
+    el('span', { text: label }),
+    input,
+    hint ? el('p', { class: 'field-help', text: hint }) : null,
+  ]);
 }
 
 function textInput(placeholder, type = 'text') {
@@ -404,7 +410,8 @@ async function users() {
   const hostConfirm = textInput('Confirm password', 'password');
 
   const candOrg = el('select', { class: 'input' }, orgOptions(organisations));
-  const candRef = textInput('Reference');
+  const candRef = textInput('e.g. CK-1001');
+  candRef.title = CANDIDATE_REF_HINT;
   const candFirst = textInput('First name');
   const candLast = textInput('Last name');
   const candIdNumber = textInput('ID or passport number');
@@ -468,7 +475,7 @@ async function users() {
       el('h2', { text: 'Create candidate account' }),
       el('p', { class: 'muted', text: 'Creates a CANDIDATE login. They clock in with this email and password.' }),
       field('Organisation', candOrg),
-      field('Reference', candRef),
+      field('Reference', candRef, CANDIDATE_REF_HINT),
       field('First name', candFirst),
       field('Last name', candLast),
       field('ID / passport number', candIdNumber),

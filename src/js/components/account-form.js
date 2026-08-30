@@ -2,6 +2,7 @@ import { el, toast } from '../utils/dom.js';
 import { api, persistUser, currentUser } from '../api.js';
 import { nationalitySelect } from '../nationalities.js';
 import { dismissModal } from './modal.js';
+import { SoundsToggle } from './sounds-toggle.js';
 
 export function AccountForm({ user, candidate = null, showIdentity = false }) {
   const name = el('input', { class: 'input', value: user.displayName || user.display_name || '' });
@@ -22,6 +23,7 @@ export function AccountForm({ user, candidate = null, showIdentity = false }) {
     showIdentity ? el('div', { class: 'field' }, [el('span', { text: 'ID / passport number' }), idNumber]) : null,
     showIdentity ? el('div', { class: 'field' }, [el('span', { text: 'Nationality' }), nationality]) : null,
     error,
+    SoundsToggle(),
     el('button', {
       class: 'btn btn-primary',
       type: 'button',

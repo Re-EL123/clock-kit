@@ -3,6 +3,7 @@ import { el, formatTime, toast } from '../utils/dom.js';
 import { table } from './sidebar.js';
 import { enablePushNotifications, installIconName, installLabel, promptInstall, pushStatus } from '../pwa.js';
 import { icon } from '../icons.js';
+import { SoundsToggle } from './sounds-toggle.js';
 
 function refresh() {
   window.dispatchEvent(new Event('ck:refresh'));
@@ -19,6 +20,7 @@ export async function AlertsPanel() {
     el('div', { class: 'card', style: 'padding:1rem' }, [
       el('h2', { text: 'Background alerts' }),
       el('p', { class: 'muted', text: status.hint }),
+      SoundsToggle(),
       el('div', { class: 'btn-row' }, [
         status.canInstall
           ? el('button', {
