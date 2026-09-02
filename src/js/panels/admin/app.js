@@ -37,6 +37,7 @@ const NAV = [
   { view: 'legal', label: 'Legal' },
   { view: 'guides', label: 'Guides' },
   { view: 'help', label: 'Help' },
+  { view: 'email', label: 'Email' },
   { view: 'notifications', label: 'Alerts' },
   { view: 'profile', label: 'Account' },
 ];
@@ -1449,6 +1450,236 @@ async function billing() {
   ]);
 }
 
+const MAIL_AUDIENCE_OPTIONS = [
+  { value: 'custom', label: 'Custom addresses' },
+  { value: 'org_owners', label: 'Organisation owners' },
+  { value: 'org_staff', label: 'Organisation staff' },
+  { value: 'hosts', label: 'Hosts' },
+  { value: 'candidates', label: 'Candidates' },
+  { value: 'organisation', label: 'Everyone in one organisation' },
+  { value: 'all_users', label: 'All logins with an email' },
+];
+
+function mailComposeBody({ audience, organisationId, emails, subject, body }) {
+  return {
+    audience,
+    organisationId: audience === 'organisation' ? organisationId : undefined,
+    emails: emails || undefined,
+    subject,
+    body,
+  };
+}
+
+async function emailView() {
+  const [settingsData, orgData, outboxData] = await Promise.all([
+    api('admin', 'mail-settings', { body: {} }),
+    api('admin', 'list-organisations', { body: {} }),
+    api('admin', 'mail-outbox', { body: {} }),
+  ]);
+  const settings = settingsData.settings || {};
+  const organisations = orgData.organisations || [];
+  const outbox = outboxData.outbox || [];
+
+  const fromName = textInput('Clock-Kit');
+  fromName.value = settings.fromName || 'Clock-Kit';
+  const fromEmail = textInput('hello@your-domain.com', 'email');
+  fromEmail.value = settings.fromEmail || '';
+  const replyTo = textInput('Optional reply-to', 'email');
+  replyTo.value = settings.replyTo || '';
+  const host = textInput('smtp.resend.com');
+  host.value = settings.host || '';
+  const port = textInput('587', 'number');
+  port.value = String(settings.port || 587);
+  const username = textInput('SMTP username');
+  username.value = settings.username || '';
+  const password = textInput(
+    settings.passwordSet ? 'Leave blank to keep the current password' : 'SMTP password',
+    'password',
+  );
+  const secure = el('input', { type: 'checkbox' });
+  secure.checked = Boolean(settings.secure);
+  const settingsErr = el('div', { class: 'form-error' });
+
+  const audience = selectInput(MAIL_AUDIENCE_OPTIONS, 'custom');
+  const orgSelect = el('select', { class: 'input' }, orgOptions(organisations));
+  const orgField = field('Organisation', orgSelect);
+  orgField.hidden = true;
+  const extraEmails = el('textarea', {
+    class: 'input',
+    rows: '3',
+    placeholder: 'one@org.com, two@org.com',
+  });
+  const subject = textInput('Subject');
+  const body = el('textarea', { class: 'input legal-editor', placeholder: 'Plain text only' });
+  body.style.minHeight = '160px';
+  const preview = el('p', {
+    class: 'muted',
+    text: settings.configured
+      ? 'Choose an audience, then preview before you send.'
+      : 'Save SMTP settings before you send mail.',
+  });
+  const composeErr = el('div', { class: 'form-error' });
+
+  function composePayload() {
+    return mailComposeBody({
+      audience: audience.value,
+      organisationId: orgSelect.value,
+      emails: extraEmails.value.trim(),
+      subject: subject.value.trim(),
+      body: body.value.trim(),
+    });
+  }
+
+  audience.addEventListener('change', () => {
+    orgField.hidden = audience.value !== 'organisation';
+  });
+
+  return el('div', { class: 'grid' }, [
+    el('div', { class: 'card', style: 'padding:1rem' }, [
+      el('h2', { text: 'Email settings' }),
+      el('p', {
+        class: 'muted',
+        text: settings.configured
+          ? 'SMTP is saved. The password is stored encrypted and is never shown again.'
+          : 'Use your own SMTP (Resend, Gmail app password, or organisation mail). The password is stored encrypted and is never shown again.',
+      }),
+      field('From name', fromName),
+      field('From email', fromEmail),
+      field('Reply-to', replyTo, 'Optional. Leave blank to use the from address.'),
+      field('SMTP host', host),
+      field('Port', port, '587 with STARTTLS, or 465 with implicit TLS.'),
+      field('Username', username, 'Often the same as the from address. Leave blank if the host does not need a username.'),
+      field('Password', password, settings.passwordSet ? 'Leave blank to keep the password already saved.' : 'Required the first time you save.'),
+      el('label', { class: 'check-row' }, [
+        secure,
+        el('span', { text: 'Use implicit TLS (port 465)' }),
+      ]),
+      settingsErr,
+      actions([
+        smBtn('Save settings', async () => {
+          settingsErr.textContent = '';
+          try {
+            await api('admin', 'save-mail-settings', {
+              body: {
+                fromName: fromName.value.trim(),
+                fromEmail: fromEmail.value.trim(),
+                replyTo: replyTo.value.trim(),
+                host: host.value.trim(),
+                port: Number(port.value),
+                secure: secure.checked,
+                username: username.value.trim(),
+                password: password.value,
+              },
+            });
+            toast('Email settings saved.');
+            password.value = '';
+            refreshPanel();
+          } catch (e) {
+            settingsErr.textContent = e.message;
+            toast(e.message, 'err');
+          }
+        }, 'btn-primary'),
+        smBtn('Send test to me', async () => {
+          settingsErr.textContent = '';
+          try {
+            await api('admin', 'send-mail', {
+              body: {
+                test: true,
+                subject: 'Clock-Kit test',
+                body: 'This is a test message from the Clock-Kit platform admin panel.',
+                to: user.email,
+              },
+            });
+            toast('Test email sent.');
+            refreshPanel();
+          } catch (e) {
+            settingsErr.textContent = e.message;
+            toast(e.message, 'err');
+          }
+        }),
+      ]),
+    ]),
+    el('div', { class: 'card', style: 'padding:1rem' }, [
+      el('h2', { text: 'Compose' }),
+      el('p', {
+        class: 'muted',
+        text: 'Bulk mail goes out in batches of 20 so the server stays within its time limit. Extra addresses are always added to the audience.',
+      }),
+      field('Audience', audience),
+      orgField,
+      field('Extra addresses', extraEmails, 'Required for custom addresses. Comma, space, or new line between emails.'),
+      field('Subject', subject),
+      field('Message', body),
+      preview,
+      composeErr,
+      actions([
+        smBtn('Preview recipients', async () => {
+          composeErr.textContent = '';
+          try {
+            const payload = composePayload();
+            const data = await api('admin', 'mail-recipients', { body: payload });
+            const sample = (data.sample || []).map((row) => row.email).join(', ');
+            preview.textContent = data.total
+              ? `${data.total} recipient${data.total === 1 ? '' : 's'}${sample ? `. First: ${sample}` : '.'}`
+              : 'No recipients match that audience.';
+          } catch (e) {
+            composeErr.textContent = e.message;
+            toast(e.message, 'err');
+          }
+        }),
+        smBtn('Send', async () => {
+          composeErr.textContent = '';
+          const payload = composePayload();
+          if (!payload.subject || !payload.body) {
+            composeErr.textContent = 'Enter a subject and a message.';
+            return;
+          }
+          try {
+            const data = await api('admin', 'mail-recipients', { body: payload });
+            if (!data.total) {
+              composeErr.textContent = 'No recipients match that audience.';
+              return;
+            }
+            const ok = await confirmAction(
+              `Send “${payload.subject}” to ${data.total} address${data.total === 1 ? '' : 'es'}?`,
+              { confirmLabel: 'Send' },
+            );
+            if (!ok) return;
+            let offset = 0;
+            let sent = 0;
+            let failed = 0;
+            while (offset < 2000) {
+              preview.textContent = `Sending… ${sent + failed} of ${data.total}`;
+              const result = await api('admin', 'send-bulk-mail', { body: { ...payload, offset } });
+              sent += result.sent;
+              failed += result.failed;
+              if (!result.remaining) break;
+              offset = result.offset + result.limit;
+            }
+            toast(failed ? `Sent ${sent}. ${failed} failed.` : `Sent ${sent} email${sent === 1 ? '' : 's'}.`);
+            refreshPanel();
+          } catch (e) {
+            composeErr.textContent = e.message;
+            toast(e.message, 'err');
+          }
+        }, 'btn-primary'),
+      ]),
+    ]),
+    el('div', { class: 'card', style: 'padding:1rem' }, [
+      el('h2', { text: 'Sent' }),
+      table(
+        ['When', 'Audience', 'Subject', 'Sent'],
+        outbox.map((row) => [
+          formatTime(row.createdAt),
+          row.audience,
+          row.subject,
+          `${row.sentCount}/${row.recipientCount}${row.failedCount ? ` · ${row.failedCount} failed` : ''}`,
+        ]),
+      ),
+    ]),
+  ]);
+}
+
 async function profileView() {
   return AccountForm({ user, showIdentity: false });
 }
@@ -1472,6 +1703,7 @@ await bootPanel({
     legal,
     guides,
     help: () => HelpPanel({ fn: 'admin', editable: true, user }),
+    email: emailView,
     billing,
     notifications: AlertsPanel,
     profile: profileView,

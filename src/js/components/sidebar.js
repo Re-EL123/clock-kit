@@ -29,6 +29,7 @@ const SECTION_FOR = {
   legal: 'System',
   guides: 'System',
   help: 'System',
+  email: 'System',
   notifications: 'Account',
   alerts: 'Account',
   profile: 'Account',

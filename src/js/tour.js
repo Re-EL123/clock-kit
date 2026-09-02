@@ -35,6 +35,7 @@ const STEPS = {
     { view: 'legal', title: 'Legal', body: 'Edit Terms and the Privacy Policy. Publishing a new version asks every user to accept it again.' },
     { view: 'guides', title: 'Guides', body: 'Edit the branded SOP and training-manual PDF for each organisation role and for hosts.' },
     { view: 'help', title: 'Help', body: 'Edit FAQs, support contacts, and the feedback form. Inbox is messages people send.' },
+    { view: 'email', title: 'Email', body: 'Save your SMTP settings, then send one message or bulk mail to owners, hosts, candidates, or custom addresses.' },
     { view: 'profile', title: 'Account', body: 'Add a phone number so we can reach you.' },
     { view: 'health', title: 'Health', body: 'Check that the API and database are responding.' },
   ],

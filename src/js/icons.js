@@ -128,6 +128,7 @@ export const VIEW_ICONS = {
   legal: 'file-text',
   guides: 'book',
   help: 'help',
+  email: 'mail',
 };
 
 export function icon(name, { size = 20, className = '', stroke = 2 } = {}) {
