@@ -1486,19 +1486,58 @@ async function emailView() {
   fromEmail.value = settings.fromEmail || '';
   const replyTo = textInput('Optional reply-to', 'email');
   replyTo.value = settings.replyTo || '';
-  const host = textInput('smtp.resend.com');
+  const provider = selectInput(
+    [
+      { value: 'resend', label: 'Resend' },
+      { value: 'smtp', label: 'SMTP' },
+    ],
+    settings.provider || 'resend',
+  );
+  const host = textInput('smtp.example.com');
   host.value = settings.host || '';
   const port = textInput('587', 'number');
   port.value = String(settings.port || 587);
   const username = textInput('SMTP username');
   username.value = settings.username || '';
-  const password = textInput(
-    settings.passwordSet ? 'Leave blank to keep the current password' : 'SMTP password',
-    'password',
-  );
+  const password = textInput('', 'password');
   const secure = el('input', { type: 'checkbox' });
   secure.checked = Boolean(settings.secure);
+  const secretHint = el('p', { class: 'field-help' });
+  const settingsIntro = el('p', { class: 'muted' });
   const settingsErr = el('div', { class: 'form-error' });
+  const smtpBlock = el('div', {}, [
+    field('SMTP host', host),
+    field('Port', port, '587 with STARTTLS, or 465 with implicit TLS.'),
+    field('Username', username, 'Often the same as the from address. Leave blank if the host does not need a username.'),
+    el('label', { class: 'check-row' }, [
+      secure,
+      el('span', { text: 'Use implicit TLS (port 465)' }),
+    ]),
+  ]);
+
+  function paintProvider() {
+    const resend = provider.value !== 'smtp';
+    smtpBlock.hidden = resend;
+    password.placeholder = resend
+      ? (settings.passwordSet || settings.envKeySet ? 'Leave blank to keep the current key' : 're_...')
+      : (settings.passwordSet ? 'Leave blank to keep the current password' : 'SMTP password');
+    secretHint.textContent = resend
+      ? settings.envKeySet && !settings.passwordSet
+        ? 'RESEND_API_KEY is already set on the server. Paste a key here only if you want to override it. The from address must use a domain verified in Resend.'
+        : 'From the Resend API keys page. The from address must use a domain you verified at resend.com/domains. The key is stored encrypted and is never shown again.'
+      : settings.passwordSet
+        ? 'Leave blank to keep the password already saved.'
+        : 'Required the first time you save.';
+    settingsIntro.textContent = settings.configured
+      ? (resend
+        ? 'Resend is ready. The API key is stored encrypted and is never shown again.'
+        : 'SMTP is saved. The password is stored encrypted and is never shown again.')
+      : (resend
+        ? 'Use Resend for platform mail. Verify your sending domain, then paste an API key (or set RESEND_API_KEY on Vercel).'
+        : 'Use your own SMTP host. The password is stored encrypted and is never shown again.');
+  }
+  provider.addEventListener('change', paintProvider);
+  paintProvider();
 
   const audience = selectInput(MAIL_AUDIENCE_OPTIONS, 'custom');
   const orgSelect = el('select', { class: 'input' }, orgOptions(organisations));
@@ -1516,7 +1555,7 @@ async function emailView() {
     class: 'muted',
     text: settings.configured
       ? 'Choose an audience, then preview before you send.'
-      : 'Save SMTP settings before you send mail.',
+      : 'Save email settings before you send mail.',
   });
   const composeErr = el('div', { class: 'form-error' });
 
@@ -1537,23 +1576,14 @@ async function emailView() {
   return el('div', { class: 'grid' }, [
     el('div', { class: 'card', style: 'padding:1rem' }, [
       el('h2', { text: 'Email settings' }),
-      el('p', {
-        class: 'muted',
-        text: settings.configured
-          ? 'SMTP is saved. The password is stored encrypted and is never shown again.'
-          : 'Use your own SMTP (Resend, Gmail app password, or organisation mail). The password is stored encrypted and is never shown again.',
-      }),
+      settingsIntro,
+      field('Provider', provider),
       field('From name', fromName),
-      field('From email', fromEmail),
+      field('From email', fromEmail, 'Must use a domain verified in Resend when Resend is selected.'),
       field('Reply-to', replyTo, 'Optional. Leave blank to use the from address.'),
-      field('SMTP host', host),
-      field('Port', port, '587 with STARTTLS, or 465 with implicit TLS.'),
-      field('Username', username, 'Often the same as the from address. Leave blank if the host does not need a username.'),
-      field('Password', password, settings.passwordSet ? 'Leave blank to keep the password already saved.' : 'Required the first time you save.'),
-      el('label', { class: 'check-row' }, [
-        secure,
-        el('span', { text: 'Use implicit TLS (port 465)' }),
-      ]),
+      smtpBlock,
+      field('API key / password', password),
+      secretHint,
       settingsErr,
       actions([
         smBtn('Save settings', async () => {
@@ -1561,11 +1591,12 @@ async function emailView() {
           try {
             await api('admin', 'save-mail-settings', {
               body: {
+                provider: provider.value,
                 fromName: fromName.value.trim(),
                 fromEmail: fromEmail.value.trim(),
                 replyTo: replyTo.value.trim(),
                 host: host.value.trim(),
-                port: Number(port.value),
+                port: Number(port.value) || undefined,
                 secure: secure.checked,
                 username: username.value.trim(),
                 password: password.value,
@@ -1603,7 +1634,7 @@ async function emailView() {
       el('h2', { text: 'Compose' }),
       el('p', {
         class: 'muted',
-        text: 'Bulk mail goes out in batches of 20 so the server stays within its time limit. Extra addresses are always added to the audience.',
+        text: `Bulk mail goes out in batches of ${settings.batchSize || 100} so the server stays within its time limit. Extra addresses are always added to the audience.`,
       }),
       field('Audience', audience),
       orgField,
