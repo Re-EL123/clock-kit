@@ -1,6 +1,7 @@
 import '../../../css/app.css';
 import { Auth } from '../../auth.js';
 import { api } from '../../api.js';
+import { withBase } from '../../config.js';
 import { el, formatTime, toast, downloadBase64, downloadText, href } from '../../utils/dom.js';
 import { table } from '../../components/sidebar.js';
 import { bootPanel, refreshPanel } from '../../runtime.js';
@@ -86,6 +87,7 @@ function requireAccountFields({ email, password, confirm }) {
 
 function smBtn(label, onClick, kind = '') {
   return el('button', {
+    type: 'button',
     class: `btn ${kind}`.trim(),
     style: 'padding:.45rem .75rem;font-size:.8rem',
     onClick,
@@ -1773,35 +1775,62 @@ function saveProspectBody(values, id) {
   };
 }
 
+async function readImportFile(file) {
+  const buf = new Uint8Array(await file.arrayBuffer());
+  if (!buf.length) throw new Error('The file is empty');
+  if (buf[0] === 0x50 && buf[1] === 0x4b) {
+    throw new Error('Save the spreadsheet as CSV. Clock-Kit cannot read Excel .xlsx files.');
+  }
+  if (buf[0] === 0xd0 && buf[1] === 0xcf) {
+    throw new Error('This Excel file is binary. Save it as CSV and import that instead.');
+  }
+  if (buf[0] === 0xff && buf[1] === 0xfe) return new TextDecoder('utf-16le').decode(buf);
+  if (buf[0] === 0xfe && buf[1] === 0xff) return new TextDecoder('utf-16be').decode(buf);
+  return new TextDecoder('utf-8').decode(buf);
+}
+
 async function outreachView() {
   const params = new URLSearchParams(location.search);
   const q = params.get('q') || '';
   const statusFilter = params.get('status') || '';
-  const data = await api('admin', 'prospects', {
-    body: {
-      ...(q ? { q } : {}),
-      ...(statusFilter ? { status: statusFilter } : {}),
-    },
-  });
-  const prospects = data.prospects || [];
+  let prospects = [];
+  let loadError = '';
+  try {
+    const data = await api('admin', 'prospects', {
+      body: {
+        ...(q ? { q } : {}),
+        ...(statusFilter ? { status: statusFilter } : {}),
+      },
+    });
+    prospects = data.prospects || [];
+  } catch (err) {
+    loadError = err.message;
+  }
   const search = textInput('Search name, email, or phone');
   search.value = q;
   const statusSel = selectInput([{ value: '', label: 'All statuses' }, ...PROSPECT_STATUSES], statusFilter);
+  const importErr = el('div', { class: 'form-error', text: loadError });
   const picker = el('input', {
+    class: 'input',
     type: 'file',
-    accept: '.csv,.xls,.xlsx,text/csv,application/vnd.ms-excel',
-    style: 'display:none',
+    accept: '.csv,.xls,.xlsx,text/csv,text/xml,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   });
+
+  async function importText(text, filename) {
+    importErr.textContent = '';
+    const result = await api('admin', 'import-prospects', { body: { text, filename } });
+    toast(`Imported ${result.imported} organisation${result.imported === 1 ? '' : 's'}.`);
+    refreshPanel();
+  }
+
   picker.addEventListener('change', async () => {
     const file = picker.files?.[0];
     picker.value = '';
     if (!file) return;
     try {
-      const text = await file.text();
-      const result = await api('admin', 'import-prospects', { body: { text, filename: file.name } });
-      toast(`Imported ${result.imported} organisation${result.imported === 1 ? '' : 's'}.`);
-      refreshPanel();
+      await importText(await readImportFile(file), file.name);
     } catch (e) {
+      importErr.textContent = e.message;
       toast(e.message, 'err');
     }
   });
@@ -1826,11 +1855,21 @@ async function outreachView() {
       el('h2', { text: 'Outreach' }),
       el('p', {
         class: 'muted',
-        text: 'Import the Sandton CSV or Excel file, then save, view, and edit each organisation. Excel 2007 .xlsx must be saved as CSV or Excel XML (.xls).',
+        text: 'Import a CSV, or load the Sandton list. If Excel saved a .xlsx, use Save As → CSV first.',
       }),
-      picker,
+      field('CSV or Excel file', picker),
+      importErr,
       actions([
-        smBtn('Import CSV or Excel', () => picker.click()),
+        smBtn('Import Sandton list', async () => {
+          try {
+            const res = await fetch(withBase('outreach/sandton-targets.csv'));
+            if (!res.ok) throw new Error('Could not load the Sandton list from this app.');
+            await importText(await res.text(), 'sandton-targets.csv');
+          } catch (e) {
+            importErr.textContent = e.message;
+            toast(e.message, 'err');
+          }
+        }, 'btn-primary'),
         smBtn('Add organisation', () => {
           openForm({
             title: 'Add organisation',
@@ -1841,12 +1880,13 @@ async function outreachView() {
               toast('Organisation saved.');
             },
           });
-        }, 'btn-primary'),
+        }),
         smBtn('Download CSV', async () => {
           try {
             const file = await api('admin', 'export-prospects', { body: { format: 'csv' } });
             downloadText(file.filename || 'clock-kit-prospects.csv', file.csv, file.mime || 'text/csv');
           } catch (e) {
+            importErr.textContent = e.message;
             toast(e.message, 'err');
           }
         }),
@@ -1855,6 +1895,7 @@ async function outreachView() {
             const file = await api('admin', 'export-prospects', { body: { format: 'xls' } });
             downloadBase64(file.filename || 'clock-kit-prospects.xls', file.excelBase64, file.mime || 'application/vnd.ms-excel');
           } catch (e) {
+            importErr.textContent = e.message;
             toast(e.message, 'err');
           }
         }),
