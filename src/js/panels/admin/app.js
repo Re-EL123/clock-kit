@@ -1809,31 +1809,49 @@ async function outreachView() {
   const search = textInput('Search name, email, or phone');
   search.value = q;
   const statusSel = selectInput([{ value: '', label: 'All statuses' }, ...PROSPECT_STATUSES], statusFilter);
-  const importErr = el('div', { class: 'form-error', text: loadError });
+  const importErr = el('div', { class: loadError ? 'form-error' : 'field-help', text: loadError });
   const picker = el('input', {
-    class: 'input',
     type: 'file',
     accept: '.csv,.xls,.xlsx,text/csv,text/xml,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   });
 
+  function importMessage(text, isError = false) {
+    importErr.className = isError ? 'form-error' : 'field-help';
+    importErr.textContent = text || '';
+  }
+
+  function failImport(err) {
+    const message = (err && err.message) || String(err) || 'Import failed';
+    importMessage(message, true);
+    toast(message, 'err');
+  }
+
   async function importText(text, filename) {
-    importErr.textContent = '';
+    importMessage(`Importing ${filename || 'file'}…`);
     const result = await api('admin', 'import-prospects', { body: { text, filename } });
-    toast(`Imported ${result.imported} organisation${result.imported === 1 ? '' : 's'}.`);
+    const count = Number(result?.imported) || 0;
+    toast(`Imported ${count} organisation${count === 1 ? '' : 's'}.`);
     refreshPanel();
   }
 
-  picker.addEventListener('change', async () => {
+  async function importPickedFile(requireFile = false) {
+    if (importPickedFile.busy) return;
     const file = picker.files?.[0];
-    picker.value = '';
-    if (!file) return;
+    if (!file) {
+      if (requireFile) failImport(new Error('Choose a CSV file first, or click Import Sandton list.'));
+      return;
+    }
+    importPickedFile.busy = true;
     try {
       await importText(await readImportFile(file), file.name);
     } catch (e) {
-      importErr.textContent = e.message;
-      toast(e.message, 'err');
+      failImport(e);
+    } finally {
+      importPickedFile.busy = false;
     }
-  });
+  }
+
+  picker.addEventListener('change', () => importPickedFile(false));
 
   function applyFilters() {
     setView('outreach', {
@@ -1855,19 +1873,20 @@ async function outreachView() {
       el('h2', { text: 'Outreach' }),
       el('p', {
         class: 'muted',
-        text: 'Import a CSV, or load the Sandton list. If Excel saved a .xlsx, use Save As → CSV first.',
+        text: 'Choose a CSV, then click Import file. Import Sandton list loads the 24 organisations without picking a file.',
       }),
       field('CSV or Excel file', picker),
       importErr,
       actions([
+        smBtn('Import file', () => importPickedFile(true)),
         smBtn('Import Sandton list', async () => {
           try {
+            importMessage('Loading Sandton list…');
             const res = await fetch(withBase('outreach/sandton-targets.csv'));
             if (!res.ok) throw new Error('Could not load the Sandton list from this app.');
             await importText(await res.text(), 'sandton-targets.csv');
           } catch (e) {
-            importErr.textContent = e.message;
-            toast(e.message, 'err');
+            failImport(e);
           }
         }, 'btn-primary'),
         smBtn('Add organisation', () => {
@@ -1886,8 +1905,7 @@ async function outreachView() {
             const file = await api('admin', 'export-prospects', { body: { format: 'csv' } });
             downloadText(file.filename || 'clock-kit-prospects.csv', file.csv, file.mime || 'text/csv');
           } catch (e) {
-            importErr.textContent = e.message;
-            toast(e.message, 'err');
+            failImport(e);
           }
         }),
         smBtn('Download Excel', async () => {
@@ -1895,8 +1913,7 @@ async function outreachView() {
             const file = await api('admin', 'export-prospects', { body: { format: 'xls' } });
             downloadBase64(file.filename || 'clock-kit-prospects.xls', file.excelBase64, file.mime || 'application/vnd.ms-excel');
           } catch (e) {
-            importErr.textContent = e.message;
-            toast(e.message, 'err');
+            failImport(e);
           }
         }),
       ]),

@@ -59,7 +59,7 @@
   right: max(1rem, env(safe-area-inset-right));
   bottom: max(1rem, env(safe-area-inset-bottom));
   padding: 0.9rem 1.1rem;
-  z-index: 50;
+  z-index: 90;
   max-width: min(420px, calc(100vw - 2rem));
 }
 

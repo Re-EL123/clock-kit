@@ -59,7 +59,7 @@ export function toast(message, kind = 'ok') {
   ]);
   document.body.append(node);
   playSound(kind === 'err' ? 'err' : kind === 'notify' ? 'notify' : 'ok');
-  setTimeout(() => node.remove(), kind === 'err' ? 8000 : 3800);
+  setTimeout(() => node.remove(), kind === 'err' ? 10000 : 3800);
 }
 
 export function formatTime(iso) {
