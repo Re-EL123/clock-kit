@@ -10,3 +10,5 @@ test-results/
 playwright-report/
 blob-report/
 *.log
+scripts/outreach/.env
+scripts/outreach/sent.jsonl

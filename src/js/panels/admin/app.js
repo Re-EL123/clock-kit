@@ -1,7 +1,7 @@
 import '../../../css/app.css';
 import { Auth } from '../../auth.js';
 import { api } from '../../api.js';
-import { el, formatTime, toast, downloadBase64, href } from '../../utils/dom.js';
+import { el, formatTime, toast, downloadBase64, downloadText, href } from '../../utils/dom.js';
 import { table } from '../../components/sidebar.js';
 import { bootPanel, refreshPanel } from '../../runtime.js';
 import { StatCard } from '../../components/clock-card.js';
@@ -38,11 +38,26 @@ const NAV = [
   { view: 'guides', label: 'Guides' },
   { view: 'help', label: 'Help' },
   { view: 'email', label: 'Email' },
+  { view: 'outreach', label: 'Outreach' },
   { view: 'notifications', label: 'Alerts' },
   { view: 'profile', label: 'Account' },
 ];
 
 const CANDIDATE_REF_HINT = 'Unique code for this person in the organisation (student number, employee number, or placement code). It appears on timesheets and must not be reused.';
+
+const PROSPECT_CATEGORIES = [
+  { value: 'staffing', label: 'Staffing / TES' },
+  { value: 'learnership', label: 'Learnership' },
+  { value: 'ngo', label: 'NGO' },
+  { value: 'other', label: 'Other' },
+];
+
+const PROSPECT_STATUSES = [
+  { value: 'NEW', label: 'New' },
+  { value: 'CONTACTED', label: 'Contacted' },
+  { value: 'REPLIED', label: 'Replied' },
+  { value: 'CLOSED', label: 'Closed' },
+];
 
 function field(label, input, hint) {
   return el('div', { class: 'field' }, [
@@ -123,10 +138,16 @@ function selectInput(options, value = '') {
 function openForm({ title, fields, submitLabel = 'Save', onSubmit }) {
   const inputs = {};
   const nodes = fields.map((item) => {
-    const input = item.options
-      ? selectInput(item.options, item.value || '')
-      : textInput(item.placeholder || item.label, item.type || 'text');
-    if (!item.options && item.value != null) input.value = item.value;
+    let input;
+    if (item.options) {
+      input = selectInput(item.options, item.value || '');
+    } else if (item.type === 'textarea') {
+      input = el('textarea', { class: 'input', rows: String(item.rows || 3), placeholder: item.placeholder || '' });
+      if (item.value != null) input.value = item.value;
+    } else {
+      input = textInput(item.placeholder || item.label, item.type || 'text');
+      if (item.value != null) input.value = item.value;
+    }
     inputs[item.name] = input;
     return field(item.label, input);
   });
@@ -1711,6 +1732,182 @@ async function emailView() {
   ]);
 }
 
+function prospectFields(row = {}) {
+  return [
+    { name: 'name', label: 'Name', value: row.name || '' },
+    {
+      name: 'category',
+      label: 'Category',
+      value: row.category || 'staffing',
+      options: PROSPECT_CATEGORIES,
+    },
+    { name: 'area', label: 'Area', value: row.area || 'Sandton' },
+    { name: 'address', label: 'Address', type: 'textarea', rows: 2, value: row.address || '' },
+    { name: 'email', label: 'Email', type: 'email', value: row.email || '' },
+    { name: 'phone', label: 'Phone', value: row.phone || '' },
+    { name: 'whatsapp', label: 'WhatsApp', value: row.whatsapp || '' },
+    { name: 'website', label: 'Website', value: row.website || '' },
+    { name: 'notes', label: 'Notes', type: 'textarea', rows: 3, value: row.notes || '' },
+    {
+      name: 'status',
+      label: 'Status',
+      value: row.status || 'NEW',
+      options: PROSPECT_STATUSES,
+    },
+  ];
+}
+
+function saveProspectBody(values, id) {
+  return {
+    ...(id ? { id } : {}),
+    name: values.name.trim(),
+    category: values.category,
+    area: values.area.trim(),
+    address: values.address.trim(),
+    email: values.email.trim(),
+    phone: values.phone.trim(),
+    whatsapp: values.whatsapp.trim(),
+    website: values.website.trim(),
+    notes: values.notes.trim(),
+    status: values.status,
+  };
+}
+
+async function outreachView() {
+  const params = new URLSearchParams(location.search);
+  const q = params.get('q') || '';
+  const statusFilter = params.get('status') || '';
+  const data = await api('admin', 'prospects', {
+    body: {
+      ...(q ? { q } : {}),
+      ...(statusFilter ? { status: statusFilter } : {}),
+    },
+  });
+  const prospects = data.prospects || [];
+  const search = textInput('Search name, email, or phone');
+  search.value = q;
+  const statusSel = selectInput([{ value: '', label: 'All statuses' }, ...PROSPECT_STATUSES], statusFilter);
+  const picker = el('input', {
+    type: 'file',
+    accept: '.csv,.xls,.xlsx,text/csv,application/vnd.ms-excel',
+    style: 'display:none',
+  });
+  picker.addEventListener('change', async () => {
+    const file = picker.files?.[0];
+    picker.value = '';
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const result = await api('admin', 'import-prospects', { body: { text, filename: file.name } });
+      toast(`Imported ${result.imported} organisation${result.imported === 1 ? '' : 's'}.`);
+      refreshPanel();
+    } catch (e) {
+      toast(e.message, 'err');
+    }
+  });
+
+  function applyFilters() {
+    setView('outreach', {
+      ...(search.value.trim() ? { q: search.value.trim() } : {}),
+      ...(statusSel.value ? { status: statusSel.value } : {}),
+    });
+    refreshPanel();
+  }
+  search.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      applyFilters();
+    }
+  });
+  statusSel.addEventListener('change', applyFilters);
+
+  return el('div', { class: 'stack' }, [
+    el('div', { class: 'card', style: 'padding:1rem' }, [
+      el('h2', { text: 'Outreach' }),
+      el('p', {
+        class: 'muted',
+        text: 'Import the Sandton CSV or Excel file, then save, view, and edit each organisation. Excel 2007 .xlsx must be saved as CSV or Excel XML (.xls).',
+      }),
+      picker,
+      actions([
+        smBtn('Import CSV or Excel', () => picker.click()),
+        smBtn('Add organisation', () => {
+          openForm({
+            title: 'Add organisation',
+            submitLabel: 'Save',
+            fields: prospectFields(),
+            onSubmit: async (values) => {
+              await api('admin', 'save-prospect', { body: saveProspectBody(values) });
+              toast('Organisation saved.');
+            },
+          });
+        }, 'btn-primary'),
+        smBtn('Download CSV', async () => {
+          try {
+            const file = await api('admin', 'export-prospects', { body: { format: 'csv' } });
+            downloadText(file.filename || 'clock-kit-prospects.csv', file.csv, file.mime || 'text/csv');
+          } catch (e) {
+            toast(e.message, 'err');
+          }
+        }),
+        smBtn('Download Excel', async () => {
+          try {
+            const file = await api('admin', 'export-prospects', { body: { format: 'xls' } });
+            downloadBase64(file.filename || 'clock-kit-prospects.xls', file.excelBase64, file.mime || 'application/vnd.ms-excel');
+          } catch (e) {
+            toast(e.message, 'err');
+          }
+        }),
+      ]),
+    ]),
+    el('div', { class: 'card', style: 'padding:1rem' }, [
+      el('h2', { text: 'Organisations' }),
+      el('p', { class: 'muted', text: `${prospects.length} saved.` }),
+      field('Search', search),
+      field('Status', statusSel),
+      smBtn('Apply filters', applyFilters),
+      table(
+        ['Name', 'Category', 'Area', 'Email', 'Phone', 'WhatsApp', 'Status', 'Actions'],
+        prospects.map((row) => [
+          row.name,
+          row.category || '—',
+          row.area || '—',
+          row.email || '—',
+          row.phone || '—',
+          row.whatsapp || '—',
+          row.status,
+          actions([
+            smBtn('Edit', () => {
+              openForm({
+                title: `Edit ${row.name}`,
+                fields: prospectFields(row),
+                onSubmit: async (values) => {
+                  await api('admin', 'save-prospect', { body: saveProspectBody(values, row.id) });
+                  toast('Organisation saved.');
+                },
+              });
+            }),
+            smBtn('Delete', async () => {
+              const ok = await confirmAction(`Delete ${row.name} from outreach?`, {
+                danger: true,
+                confirmLabel: 'Delete',
+              });
+              if (!ok) return;
+              try {
+                await api('admin', 'delete-prospect', { body: { id: row.id } });
+                toast('Deleted.');
+                refreshPanel();
+              } catch (e) {
+                toast(e.message, 'err');
+              }
+            }),
+          ]),
+        ]),
+      ),
+    ]),
+  ]);
+}
+
 async function profileView() {
   return AccountForm({ user, showIdentity: false });
 }
@@ -1735,6 +1932,7 @@ await bootPanel({
     guides,
     help: () => HelpPanel({ fn: 'admin', editable: true, user }),
     email: emailView,
+    outreach: outreachView,
     billing,
     notifications: AlertsPanel,
     profile: profileView,

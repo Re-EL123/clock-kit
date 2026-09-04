@@ -129,6 +129,7 @@ export const VIEW_ICONS = {
   guides: 'book',
   help: 'help',
   email: 'mail',
+  outreach: 'share',
 };
 
 export function icon(name, { size = 20, className = '', stroke = 2 } = {}) {

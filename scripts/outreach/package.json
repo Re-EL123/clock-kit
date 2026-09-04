@@ -1,0 +1,12 @@
+{
+  "name": "clock-kit-outreach",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "preview": "node send.js",
+    "send": "node send.js --send"
+  },
+  "dependencies": {
+    "nodemailer": "6.10.1"
+  }
+}

@@ -36,6 +36,7 @@ const STEPS = {
     { view: 'guides', title: 'Guides', body: 'Edit the branded SOP and training-manual PDF for each organisation role and for hosts.' },
     { view: 'help', title: 'Help', body: 'Edit FAQs, support contacts, and the feedback form. Inbox is messages people send.' },
     { view: 'email', title: 'Email', body: 'Save Resend (or SMTP), then send one message or bulk mail to owners, hosts, candidates, or custom addresses.' },
+    { view: 'outreach', title: 'Outreach', body: 'Import CSV or Excel lists, then save, view, and edit organisations you want to contact.' },
     { view: 'profile', title: 'Account', body: 'Add a phone number so we can reach you.' },
     { view: 'health', title: 'Health', body: 'Check that the API and database are responding.' },
   ],

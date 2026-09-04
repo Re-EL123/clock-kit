@@ -1,0 +1,146 @@
+[
+  {
+    "area": "Sandton",
+    "name": "The Learning Organisation",
+    "email": "info@tlo.co.za",
+    "phone": "010 612 0679",
+    "why": "You place unemployed learners at host employers and manage the learnership end-to-end.",
+    "web": "https://future.tlo.co.za/learnerships/"
+  },
+  {
+    "area": "Sandton",
+    "name": "Skills Development Corporation",
+    "email": "info@sd-corp.co.za",
+    "phone": "010 900 3115",
+    "why": "You source, host, and administer learnerships at scale from Paulshof.",
+    "web": "https://sd-corp.co.za"
+  },
+  {
+    "area": "Alberton",
+    "name": "Learnership Lab",
+    "email": "christa@learnershiplab.co.za",
+    "phone": "",
+    "why": "You run accredited learnerships from Alberton and work with merSETA and Services SETA.",
+    "web": "https://learnershiplab.co.za"
+  },
+  {
+    "area": "Randburg",
+    "name": "Advanced Assessments and Training",
+    "email": "orders@aaat.co.za",
+    "phone": "010 110 0081",
+    "why": "You train and place learners from Boskruin.",
+    "web": "https://advancedassessments.co.za"
+  },
+  {
+    "area": "Randburg",
+    "name": "Visionary Skills Academy",
+    "email": "info@visionaryskills.co.za",
+    "phone": "011 027 8189",
+    "why": "You implement learnerships and graduate placements from Northriding.",
+    "web": "https://www.visionaryskills.co.za"
+  },
+  {
+    "area": "Randburg",
+    "name": "Networx for Career Development",
+    "email": "info@networxgroup.co.za",
+    "phone": "011 431 4430",
+    "why": "You manage learnerships from set-up through SETA reporting in Fairland.",
+    "web": "https://networxgroup.co.za"
+  },
+  {
+    "area": "Randburg",
+    "name": "InnerOUT Training Solutions",
+    "email": "shirley@iots.co.za",
+    "phone": "082 683 1274",
+    "why": "You deliver SETA-accredited learnerships from Randburg.",
+    "web": "https://www.iots.co.za/contact.html"
+  },
+  {
+    "area": "Randburg",
+    "name": "Skills Junction",
+    "email": "info@skillsjunction.co.za",
+    "phone": "072 137 7673",
+    "why": "You are a QCTO and SETA accredited skills provider serving Johannesburg North.",
+    "web": "https://skillsjunction.co.za"
+  },
+  {
+    "area": "Sandton",
+    "name": "Tiso Skills Development Fund",
+    "email": "mkimmie@tiso.co.za",
+    "phone": "011 784 4111",
+    "why": "You manage skills-development spend and B-BBEE outcomes from Sandton.",
+    "web": "https://tisoskillsfund.co.za/contact-us/"
+  },
+  {
+    "area": "Sandton",
+    "name": "Beth Horner & Associates",
+    "email": "info@bethhorner.net",
+    "phone": "087 153 8657",
+    "why": "You run MICT SETA IT learnerships with a Sandton training venue.",
+    "web": "https://bethhorner.net/learnerships/"
+  },
+  {
+    "area": "Alberton",
+    "name": "Blind SA",
+    "email": "ceo@blindsa.org.za",
+    "phone": "011 839 1793",
+    "why": "You train and place visually impaired people from Alrode.",
+    "web": "https://www.blindsa.org.za"
+  },
+  {
+    "area": "Alberton",
+    "name": "Manna Employment Services",
+    "email": "aimy@mannahr.co.za",
+    "phone": "011 869 5060",
+    "why": "You place and payroll staff at transport and warehouse sites across Gauteng.",
+    "web": "https://mannahr.co.za"
+  },
+  {
+    "area": "Alberton",
+    "name": "Kempston Employment Solutions Alberton",
+    "email": "employment@kempston.co.za",
+    "phone": "078 451 7741",
+    "why": "You supply temporary staff from your Alberton branch.",
+    "web": "https://kempston.co.za/employment-solutions/employment-solutions-alberton/"
+  },
+  {
+    "area": "Alberton",
+    "name": "JMZ Multi-skills Training Centre",
+    "email": "Jmzmultiskills@gmail.com",
+    "phone": "073 560 2664",
+    "why": "You train operators in Alberton and Germiston and help graduates find work.",
+    "web": "https://www.jmzmultiskills.com"
+  },
+  {
+    "area": "Randburg",
+    "name": "Kontak Recruitment",
+    "email": "placements@kontak.co.za",
+    "phone": "011 431 3542",
+    "why": "You place permanent and contract staff from Randburg.",
+    "web": "https://www.kontak.co.za"
+  },
+  {
+    "area": "Randburg",
+    "name": "Ingenious Personnel",
+    "email": "cvs@ingeniouspersonnel.co.za",
+    "phone": "060 555 7940",
+    "why": "You recruit from Robindale, Randburg.",
+    "web": "https://www.ingeniouspersonnel.co.za/contact-ingenious-personnel/"
+  },
+  {
+    "area": "Randburg",
+    "name": "Kempston Johannesburg North",
+    "email": "employment@kempston.co.za",
+    "phone": "087 351 1008",
+    "why": "You supply temporary staff from Kensington B, Randburg.",
+    "web": "https://kempston.co.za/employment-solutions/employment-solutions-johannesburg-north/"
+  },
+  {
+    "area": "Gauteng",
+    "name": "VCA Consulting",
+    "email": "vca@vcaconsulting.co.za",
+    "phone": "011 425 3575",
+    "why": "You handle skills-development facilitation for employers across Alberton, Sandton, and Randburg.",
+    "web": "https://vcaconsulting.co.za"
+  }
+]

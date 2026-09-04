@@ -30,6 +30,7 @@ const SECTION_FOR = {
   guides: 'System',
   help: 'System',
   email: 'System',
+  outreach: 'System',
   notifications: 'Account',
   alerts: 'Account',
   profile: 'Account',
