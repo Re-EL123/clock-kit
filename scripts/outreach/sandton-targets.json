@@ -1,170 +1,6 @@
 [
   {
-    "name": "Quest Staffing / Adcorp / Kelly",
-    "category": "staffing",
-    "area": "Sandton",
-    "address": "Adcorp Place, 102 Western Service Rd, Gallo Manor, Sandton, 2191",
-    "email": "info@quest.co.za",
-    "phone": "010 800 0000",
-    "whatsapp": "",
-    "website": "https://www.quest.co.za",
-    "notes": "Adcorp group. Kelly also lists this Woodmead address."
-  },
-  {
-    "name": "Kelly",
-    "category": "staffing",
-    "area": "Sandton",
-    "address": "6 Protea Place, Sandton (also Adcorp Place, Woodmead)",
-    "email": "info@kelly.co.za",
-    "phone": "011 722 8300",
-    "whatsapp": "",
-    "website": "https://www.kelly.co.za",
-    "notes": "Part of Adcorp. Confirm which desk to call before outreach."
-  },
-  {
-    "name": "Primeserv Group",
-    "category": "staffing",
-    "area": "Sandton",
-    "address": "25 Rudd Road, Illovo, Sandton, 2196",
-    "email": "productivity@primeserv.co.za",
-    "phone": "011 691 8000 / 0860 777 677",
-    "whatsapp": "",
-    "website": "https://www.primeserv.co.za",
-    "notes": ""
-  },
-  {
-    "name": "MECS Africa",
-    "category": "staffing",
-    "area": "Sandton",
-    "address": "MMG House, 66 Park Lane, Sandton, 2196",
-    "email": "",
-    "phone": "011 218 8060",
-    "whatsapp": "",
-    "website": "https://www.mecs.co.za",
-    "notes": "No public inbox. Use the contact form on mecs.co.za. TESD also lists 61 Katherine St."
-  },
-  {
-    "name": "The Only Option",
-    "category": "staffing",
-    "area": "Sandton",
-    "address": "12 Desmond Street, Kramerville, Sandton, 2090",
-    "email": "admin@theonlyoption.co",
-    "phone": "011 234 3454",
-    "whatsapp": "",
-    "website": "https://theonlyoption.co",
-    "notes": ""
-  },
-  {
-    "name": "Impact Human Resources",
-    "category": "staffing",
-    "area": "Sandton",
-    "address": "Pinmill Office Park, Block G, 164 Katherine St, Sandton",
-    "email": "info@impacthr.co.za",
-    "phone": "010 241 7000",
-    "whatsapp": "",
-    "website": "https://www.impacthr.co.za",
-    "notes": "TESD lists Pinmill / Katherine St. Website now Waterfall Office Park, 2 Augrabies Rd, Midrand."
-  },
-  {
-    "name": "FROGG Recruitment",
-    "category": "staffing",
-    "area": "Sandton",
-    "address": "155 West St, Sandown, Sandton, 2196",
-    "email": "sales@froggsa.co.za",
-    "phone": "010 824 6772",
-    "whatsapp": "",
-    "website": "https://www.froggsa.co.za",
-    "notes": ""
-  },
-  {
-    "name": "Jelocorp Group",
-    "category": "staffing",
-    "area": "Sandton",
-    "address": "155 West St, Sandton CBD, 2031",
-    "email": "recruitment@jelocorp.com",
-    "phone": "081 794 2924",
-    "whatsapp": "081 794 2924",
-    "website": "https://www.jelocorp.com",
-    "notes": "Mobile is worth trying on WhatsApp."
-  },
-  {
-    "name": "Robert Walters Africa",
-    "category": "staffing",
-    "area": "Sandton",
-    "address": "19th Floor, GreenPark Corner, cnr West Rd South & Lower Rd, Morningside, Sandton, 2196",
-    "email": "south.africa@robertwalters.com",
-    "phone": "011 881 2400",
-    "whatsapp": "",
-    "website": "https://www.robertwalters.co.za",
-    "notes": ""
-  },
-  {
-    "name": "Michael Page",
-    "category": "staffing",
-    "area": "Sandton",
-    "address": "5th Floor, The Forum, 2 Maude Street, Sandton City, 2196",
-    "email": "clientafrica@michaelpage.co.za",
-    "phone": "011 303 8341",
-    "whatsapp": "",
-    "website": "https://www.michaelpage.co.za",
-    "notes": ""
-  },
-  {
-    "name": "GAP Consulting",
-    "category": "staffing",
-    "area": "Sandton",
-    "address": "2nd Floor, West Tower, Nelson Mandela Square, Maude St, Sandton, 2196",
-    "email": "info@gapconsulting.co.za",
-    "phone": "086 111 4992",
-    "whatsapp": "",
-    "website": "https://www.gapconsulting.co.za",
-    "notes": ""
-  },
-  {
-    "name": "CG Recruitment",
-    "category": "staffing",
-    "area": "Sandton",
-    "address": "Atrium on 5th, 9th floor, Sandton",
-    "email": "info@cgrecruitment.co.za",
-    "phone": "010 634 4931",
-    "whatsapp": "",
-    "website": "https://www.cgrecruitment.co.za",
-    "notes": ""
-  },
-  {
-    "name": "Embark Recruitment",
-    "category": "staffing",
-    "area": "Sandton",
-    "address": "48 Coleraine Drive, River Club, Sandton, 2191",
-    "email": "info@embarkrecruitment.co.za",
-    "phone": "076 223 5185",
-    "whatsapp": "076 223 5185",
-    "website": "https://www.embarkrecruitment.co.za",
-    "notes": "Mobile is worth trying on WhatsApp."
-  },
-  {
-    "name": "RED|LINE Recruitment",
-    "category": "staffing",
-    "area": "Sandton",
-    "address": "Bryanston, Sandton",
-    "email": "",
-    "phone": "060 338 8920",
-    "whatsapp": "060 338 8920",
-    "website": "",
-    "notes": "Street number not on the site. No public inbox. Mobile is worth trying on WhatsApp."
-  },
-  {
-    "name": "Total Recruitment Solutions",
-    "category": "staffing",
-    "area": "Sandton",
-    "address": "Sandton (Maps listing; office phone is national)",
-    "email": "trs@totalrecruitment.solutions",
-    "phone": "011 970 3166",
-    "whatsapp": "",
-    "website": "https://totalrecruitment.solutions",
-    "notes": "Confirm the Sandton desk before a visit."
-  },
-  {
+    "priority": 10,
     "name": "The Learning Organisation",
     "category": "learnership",
     "area": "Sandton",
@@ -173,9 +9,11 @@
     "phone": "010 612 0679",
     "whatsapp": "",
     "website": "https://www.tlo.co.za",
-    "notes": ""
+    "pitch": "You place unemployed learners at host employers and manage the learnership end-to-end.",
+    "notes": "Start here this week. Email, then phone in 3–5 days if there is no reply."
   },
   {
+    "priority": 11,
     "name": "Skills Development Corporation",
     "category": "learnership",
     "area": "Sandton",
@@ -184,9 +22,11 @@
     "phone": "010 900 3115",
     "whatsapp": "",
     "website": "https://www.sdcorp.co.za",
-    "notes": ""
+    "pitch": "You source, host, and administer learnerships at scale from Paulshof.",
+    "notes": "This week. One email, then the office number."
   },
   {
+    "priority": 12,
     "name": "Tiso Skills Development Fund",
     "category": "learnership",
     "area": "Sandton",
@@ -195,9 +35,11 @@
     "phone": "011 784 4111",
     "whatsapp": "",
     "website": "https://www.tiso.co.za",
-    "notes": ""
+    "pitch": "You fund skills programmes and place learners with host employers from Alice Lane.",
+    "notes": "This week. Named inbox, so keep the note to one person."
   },
   {
+    "priority": 13,
     "name": "Beth Horner & Associates",
     "category": "learnership",
     "area": "Sandton",
@@ -206,9 +48,180 @@
     "phone": "087 153 8657",
     "whatsapp": "",
     "website": "https://www.bethhorner.net",
-    "notes": "087 numbers are usually VoIP, not WhatsApp."
+    "pitch": "You run training and learnerships with a Sandton venue.",
+    "notes": "This week. 087 is usually VoIP, not WhatsApp."
   },
   {
+    "priority": 20,
+    "name": "Quest Staffing / Adcorp / Kelly",
+    "category": "staffing",
+    "area": "Sandton",
+    "address": "Adcorp Place, 102 Western Service Rd, Gallo Manor, Sandton, 2191",
+    "email": "info@quest.co.za",
+    "phone": "010 800 0000",
+    "whatsapp": "",
+    "website": "https://www.quest.co.za",
+    "pitch": "You place candidates at host sites through the Adcorp / Quest / Kelly network.",
+    "notes": "Next after learnerships. Adcorp group. Kelly also lists this Woodmead address."
+  },
+  {
+    "priority": 21,
+    "name": "Kelly",
+    "category": "staffing",
+    "area": "Sandton",
+    "address": "6 Protea Place, Sandton (also Adcorp Place, Woodmead)",
+    "email": "info@kelly.co.za",
+    "phone": "011 722 8300",
+    "whatsapp": "",
+    "website": "https://www.kelly.co.za",
+    "pitch": "You staff host employers from Sandton and Woodmead.",
+    "notes": "Part of Adcorp. Confirm which desk to call before a visit."
+  },
+  {
+    "priority": 22,
+    "name": "Primeserv Group",
+    "category": "staffing",
+    "area": "Sandton",
+    "address": "25 Rudd Road, Illovo, Sandton, 2196",
+    "email": "productivity@primeserv.co.za",
+    "phone": "011 691 8000 / 0860 777 677",
+    "whatsapp": "",
+    "website": "https://www.primeserv.co.za",
+    "pitch": "You supply and manage people at client workplaces from Illovo.",
+    "notes": ""
+  },
+  {
+    "priority": 23,
+    "name": "The Only Option",
+    "category": "staffing",
+    "area": "Sandton",
+    "address": "12 Desmond Street, Kramerville, Sandton, 2090",
+    "email": "admin@theonlyoption.co",
+    "phone": "011 234 3454",
+    "whatsapp": "",
+    "website": "https://theonlyoption.co",
+    "pitch": "You recruit and place people into host roles from Kramerville.",
+    "notes": ""
+  },
+  {
+    "priority": 24,
+    "name": "Impact Human Resources",
+    "category": "staffing",
+    "area": "Sandton",
+    "address": "Pinmill Office Park, Block G, 164 Katherine St, Sandton",
+    "email": "info@impacthr.co.za",
+    "phone": "010 241 7000",
+    "whatsapp": "",
+    "website": "https://www.impacthr.co.za",
+    "pitch": "You place and manage people at client sites from Sandton / Midrand.",
+    "notes": "TESD lists Pinmill / Katherine St. Website now Waterfall Office Park, 2 Augrabies Rd, Midrand."
+  },
+  {
+    "priority": 25,
+    "name": "FROGG Recruitment",
+    "category": "staffing",
+    "area": "Sandton",
+    "address": "155 West St, Sandown, Sandton, 2196",
+    "email": "sales@froggsa.co.za",
+    "phone": "010 824 6772",
+    "whatsapp": "",
+    "website": "https://www.froggsa.co.za",
+    "pitch": "You recruit for host employers from Sandown.",
+    "notes": ""
+  },
+  {
+    "priority": 26,
+    "name": "Jelocorp Group",
+    "category": "staffing",
+    "area": "Sandton",
+    "address": "155 West St, Sandton CBD, 2031",
+    "email": "recruitment@jelocorp.com",
+    "phone": "081 794 2924",
+    "whatsapp": "081 794 2924",
+    "website": "https://www.jelocorp.com",
+    "pitch": "You recruit and place people into workplaces from Sandton CBD.",
+    "notes": "Email first. Mobile is worth trying on WhatsApp if they do not reply."
+  },
+  {
+    "priority": 27,
+    "name": "Robert Walters Africa",
+    "category": "staffing",
+    "area": "Sandton",
+    "address": "19th Floor, GreenPark Corner, cnr West Rd South & Lower Rd, Morningside, Sandton, 2196",
+    "email": "south.africa@robertwalters.com",
+    "phone": "011 881 2400",
+    "whatsapp": "",
+    "website": "https://www.robertwalters.co.za",
+    "pitch": "You place professionals at client sites across South Africa from Morningside.",
+    "notes": ""
+  },
+  {
+    "priority": 28,
+    "name": "Michael Page",
+    "category": "staffing",
+    "area": "Sandton",
+    "address": "5th Floor, The Forum, 2 Maude Street, Sandton City, 2196",
+    "email": "clientafrica@michaelpage.co.za",
+    "phone": "011 303 8341",
+    "whatsapp": "",
+    "website": "https://www.michaelpage.co.za",
+    "pitch": "You place people into client workplaces from Sandton City.",
+    "notes": ""
+  },
+  {
+    "priority": 29,
+    "name": "GAP Consulting",
+    "category": "staffing",
+    "area": "Sandton",
+    "address": "2nd Floor, West Tower, Nelson Mandela Square, Maude St, Sandton, 2196",
+    "email": "info@gapconsulting.co.za",
+    "phone": "086 111 4992",
+    "whatsapp": "",
+    "website": "https://www.gapconsulting.co.za",
+    "pitch": "You consult and place people at host employers from Nelson Mandela Square.",
+    "notes": ""
+  },
+  {
+    "priority": 30,
+    "name": "CG Recruitment",
+    "category": "staffing",
+    "area": "Sandton",
+    "address": "Atrium on 5th, 9th floor, Sandton",
+    "email": "info@cgrecruitment.co.za",
+    "phone": "010 634 4931",
+    "whatsapp": "",
+    "website": "https://www.cgrecruitment.co.za",
+    "pitch": "You recruit for host employers from Atrium on 5th.",
+    "notes": ""
+  },
+  {
+    "priority": 31,
+    "name": "Embark Recruitment",
+    "category": "staffing",
+    "area": "Sandton",
+    "address": "48 Coleraine Drive, River Club, Sandton, 2191",
+    "email": "info@embarkrecruitment.co.za",
+    "phone": "076 223 5185",
+    "whatsapp": "076 223 5185",
+    "website": "https://www.embarkrecruitment.co.za",
+    "pitch": "You recruit and place people from River Club.",
+    "notes": "Email first. Mobile is worth trying on WhatsApp if they do not reply."
+  },
+  {
+    "priority": 32,
+    "name": "Total Recruitment Solutions",
+    "category": "staffing",
+    "area": "Sandton",
+    "address": "Sandton (Maps listing; office phone is national)",
+    "email": "trs@totalrecruitment.solutions",
+    "phone": "011 970 3166",
+    "whatsapp": "",
+    "website": "https://totalrecruitment.solutions",
+    "pitch": "You recruit nationally and list a Sandton presence.",
+    "notes": "Confirm the Sandton desk before a visit."
+  },
+  {
+    "priority": 40,
     "name": "Afrika Tikkun",
     "category": "ngo",
     "area": "Sandton",
@@ -217,9 +230,37 @@
     "phone": "011 325 5914",
     "whatsapp": "",
     "website": "https://www.afrikatikkun.org",
-    "notes": "Head office. WhatsApp is opt-in on their site, not a published number."
+    "pitch": "You support young people who are placed at workplaces. Clock-Kit has an NGO billing plan if you run host placements.",
+    "notes": "Ask whether they run host placements. WhatsApp is opt-in on their site."
   },
   {
+    "priority": 50,
+    "name": "MECS Africa",
+    "category": "staffing",
+    "area": "Sandton",
+    "address": "MMG House, 66 Park Lane, Sandton, 2196",
+    "email": "",
+    "phone": "011 218 8060",
+    "whatsapp": "",
+    "website": "https://www.mecs.co.za",
+    "pitch": "You place people at client sites from Park Lane.",
+    "notes": "No public inbox. Call or use the contact form on mecs.co.za. TESD also lists 61 Katherine St."
+  },
+  {
+    "priority": 51,
+    "name": "RED|LINE Recruitment",
+    "category": "staffing",
+    "area": "Sandton",
+    "address": "Bryanston, Sandton",
+    "email": "",
+    "phone": "060 338 8920",
+    "whatsapp": "060 338 8920",
+    "website": "",
+    "notes": "No public inbox. Introduce yourself on WhatsApp first. Street number is not on the site.",
+    "pitch": "You recruit from Bryanston / Sandton."
+  },
+  {
+    "priority": 90,
     "name": "Elite Employment",
     "category": "staffing",
     "area": "Sandton",
@@ -228,9 +269,11 @@
     "phone": "",
     "whatsapp": "",
     "website": "",
-    "notes": "Google Maps listing only. Confirm address, email, and phone before outreach."
+    "pitch": "",
+    "notes": "Google Maps listing only. Confirm address, email, and phone before any outreach."
   },
   {
+    "priority": 91,
     "name": "LVB Recruitment",
     "category": "staffing",
     "area": "Sandton",
@@ -239,9 +282,11 @@
     "phone": "",
     "whatsapp": "",
     "website": "",
-    "notes": "Google Maps listing only. Confirm address, email, and phone before outreach."
+    "pitch": "",
+    "notes": "Google Maps listing only. Confirm address, email, and phone before any outreach."
   },
   {
+    "priority": 92,
     "name": "BossJansen Executive Search",
     "category": "staffing",
     "area": "Sandton",
@@ -250,9 +295,11 @@
     "phone": "",
     "whatsapp": "",
     "website": "",
-    "notes": "Google Maps listing only. Confirm address, email, and phone before outreach."
+    "pitch": "",
+    "notes": "Google Maps listing only. Confirm address, email, and phone before any outreach."
   },
   {
+    "priority": 93,
     "name": "Emporium Human Capital",
     "category": "staffing",
     "area": "Sandton",
@@ -261,6 +308,7 @@
     "phone": "",
     "whatsapp": "",
     "website": "",
-    "notes": "Google Maps listing only. Confirm address, email, and phone before outreach."
+    "pitch": "",
+    "notes": "Google Maps listing only. Confirm address, email, and phone before any outreach."
   }
 ]

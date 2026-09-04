@@ -23,6 +23,13 @@ import {
   downloadGuide,
 } from '../../components/guides-panel.js';
 import { HelpPanel } from '../../components/help-panel.js';
+import {
+  channelLabel,
+  outreachChannel,
+  outreachDraft,
+  outreachWave,
+  waHref,
+} from '../../outreach-draft.js';
 
 const NAV = [
   { view: 'dashboard', label: 'Dashboard' },
@@ -1661,7 +1668,7 @@ async function emailView() {
       }),
       field('Audience', audience),
       orgField,
-      field('Extra addresses', extraEmails, 'Required for custom addresses. Comma, space, or new line between emails.'),
+      field('Extra addresses', extraEmails, 'For one-off outreach, copy a single address from Outreach → Draft. Do not paste the whole Sandton list here.'),
       field('Subject', subject),
       field('Message', body),
       preview,
@@ -1749,6 +1756,8 @@ function prospectFields(row = {}) {
     { name: 'phone', label: 'Phone', value: row.phone || '' },
     { name: 'whatsapp', label: 'WhatsApp', value: row.whatsapp || '' },
     { name: 'website', label: 'Website', value: row.website || '' },
+    { name: 'priority', label: 'Sequence (lower first)', type: 'number', value: String(row.priority || 100) },
+    { name: 'pitch', label: 'Pitch', type: 'textarea', rows: 2, value: row.pitch || '' },
     { name: 'notes', label: 'Notes', type: 'textarea', rows: 3, value: row.notes || '' },
     {
       name: 'status',
@@ -1770,9 +1779,90 @@ function saveProspectBody(values, id) {
     phone: values.phone.trim(),
     whatsapp: values.whatsapp.trim(),
     website: values.website.trim(),
+    priority: Number(values.priority) || 100,
+    pitch: values.pitch.trim(),
     notes: values.notes.trim(),
     status: values.status,
   };
+}
+
+async function copyText(text, ok) {
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch {
+    const box = el('textarea');
+    box.value = text;
+    box.setAttribute('style', 'position:fixed;left:-999px');
+    document.body.append(box);
+    box.select();
+    document.execCommand('copy');
+    box.remove();
+  }
+  toast(ok || 'Copied.');
+}
+
+function rowFormValues(row, extra = {}) {
+  return {
+    name: row.name || '',
+    category: row.category || 'staffing',
+    area: row.area || '',
+    address: row.address || '',
+    email: row.email || '',
+    phone: row.phone || '',
+    whatsapp: row.whatsapp || '',
+    website: row.website || '',
+    priority: String(row.priority || 100),
+    pitch: row.pitch || '',
+    notes: row.notes || '',
+    status: extra.status || row.status || 'NEW',
+  };
+}
+
+function openDraft(row) {
+  const draft = outreachDraft(row);
+  const bodyBox = el('textarea', { class: 'input', rows: '12' });
+  bodyBox.value = draft.channel === 'whatsapp' ? draft.whatsapp : draft.channel === 'call' ? draft.call : draft.mailText;
+  const modal = Modal({
+    title: row.name,
+    onClose: () => modal.remove(),
+    children: [
+      el('p', {
+        class: 'muted',
+        text: `${outreachWave(row.priority)} · ${channelLabel(draft.channel)}. ${draft.hint}`,
+      }),
+      draft.channel === 'email'
+        ? field('Subject', el('input', { class: 'input', value: draft.subject, readonly: true }))
+        : null,
+      field('Draft', bodyBox),
+      el('div', { class: 'modal-actions' }, [
+        el('button', { type: 'button', class: 'btn', onClick: () => modal.remove() }, ['Close']),
+        smBtn('Copy draft', () => copyText(bodyBox.value, 'Draft copied.')),
+        row.email && draft.channel === 'email'
+          ? smBtn('Open mail app', () => {
+              location.href = `mailto:${encodeURIComponent(row.email)}?subject=${encodeURIComponent(draft.subject)}&body=${encodeURIComponent(bodyBox.value)}`;
+            })
+          : null,
+        row.whatsapp && (draft.channel === 'whatsapp' || draft.channel === 'email')
+          ? smBtn('Open WhatsApp', () => {
+              window.open(`${waHref(row.whatsapp)}?text=${encodeURIComponent(draft.whatsapp)}`, '_blank', 'noopener');
+            })
+          : null,
+        row.id
+          ? smBtn('Mark contacted', async () => {
+              try {
+                await api('admin', 'save-prospect', { body: saveProspectBody(rowFormValues(row, { status: 'CONTACTED' }), row.id) });
+                toast('Marked contacted.');
+                modal.remove();
+                refreshPanel();
+              } catch (e) {
+                toast(e.message, 'err');
+              }
+            }, 'btn-primary')
+          : null,
+      ].filter(Boolean)),
+    ],
+  });
+  document.body.append(modal);
 }
 
 async function readImportFile(file) {
@@ -1873,7 +1963,7 @@ async function outreachView() {
       el('h2', { text: 'Outreach' }),
       el('p', {
         class: 'muted',
-        text: 'Choose a CSV, then click Import file. Import Sandton list loads the 24 organisations without picking a file.',
+        text: 'Choose a CSV, then click Import file. Import Sandton list loads the sequence, pitches, and drafts. Re-import does not reset Contacted or Replied.',
       }),
       field('CSV or Excel file', picker),
       importErr,
@@ -1919,22 +2009,33 @@ async function outreachView() {
       ]),
     ]),
     el('div', { class: 'card', style: 'padding:1rem' }, [
+      el('h2', { text: 'This week' }),
+      el('p', {
+        class: 'muted',
+        text: 'One organisation at a time. Email first, honour stop, phone after 3–5 days if they do not reply. WhatsApp only the three mobiles on the list. After a walkthrough, create their organisation on Organisations — they do not self-signup.',
+      }),
+      el('p', {
+        class: 'muted',
+        text: 'Sequence: learnerships (TLO, SDC, Tiso, Beth Horner), then staffing with an inbox, then Afrika Tikkun, then call/WhatsApp-only. Skip Maps-only names until details are confirmed. At most 4–6 emails a day.',
+      }),
+    ]),
+    el('div', { class: 'card', style: 'padding:1rem' }, [
       el('h2', { text: 'Organisations' }),
-      el('p', { class: 'muted', text: `${prospects.length} saved.` }),
+      el('p', { class: 'muted', text: `${prospects.length} saved. Listed in onboarding order.` }),
       field('Search', search),
       field('Status', statusSel),
       smBtn('Apply filters', applyFilters),
       table(
-        ['Name', 'Category', 'Area', 'Email', 'Phone', 'WhatsApp', 'Status', 'Actions'],
+        ['#', 'Name', 'Wave', 'Channel', 'Email', 'Status', 'Actions'],
         prospects.map((row) => [
+          String(row.priority || '—'),
           row.name,
-          row.category || '—',
-          row.area || '—',
+          outreachWave(row.priority),
+          channelLabel(outreachChannel(row)),
           row.email || '—',
-          row.phone || '—',
-          row.whatsapp || '—',
           row.status,
           actions([
+            smBtn('Draft', () => openDraft(row), 'btn-primary'),
             smBtn('Edit', () => {
               openForm({
                 title: `Edit ${row.name}`,
