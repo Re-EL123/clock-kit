@@ -1,5 +1,5 @@
 const BASE = new URL('./', self.location).pathname;
-const CACHE = 'clock-kit-shell-v11';
+const CACHE = 'clock-kit-shell-v12';
 const PUSH_CACHE = 'clock-kit-push';
 const PRECACHE = []; // __CK_PRECACHE__
 const SHELL = [
