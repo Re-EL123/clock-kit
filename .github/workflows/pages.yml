@@ -26,11 +26,11 @@ jobs:
       - run: npm ci
       - run: npm run build
         env:
-          GITHUB_PAGES: "true"
+          BASE_PATH: "/"
           VITE_API_URL: ${{ vars.VITE_API_URL || 'https://clock-kit-backend.vercel.app/api' }}
           VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
-          VITE_APP_URL: ${{ vars.VITE_APP_URL || 'https://re-el123.github.io/clock-kit' }}
+          VITE_APP_URL: ${{ vars.VITE_APP_URL || 'https://www.clock-kit.rf.gd' }}
       - name: Add Pages 404 fallback
         run: cp dist/index.html dist/404.html
       - uses: actions/upload-pages-artifact@v3

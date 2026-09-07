@@ -5,8 +5,8 @@ import { fileURLToPath } from 'node:url';
 import { buildWebManifest } from './src/js/pwa-manifest.js';
 
 const root = dirname(fileURLToPath(import.meta.url));
-const pagesBase = process.env.GITHUB_PAGES === 'true'
-  ? `/${(process.env.GITHUB_REPOSITORY || 'Re-EL123/clock-kit').split('/')[1]}/`
+const pagesBase = process.env.BASE_PATH
+  ? process.env.BASE_PATH
   : '/';
 
 function collectLaunchUrls(dist) {

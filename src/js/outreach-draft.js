@@ -1,4 +1,4 @@
-const LOGIN = 'https://re-el123.github.io/clock-kit/login.html';
+const LOGIN = 'https://www.clock-kit.rf.gd/login.html';
 
 const DEFAULT_PITCH = {
   learnership: 'You place learners at host employers.',

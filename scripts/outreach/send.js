@@ -53,7 +53,7 @@ I work nearby ({{area}}) and can show a 15-minute walkthrough. If this is not re
 
 Akani
 Clock-Kit
-https://re-el123.github.io/clock-kit/login.html
+https://www.clock-kit.rf.gd/login.html
 `;
 
 loadEnv();
