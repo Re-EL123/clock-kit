@@ -3,6 +3,7 @@ import { api, persistUser, currentUser } from './api.js';
 import { Modal, dismissModal } from './components/modal.js';
 import { AccountForm } from './components/account-form.js';
 import { SignaturePad } from './components/signature-pad.js';
+import { AssetUploader } from './components/asset-uploader.js';
 import { startTour } from './tour.js';
 import { withBase } from './config.js';
 
@@ -107,8 +108,13 @@ function showReminder(checklist, user, { force = false } = {}) {
   if (!force && !nudgeStale(user.id)) return false;
   markNudge(user.id);
   const needsSignature = items.some((item) => item.code === 'SIGNATURE');
+  const needsLogo = items.some((item) => item.code === 'LOGO');
   const needsProfile = items.some((item) => item.view === 'profile' && item.code !== 'SIGNATURE');
-  const firstNav = items.find((item) => item.view && item.view !== 'profile');
+  const firstNav = items.find((item) => item.view && !['profile', 'settings'].includes(item.view));
+  const afterDone = () => {
+    node.remove();
+    refreshChecklist({ popup: false });
+  };
   const node = Modal({
     title: 'Finish these Clock-Kit items',
     onClose: () => node.remove(),
@@ -125,11 +131,30 @@ function showReminder(checklist, user, { force = false } = {}) {
         ? SignaturePad({
           signaturePath: '',
           onSaved: () => {
-            node.remove();
             toast('Signature saved');
-            refreshChecklist({ popup: false });
+            return afterDone();
           },
         })
+        : null,
+      needsLogo
+        ? el('div', { class: 'card', style: 'padding:1rem' }, [
+          el('h3', { text: 'Organisation logo' }),
+          AssetUploader({
+            bucket: 'org-logos',
+            path: checklist.organisation?.logo_path || '',
+            accept: 'image/png,image/jpeg,image/webp',
+            maxBytes: 5242880,
+            onSaved: async (path) => {
+              const res = await api('organisation', 'save-logo', { body: { logoPath: path } });
+              toast('Logo saved');
+              afterDone();
+              return res.organisation?.logo_path || path;
+            },
+            onRemoved: async () => {
+              await api('organisation', 'save-logo', { body: { logoPath: null } });
+            },
+          }),
+        ])
         : null,
       el('div', { class: 'modal-actions' }, [
         el('button', { class: 'btn', type: 'button', onClick: () => node.remove() }, ['Later']),

@@ -869,10 +869,12 @@ async function settings() {
         editable,
         onSaved: async (path) => {
           const res = await api('organisation', 'save-logo', { body: { logoPath: path } });
+          window.dispatchEvent(new Event('ck:profile-saved'));
           return res.organisation?.logo_path || path;
         },
         onRemoved: async () => {
           await api('organisation', 'save-logo', { body: { logoPath: null } });
+          window.dispatchEvent(new Event('ck:profile-saved'));
         },
       }),
     ]),

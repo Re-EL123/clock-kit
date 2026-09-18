@@ -307,6 +307,7 @@ async function profile() {
       el('p', { class: 'muted', text: 'Sign below with your finger or mouse. Your signature is printed on your timesheets.' }),
       SignaturePad({
         signaturePath: (extra.candidate && extra.candidate.signature_path) || '',
+        onSaved: () => window.dispatchEvent(new Event('ck:profile-saved')),
       }),
     ]),
   ]);
