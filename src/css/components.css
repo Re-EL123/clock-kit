@@ -101,6 +101,25 @@
   gap: 0.6rem;
 }
 
+/* Asset previews (org logos, signatures) */
+.asset-preview,
+.signature-pad .asset-preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 68px;
+  padding: 0.5rem;
+  border: 1px dashed var(--ck-light);
+  border-radius: var(--radius-sm);
+  background: var(--ck-white);
+}
+.asset-preview.empty {
+  display: none;
+}
+.signature-pad canvas {
+  margin-top: 0.75rem;
+}
+
 .clock-face {
   width: 100%;
   aspect-ratio: 1;

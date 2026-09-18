@@ -16,6 +16,7 @@ import { Modal } from '../../components/modal.js';
 import { GuidesPanel } from '../../components/guides-panel.js';
 import { HelpPanel } from '../../components/help-panel.js';
 import { setView } from '../../router.js';
+import { AssetUploader } from '../../components/asset-uploader.js';
 
 const NAV = [
   { view: 'dashboard', label: 'Dashboard' },
@@ -849,11 +850,32 @@ async function billing() {
 
 async function settings() {
   const data = await api('organisation', 'settings', { body: {} });
-  return el('div', { class: 'card', style: 'padding:1rem' }, [
-    el('h2', { text: data.settings?.name || 'Settings' }),
-    el('p', { text: `Timezone: ${data.settings?.timezone}` }),
-    el('p', { text: `Retention: ${data.settings?.retention_period_days} days` }),
-    el('p', { class: 'muted', text: data.settings?.legal_hold ? 'Legal hold is ON' : 'Legal hold is off' }),
+  const editable = ['ORG_OWNER', 'ORG_ADMIN'].includes(user.role);
+  return el('div', { class: 'grid' }, [
+    el('div', { class: 'card', style: 'padding:1rem' }, [
+      el('h2', { text: data.settings?.name || 'Settings' }),
+      el('p', { text: `Timezone: ${data.settings?.timezone}` }),
+      el('p', { text: `Retention: ${data.settings?.retention_period_days} days` }),
+      el('p', { class: 'muted', text: data.settings?.legal_hold ? 'Legal hold is ON' : 'Legal hold is off' }),
+    ]),
+    el('div', { class: 'card', style: 'padding:1rem' }, [
+      el('h2', { text: 'Organisation logo' }),
+      el('p', { class: 'muted', text: 'Shown at the top of exported timesheets. PNG, JPEG or WebP up to 5MB.' }),
+      AssetUploader({
+        bucket: 'org-logos',
+        path: data.settings?.logo_path || '',
+        accept: 'image/png,image/jpeg,image/webp',
+        maxBytes: 5242880,
+        editable,
+        onSaved: async (path) => {
+          const res = await api('organisation', 'save-logo', { body: { logoPath: path } });
+          return res.organisation?.logo_path || path;
+        },
+        onRemoved: async () => {
+          await api('organisation', 'save-logo', { body: { logoPath: null } });
+        },
+      }),
+    ]),
   ]);
 }
 

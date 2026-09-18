@@ -17,6 +17,7 @@ import { flushQueue, pendingCount, queueClock } from '../../offline.js';
 import { AccountForm } from '../../components/account-form.js';
 import { AlertsPanel } from '../../components/alerts-panel.js';
 import { HelpPanel } from '../../components/help-panel.js';
+import { SignaturePad } from '../../components/signature-pad.js';
 
 const NAV = [
   { view: 'home', label: 'Home' },
@@ -295,11 +296,20 @@ async function profile() {
   } catch {
     /* use signed-in user */
   }
-  return AccountForm({
-    user: extra.user || user,
-    candidate: extra.candidate,
-    showIdentity: true,
-  });
+  return el('div', { class: 'grid' }, [
+    AccountForm({
+      user: extra.user || user,
+      candidate: extra.candidate,
+      showIdentity: true,
+    }),
+    el('div', { class: 'card', style: 'padding:1rem' }, [
+      el('h2', { text: 'Your signature' }),
+      el('p', { class: 'muted', text: 'Sign below with your finger or mouse. Your signature is printed on your timesheets.' }),
+      SignaturePad({
+        signaturePath: (extra.candidate && extra.candidate.signature_path) || '',
+      }),
+    ]),
+  ]);
 }
 
 const user = Auth.requireRole('CANDIDATE');

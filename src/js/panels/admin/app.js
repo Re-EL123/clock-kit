@@ -41,6 +41,7 @@ const NAV = [
   { view: 'sites', label: 'Sites' },
   { view: 'assignments', label: 'Assignments' },
   { view: 'security', label: 'Security' },
+  { view: 'activity', label: 'Activity' },
   { view: 'health', label: 'Health' },
   { view: 'legal', label: 'Legal' },
   { view: 'guides', label: 'Guides' },
@@ -850,6 +851,71 @@ async function security() {
     table(
       ['When', 'Action', 'Entity'],
       events.map((e) => [formatTime(e.created_at), e.action, e.entity_type]),
+    ),
+  ]);
+}
+
+async function activityView() {
+  const url = new URLSearchParams(window.location.search);
+  const action = url.get('action') || '';
+  const organisationId = url.get('org') || '';
+
+  const actionOptions = [
+    { value: '', label: 'All actions' },
+    { value: 'SIGNATURE_SAVED', label: 'Signature saved' },
+    { value: 'ORG_LOGO_UPDATED', label: 'Logo updated' },
+    { value: 'ORG_LOGO_REMOVED', label: 'Logo removed' },
+  ];
+  const actionSel = el('select', { class: 'input' });
+  actionOptions.forEach((opt) => {
+    const option = el('option', { value: opt.value, text: opt.label });
+    actionSel.append(option);
+  });
+  actionSel.value = action;
+  actionSel.addEventListener('change', () => {
+    setView('activity', {
+      ...(actionSel.value ? { action: actionSel.value } : {}),
+      ...(organisationId ? { org: organisationId } : {}),
+    });
+  });
+
+  const orgInput = el('input', { class: 'input', placeholder: 'Organisation ID', value: organisationId });
+  orgInput.addEventListener('change', () => {
+    setView('activity', {
+      ...(action ? { action } : {}),
+      ...(orgInput.value.trim() ? { org: orgInput.value.trim() } : {}),
+    });
+  });
+
+  const data = await api('admin', 'platform-activity', {
+    body: {
+      limit: 200,
+      ...(action ? { action } : {}),
+      ...(organisationId ? { organisationId } : {}),
+    },
+  });
+  const events = data.events || [];
+
+  return el('div', { class: 'grid' }, [
+    el('div', { class: 'card', style: 'padding:1rem' }, [
+      el('h2', { text: 'Full platform activity' }),
+      el('p', { class: 'muted', text: 'Every action across every organisation. Filters are saved in the URL so you can bookmark views.' }),
+      el('div', { class: 'fields', style: 'display:flex; gap:0.5rem; margin-top:0.5rem; flex-wrap:wrap' }, [
+        actionSel,
+        orgInput,
+      ]),
+    ]),
+    table(
+      ['When', 'Who', 'Email', 'Role', 'Organisation', 'Action', 'Entity'],
+      events.map((e) => [
+        formatTime(e.created_at),
+        e.actor?.display_name || '—',
+        e.actor?.email || '—',
+        e.actor?.role || e.actor_role || '—',
+        e.organisations?.name || '—',
+        e.action,
+        `${e.entity_type || ''}${e.entity_id ? ` · ${String(e.entity_id).slice(0, 8)}` : ''}`,
+      ]),
     ),
   ]);
 }
@@ -2086,6 +2152,7 @@ await bootPanel({
     sites,
     assignments,
     security,
+    activity: activityView,
     health,
     legal,
     guides,

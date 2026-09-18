@@ -12,6 +12,7 @@ import { AlertsPanel } from '../../components/alerts-panel.js';
 import { nationalitySelect } from '../../nationalities.js';
 import { GuidesPanel } from '../../components/guides-panel.js';
 import { HelpPanel } from '../../components/help-panel.js';
+import { SignaturePad } from '../../components/signature-pad.js';
 
 const NAV = [
   { view: 'dashboard', label: 'Dashboard' },
@@ -281,6 +282,25 @@ async function schedule() {
   );
 }
 
+async function profile() {
+  let extra = { user, host: null };
+  try {
+    extra = await api('auth', 'checklist', { body: { remind: false } });
+  } catch {
+    /* use signed-in user */
+  }
+  return el('div', { class: 'grid' }, [
+    AccountForm({ user: extra.user || user, showIdentity: false }),
+    el('div', { class: 'card', style: 'padding:1rem' }, [
+      el('h2', { text: 'Your signature' }),
+      el('p', { class: 'muted', text: 'Sign below with your finger or mouse. Your signature is printed on candidate timesheets.' }),
+      SignaturePad({
+        signaturePath: (extra.host && extra.host.signature_path) || '',
+      }),
+    ]),
+  ]);
+}
+
 const user = Auth.requireRole('HOST');
 await bootPanel({
   title: 'Host',
@@ -295,6 +315,6 @@ await bootPanel({
     guides: () => GuidesPanel({ fn: 'host' }),
     help: () => HelpPanel({ fn: 'system', user }),
     notifications: AlertsPanel,
-    profile: () => AccountForm({ user, showIdentity: false }),
+    profile: profile,
   },
 });
