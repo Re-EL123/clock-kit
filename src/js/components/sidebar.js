@@ -2,7 +2,8 @@ import { el, href, liveText, nowClock } from '../utils/dom.js';
 import { Auth } from '../auth.js';
 import { withBase } from '../config.js';
 import { icon, viewIcon } from '../icons.js';
-import { reveal } from '../motion.js';
+import { reveal, countUpAll, hasViewTransitions } from '../motion.js';
+import { wrapTooltip } from './tooltip.js';
 import { fillPwaSlots } from '../pwa.js';
 import { viewLoader } from '../busy.js';
 
@@ -125,7 +126,7 @@ function collapseToggle() {
 
 function navLink(item, view) {
   const active = item.view === view;
-  return el('a', {
+  const link = el('a', {
     class: `nav-link${active ? ' active' : ''}`,
     href: href(item.view),
     dataset: { view: item.view },
@@ -134,6 +135,8 @@ function navLink(item, view) {
     el('span', { class: 'nav-ico', 'aria-hidden': 'true' }, [viewIcon(item.view, { size: 18 })]),
     el('span', { class: 'nav-label', text: item.label }),
   ]);
+  if (readCollapsed()) return wrapTooltip(link, item.label, 'right');
+  return link;
 }
 
 function navGroups(items, view) {
@@ -308,7 +311,10 @@ export function shell({ title, items, view, heading, user, content }) {
   const body = el('div', { class: 'page-body' }, [content]);
   const stage = el('div', { class: 'page-stage' }, [body, viewLoader()]);
   const headingEl = el('h1', { text: heading });
-  queueMicrotask(() => reveal(body));
+  queueMicrotask(() => {
+    reveal(body);
+    countUpAll(body);
+  });
   const topbar = el('header', { class: 'topbar' }, [
     el('div', {}, [
       headingEl,
@@ -343,7 +349,8 @@ export function replaceShellContent(root, { view, heading, content, items = [] }
   const body = root.querySelector('.page-body');
   if (body) {
     body.replaceChildren(content);
-    reveal(body);
+    if (!hasViewTransitions()) reveal(body);
+    countUpAll(body);
   }
 }
 

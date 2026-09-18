@@ -216,3 +216,39 @@
   justify-content: center;
   gap: 0.4rem;
 }
+
+.success-stamp {
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 0.6rem;
+}
+
+.success-stamp svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.success-stamp .ck-icon {
+  width: 56px;
+  height: 56px;
+  display: block;
+  margin: 0 auto;
+  color: var(--ck-navy);
+}
+
+.ck-skeleton {
+  display: grid;
+  gap: 12px;
+  width: min(100%, 640px);
+}
+
+.ck-skeleton sl-skeleton {
+  width: 100%;
+  height: 84px;
+  border-radius: var(--radius-sm);
+}
+
+.sidebar.is-collapsed .sidebar-nav sl-tooltip {
+  display: block;
+}

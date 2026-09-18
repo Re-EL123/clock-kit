@@ -1,3 +1,5 @@
+import '@shoelace-style/shoelace/dist/components/skeleton/skeleton.js';
+
 let requests = 0;
 let paints = 0;
 let extra = 0;
@@ -35,7 +37,11 @@ function spinner(size = '') {
 
 export function PanelLoader(label = 'Loading') {
   return node('div', { class: 'ck-page-loader', role: 'status', 'aria-live': 'polite' }, [
-    spinner('lg'),
+    node('div', { class: 'ck-skeleton', 'aria-hidden': 'true' }, [
+      node('sl-skeleton', { effect: 'pulse' }),
+      node('sl-skeleton', { effect: 'pulse' }),
+      node('sl-skeleton', { effect: 'pulse' }),
+    ]),
     node('p', { class: 'muted', text: label }),
   ]);
 }

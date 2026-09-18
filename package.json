@@ -12,12 +12,14 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
+    "@shoelace-style/shoelace": "^2.20.1",
     "@supabase/supabase-js": "2.57.4",
     "chart.js": "4.4.9",
     "date-fns": "4.1.0",
     "date-fns-tz": "3.2.0",
     "dompurify": "3.2.6",
     "interactjs": "1.10.27",
+    "lottie-web": "^5.13.0",
     "lucide": "0.511.0",
     "maplibre-gl": "5.6.0",
     "motion": "12.23.6",

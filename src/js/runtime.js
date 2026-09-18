@@ -4,6 +4,7 @@ import { armSounds } from './sound.js';
 import { startPwa, mountInstallBanner } from './pwa.js';
 import { PanelLoader, beginPaint, endPaint } from './busy.js';
 import { startOnboarding } from './onboarding.js';
+import { viewTransition } from './motion.js';
 
 export function refreshPanel() {
   window.dispatchEvent(new Event('ck:refresh'));
@@ -31,12 +32,14 @@ export async function bootPanel({ title, items, user, views, defaultView }) {
       } catch (err) {
         content = el('p', { class: 'form-error', text: err.message });
       }
-      if (!tree) {
-        tree = shell({ title, items, view: current, heading, user, content });
-        root.replaceChildren(tree);
-      } else {
-        replaceShellContent(tree, { view: current, heading, content, items });
-      }
+      await viewTransition(() => {
+        if (!tree) {
+          tree = shell({ title, items, view: current, heading, user, content });
+          root.replaceChildren(tree);
+        } else {
+          replaceShellContent(tree, { view: current, heading, content, items });
+        }
+      });
       closeMoreSheet();
     } finally {
       endPaint();

@@ -25,7 +25,30 @@
 }
 
 .page-body {
+  view-transition-name: ck-page;
   animation: rise-in 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+::view-transition-old(ck-page) {
+  animation: ck-vt-out 240ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+::view-transition-new(ck-page) {
+  animation: ck-vt-in 380ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes ck-vt-out {
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes ck-vt-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
 }
 
 .page-body.is-refreshing {
@@ -154,5 +177,11 @@
 
   .shell {
     transition: none;
+  }
+
+  ::view-transition-group(ck-page),
+  ::view-transition-old(ck-page),
+  ::view-transition-new(ck-page) {
+    animation: none !important;
   }
 }

@@ -6,6 +6,7 @@ import { captureLocation } from '../../geolocation.js';
 import { withBase } from '../../config.js';
 import { icon } from '../../icons.js';
 import { popIn } from '../../motion.js';
+import { SuccessStamp } from '../../components/lottie.js';
 import { armSounds } from '../../sound.js';
 import { startPwa } from '../../pwa.js';
 
@@ -40,6 +41,7 @@ async function clock(kind) {
     });
     toast(kind === 'clock-in' ? 'Clocked in' : 'Clocked out');
     result.replaceChildren(
+      await SuccessStamp({ label: kind === 'clock-in' ? 'Clocked in' : 'Clocked out' }),
       el('h2', { class: 'icon-label', style: 'justify-content:center' }, [
         icon(kind === 'clock-in' ? 'log-in' : 'log-out'),
         kind === 'clock-in' ? 'CLOCKED IN' : 'CLOCKED OUT',
