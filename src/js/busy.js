@@ -35,15 +35,65 @@ function spinner(size = '') {
   });
 }
 
-export function PanelLoader(label = 'Loading') {
-  return node('div', { class: 'ck-page-loader', role: 'status', 'aria-live': 'polite' }, [
-    node('div', { class: 'ck-skeleton', 'aria-hidden': 'true' }, [
-      node('sl-skeleton', { effect: 'pulse' }),
-      node('sl-skeleton', { effect: 'pulse' }),
-      node('sl-skeleton', { effect: 'pulse' }),
-    ]),
-    node('p', { class: 'muted', text: label }),
+const LOADER_MESSAGES = [
+  'Loading your workspace',
+  'Fetching your dashboard',
+  'Syncing your clock',
+  'Preparing your schedule',
+  'Refreshing attendance',
+  'Almost done…',
+];
+
+function prefersReduced() {
+  if (typeof window === 'undefined' || !window.matchMedia) return false;
+  try {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  } catch {
+    return false;
+  }
+}
+
+export function PanelLoader(label = 'Loading your workspace') {
+  const effect = prefersReduced() ? '' : 'pulse';
+  const status = node('p', { class: 'ck-loader-status', text: label });
+  const statusline = node('div', { class: 'ck-loader-statusline', 'aria-live': 'polite' }, [
+    spinner(),
+    status,
   ]);
+  const bar = node('div', { class: 'ck-loader-bar', 'aria-hidden': 'true' });
+  const layout = node('div', { class: 'ck-loader-layout', 'aria-hidden': 'true' }, [
+    node('div', { class: 'ck-loader-top' }, [
+      node('sl-skeleton', { effect }),
+      node('div', { class: 'ck-loader-lines' }, [
+        node('sl-skeleton', { effect }),
+        node('sl-skeleton', { effect }),
+      ]),
+    ]),
+    node('div', { class: 'ck-loader-stats' }, [
+      ...[0, 1, 2, 3].map((i) => node('sl-skeleton', { effect, style: `--sl-show-delay:${i * 110}ms` })),
+    ]),
+    node('sl-skeleton', { effect, class: 'ck-loader-panel' }),
+  ]);
+  const host = node('div', { class: 'ck-page-loader', role: 'status', 'aria-busy': 'true' }, [
+    layout,
+    statusline,
+    bar,
+  ]);
+
+  if (!prefersReduced()) {
+    const messages = LOADER_MESSAGES.includes(label) ? LOADER_MESSAGES : [label, ...LOADER_MESSAGES];
+    let step = messages.indexOf(label) >= 0 ? messages.indexOf(label) : 0;
+    const timer = setInterval(() => {
+      if (!host.isConnected) {
+        clearInterval(timer);
+        return;
+      }
+      step = (step + 1) % messages.length;
+      status.textContent = messages[step];
+    }, 900);
+    host._ckLoaderTimer = timer;
+  }
+  return host;
 }
 
 export function viewLoader() {

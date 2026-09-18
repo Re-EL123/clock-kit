@@ -56,6 +56,110 @@
   padding: 2rem;
 }
 
+.ck-loader-layout {
+  width: min(100%, 720px);
+  display: grid;
+  gap: 14px;
+}
+
+.ck-loader-top {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.ck-loader-top sl-skeleton {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-sm);
+}
+
+.ck-loader-lines {
+  flex: 1;
+  display: grid;
+  gap: 9px;
+}
+
+.ck-loader-lines sl-skeleton {
+  width: 100%;
+  height: 16px;
+  border-radius: 999px;
+}
+
+.ck-loader-lines sl-skeleton:first-child {
+  width: 62%;
+  height: 24px;
+}
+
+.ck-loader-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.ck-loader-stats sl-skeleton {
+  height: 96px;
+  border-radius: var(--radius-md);
+}
+
+.ck-loader-panel {
+  width: 100%;
+  height: 210px;
+  border-radius: var(--radius-md);
+}
+
+.ck-loader-statusline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 2rem;
+  color: var(--ck-navy);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.ck-loader-status {
+  margin: 0;
+}
+
+.ck-loader-bar {
+  width: min(100%, 720px);
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(33, 57, 106, 0.12);
+  overflow: hidden;
+  position: relative;
+}
+
+.ck-loader-bar::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 45%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, var(--ck-gold), var(--ck-navy), transparent);
+  animation: ck-loader-sweep 1.3s ease-in-out infinite;
+}
+
+@keyframes ck-loader-sweep {
+  0% { transform: translateX(-120%); }
+  100% { transform: translateX(320%); }
+}
+
+@media (max-width: 720px) {
+  .ck-loader-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .ck-loader-stats sl-skeleton {
+    height: 72px;
+  }
+}
+
 .page-stage {
   position: relative;
   min-height: 42vh;
@@ -169,6 +273,7 @@ html.ck-busy {
 @media (prefers-reduced-motion: reduce) {
   .ck-spinner,
   .ck-progress-bar,
+  .ck-loader-bar::after,
   .nav-link.is-busy .nav-ico::after,
   .mobile-nav a.is-busy::after,
   .mobile-nav button.is-busy::after {
