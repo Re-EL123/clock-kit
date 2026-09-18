@@ -2,6 +2,7 @@ import { el, toast } from './utils/dom.js';
 import { api, persistUser, currentUser } from './api.js';
 import { Modal, dismissModal } from './components/modal.js';
 import { AccountForm } from './components/account-form.js';
+import { SignaturePad } from './components/signature-pad.js';
 import { startTour } from './tour.js';
 import { withBase } from './config.js';
 
@@ -105,7 +106,8 @@ function showReminder(checklist, user, { force = false } = {}) {
   if (document.querySelector('.ck-reminder-modal')) return false;
   if (!force && !nudgeStale(user.id)) return false;
   markNudge(user.id);
-  const needsProfile = items.some((item) => item.view === 'profile');
+  const needsSignature = items.some((item) => item.code === 'SIGNATURE');
+  const needsProfile = items.some((item) => item.view === 'profile' && item.code !== 'SIGNATURE');
   const firstNav = items.find((item) => item.view && item.view !== 'profile');
   const node = Modal({
     title: 'Finish these Clock-Kit items',
@@ -117,6 +119,16 @@ function showReminder(checklist, user, { force = false } = {}) {
           user: checklist.user || user,
           candidate: checklist.candidate,
           showIdentity: user.role === 'CANDIDATE',
+        })
+        : null,
+      needsSignature
+        ? SignaturePad({
+          signaturePath: '',
+          onSaved: () => {
+            node.remove();
+            toast('Signature saved');
+            refreshChecklist({ popup: false });
+          },
         })
         : null,
       el('div', { class: 'modal-actions' }, [
