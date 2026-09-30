@@ -8,23 +8,824 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Clock-Kit" />
-    <title>Clock-Kit</title>
+    <meta
+      name="description"
+      content="Clock-Kit — the cleaner way to clock in, clock out and manage attendance for staffing agencies, hosts and contracted teams across South Africa."
+    />
+    <title>Clock-Kit — Click It. While You Clock It.</title>
     <link rel="icon" href="%BASE_URL%assets/logo/clock-kit-icon.svg" />
+    <link rel="icon" type="image/png" sizes="192x192" href="%BASE_URL%assets/logo/clock-kit-icon-192.png" />
     <link rel="apple-touch-icon" href="%BASE_URL%assets/logo/clock-kit-icon-180.png" />
     <link rel="manifest" href="%BASE_URL%manifest.webmanifest" />
-    <style>
-      html, body { background: #e2ddd8; margin: 0; min-height: 100%; }
-      body { font-family: Inter, "Segoe UI", system-ui, sans-serif; padding: 1.5rem; }
-    </style>
-    <script>
-      (function () {
-        var dest = '%BASE_URL%login.html';
-        try { location.replace(dest); }
-        catch (e) { location.href = dest; }
-      })();
-    </script>
+    <link rel="stylesheet" href="%BASE_URL%src/css/home.css" />
   </head>
-  <body>
-    <p><a href="%BASE_URL%login.html">Continue to Clock-Kit</a></p>
+  <body class="lp">
+    <!-- ============ NAV ============ -->
+    <nav class="lp-nav" aria-label="Primary">
+      <div class="lp-nav-inner">
+        <a class="lp-brand" href="#home" aria-label="Clock-Kit home">
+          <span class="lp-brand-tile">
+            <img
+              src="%BASE_URL%assets/logo/clock-kit-icon.svg"
+              alt=""
+              width="26"
+              height="26"
+            />
+          </span>
+          <img
+            src="%BASE_URL%assets/logo/clock-kit-text.svg"
+            alt="Clock-Kit"
+            class="lp-brand-wordmark"
+            width="104"
+            height="24"
+          />
+        </a>
+        <div class="lp-nav-links" id="lpNavLinks">
+          <a href="#showcase">Product</a>
+          <a href="#features">Features</a>
+          <a href="#how">How it works</a>
+          <a href="#audience">Who it's for</a>
+          <a href="#pricing">Pricing</a>
+          <a href="#faq">FAQ</a>
+        </div>
+        <div class="lp-nav-actions">
+          <a class="lp-nav-cta" href="%BASE_URL%login.html">Sign in</a>
+          <button class="lp-burger" type="button" aria-label="Menu" aria-expanded="false">
+            <span></span><span></span><span></span>
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <main>
+      <!-- ============ HERO ============ -->
+      <header class="lp-hero" id="home">
+        <div class="lp-hero-grid" aria-hidden="true"></div>
+        <div class="lp-container lp-hero-inner">
+          <div class="lp-hero-copy">
+            <p class="lp-eyebrow lp-reveal">
+              <span class="lp-dot" aria-hidden="true"></span>
+              CLOCK-KIT
+            </p>
+            <h1 class="lp-hero-title lp-reveal">
+              Click It.<br />
+              <span class="lp-gold">While You</span> Clock It.
+            </h1>
+            <p class="lp-hero-sub lp-reveal">
+              Every minute counts. Clock-Kit captures it — where the work happens — without
+              paperwork, guesswork or missed minutes.
+            </p>
+            <div class="lp-hero-ctas lp-reveal">
+              <a class="lp-btn lp-btn-gold" href="#showcase">
+                Explore Clock-Kit <span class="lp-btn-arrow" data-icon="arrow-right"></span>
+              </a>
+              <a class="lp-btn lp-btn-ghost lp-js-demo" href="%BASE_URL%login.html">
+                Request a demo
+              </a>
+            </div>
+            <p class="lp-hero-meta lp-reveal">
+              For staffing agencies, hosts and contracted teams across South Africa.
+            </p>
+          </div>
+
+          <div class="lp-hero-stage lp-reveal" aria-hidden="false">
+            <div class="lp-status-pill">
+              <span class="lp-status-dot" aria-hidden="true"></span>
+              SYSTEM STATUS: <strong>ACTIVE</strong>
+              <span class="lp-status-sub">server-synced</span>
+            </div>
+            <div class="lp-clockcard">
+              <div class="lp-clock-rows">
+                <div class="lp-clock-analog" id="lpAnalogClock">
+                  <div class="lp-clock-face">
+                    <span class="lp-tick" style="--deg: 0deg"></span>
+                    <span class="lp-tick" style="--deg: 30deg"></span>
+                    <span class="lp-tick" style="--deg: 60deg"></span>
+                    <span class="lp-tick" style="--deg: 90deg"></span>
+                    <span class="lp-tick" style="--deg: 120deg"></span>
+                    <span class="lp-tick" style="--deg: 150deg"></span>
+                    <span class="lp-tick" style="--deg: 180deg"></span>
+                    <span class="lp-tick" style="--deg: 210deg"></span>
+                    <span class="lp-tick" style="--deg: 240deg"></span>
+                    <span class="lp-tick" style="--deg: 270deg"></span>
+                    <span class="lp-tick" style="--deg: 300deg"></span>
+                    <span class="lp-tick" style="--deg: 330deg"></span>
+                    <div class="lp-hand lp-hand-hour" id="lpHour"></div>
+                    <div class="lp-hand lp-hand-minute" id="lpMinute"></div>
+                    <div class="lp-hand lp-hand-second" id="lpSecond"></div>
+                    <div class="lp-clock-center" aria-hidden="true"></div>
+                  </div>
+                </div>
+                <div class="lp-clock-digital">
+                  <span class="lp-clock-label">SERVER TIME</span>
+                  <span class="lp-clock-hh" id="lpHH">--:--:--</span>
+                  <span class="lp-clock-date" id="lpDate">—</span>
+                  <div class="lp-clock-chips">
+                    <span class="lp-chip lp-chip-working"><span class="lp-chip-dot" aria-hidden="true"></span>WORKING</span>
+                    <span class="lp-chip lp-chip-neutral"><span class="lp-chip-dot" aria-hidden="true"></span>SYNCED</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="lp-ticker" aria-hidden="true">
+          <div class="lp-ticker-track">
+            <span>Clock in.</span><span class="lp-ticker-gold">Work.</span><span>Clock out.</span>
+            <span>No paper.</span><span class="lp-ticker-gold">No guesswork.</span><span>No missed minutes.</span>
+            <span>Clock in.</span><span class="lp-ticker-gold">Work.</span><span>Clock out.</span>
+            <span>No paper.</span><span class="lp-ticker-gold">No guesswork.</span><span>No missed minutes.</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- ============ ONE WORKFORCE, ONE SYSTEM ============ -->
+      <section class="lp-section lp-network" id="network">
+        <div class="lp-container">
+          <div class="lp-section-head lp-reveal">
+            <p class="lp-eyebrow lp-eyebrow-dark">THE ECOSYSTEM</p>
+            <h2 class="lp-section-title">One workforce. One system.</h2>
+            <p class="lp-section-sub">
+              Candidates, hosts and agencies stay on the same page — because every clock-in lands in
+              the same system, in real time.
+            </p>
+          </div>
+          <div class="lp-net lp-reveal">
+            <svg class="lp-net-svg" viewBox="0 0 900 420" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+              <path class="lp-net-line lp-net-line-a" d="M150 120 C 300 150, 360 90, 450 80" />
+              <path class="lp-net-line lp-net-line-b" d="M450 80 C 560 70, 620 150, 735 150" />
+              <path class="lp-net-line lp-net-line-c" d="M150 120 C 240 230, 330 300, 450 300" />
+              <path class="lp-net-line lp-net-line-d" d="M450 300 C 560 300, 660 230, 735 150" />
+              <path class="lp-net-line lp-net-line-e" d="M150 120 C 260 90, 360 60, 450 80" />
+              <path class="lp-net-line lp-net-line-f" d="M450 300 C 560 330, 650 260, 735 198" />
+              <path class="lp-net-dash lp-net-dash-a" d="M150 120 C 300 150, 360 90, 450 80" />
+              <path class="lp-net-dash lp-net-dash-b" d="M450 80 C 560 70, 620 150, 735 150" />
+              <path class="lp-net-dash lp-net-dash-c" d="M150 120 C 240 230, 330 300, 450 300" />
+              <path class="lp-net-dash lp-net-dash-d" d="M450 300 C 560 300, 660 230, 735 150" />
+              <path class="lp-net-dash lp-net-dash-e" d="M150 120 C 260 90, 360 60, 450 80" />
+              <path class="lp-net-dash lp-net-dash-f" d="M450 300 C 560 330, 650 260, 735 198" />
+            </svg>
+            <div class="lp-node lp-node-a">
+              <span class="lp-node-icon" data-icon="user"></span>
+              <strong>Candidate</strong>
+              <small>clocks in at the site</small>
+            </div>
+            <div class="lp-node lp-node-b">
+              <span class="lp-node-icon" data-icon="building"></span>
+              <strong>Host</strong>
+              <small>reviews & approves</small>
+            </div>
+            <div class="lp-node lp-node-c">
+              <span class="lp-node-icon" data-icon="layout-dashboard"></span>
+              <strong>Manager</strong>
+              <small>sees it live</small>
+            </div>
+            <div class="lp-node lp-node-d">
+              <span class="lp-node-icon" data-icon="file-text"></span>
+              <strong>Timesheet</strong>
+              <small>accurate, signed, billed</small>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ PRODUCT SHOWCASE ============ -->
+      <section class="lp-section lp-showcase" id="showcase">
+        <div class="lp-container">
+          <div class="lp-section-head lp-reveal">
+            <p class="lp-eyebrow lp-eyebrow-light">THE PRODUCT</p>
+            <h2 class="lp-section-title">Every view, built for how your team actually works.</h2>
+            <p class="lp-section-sub">
+              Real screens from Clock-Kit — pick an experience and click through.
+            </p>
+          </div>
+
+          <div class="lp-tabs lp-reveal" role="tablist" aria-label="Product views">
+            <button class="lp-tab is-active" role="tab" aria-selected="true" data-tab="candidate">
+              Candidate
+            </button>
+            <button class="lp-tab" role="tab" aria-selected="false" data-tab="host">Host</button>
+            <button class="lp-tab" role="tab" aria-selected="false" data-tab="organisation">
+              Organisation
+            </button>
+            <button class="lp-tab" role="tab" aria-selected="false" data-tab="admin">Platform</button>
+          </div>
+
+          <div class="lp-browser lp-reveal">
+            <div class="lp-browser-bar">
+              <span class="lp-browser-dot lp-browser-dot-a"></span>
+              <span class="lp-browser-dot lp-browser-dot-b"></span>
+              <span class="lp-browser-dot lp-browser-dot-c"></span>
+              <span class="lp-browser-url" id="lpBrowserUrl">candidate — home view</span>
+            </div>
+            <div class="lp-browser-stage">
+              <img
+                class="lp-shot is-active"
+                data-panel="candidate"
+                src="%BASE_URL%assets/screens/candidate-home.png"
+                alt="Clock-Kit candidate home view with the clock-in card"
+                loading="lazy"
+              />
+              <img
+                class="lp-shot"
+                data-panel="host"
+                src="%BASE_URL%assets/screens/host-dashboard.png"
+                alt="Clock-Kit host dashboard with live attendance"
+                loading="lazy"
+              />
+              <img
+                class="lp-shot"
+                data-panel="organisation"
+                src="%BASE_URL%assets/screens/organisation-dashboard.png"
+                alt="Clock-Kit organisation dashboard with stats and timesheets"
+                loading="lazy"
+              />
+              <img
+                class="lp-shot"
+                data-panel="admin"
+                src="%BASE_URL%assets/screens/admin-dashboard.png"
+                alt="Clock-Kit platform admin dashboard"
+                loading="lazy"
+              />
+            </div>
+            <div class="lp-browser-caption" id="lpBrowserCaption">
+              Candidates sign in, verify their location and clock in one tap.
+            </div>
+          </div>
+
+          <p class="lp-showcase-note lp-reveal">
+            <span data-icon="lock"></span>
+            Screens are from the actual Clock-Kit application.
+          </p>
+        </div>
+      </section>
+
+      <!-- ============ LIVE STATS ============ -->
+      <section class="lp-section lp-stats" id="stats">
+        <div class="lp-container">
+          <p class="lp-stats-eyebrow lp-reveal">EXAMPLE ORGANISATION DASHBOARD</p>
+          <div class="lp-stats-grid">
+            <div class="lp-stat lp-reveal">
+              <span class="lp-stat-value"><span data-count="120">0</span></span>
+              <span class="lp-stat-label">clock-ins today</span>
+            </div>
+            <div class="lp-stat lp-reveal">
+              <span class="lp-stat-value"><span data-count="87">0</span>%</span>
+              <span class="lp-stat-label">clocked in on time</span>
+            </div>
+            <div class="lp-stat lp-reveal">
+              <span class="lp-stat-value"><span data-count="7">0</span>s</span>
+              <span class="lp-stat-label">average clock-in time</span>
+            </div>
+            <div class="lp-stat lp-reveal">
+              <span class="lp-stat-value"><span data-count="3">0</span></span>
+              <span class="lp-stat-label">live shifts on site</span>
+            </div>
+          </div>
+          <p class="lp-stats-note lp-reveal">
+            Example figures shown for illustration only — your dashboard shows your real numbers.
+          </p>
+        </div>
+      </section>
+
+      <!-- ============ FEATURES ============ -->
+      <section class="lp-section lp-features" id="features">
+        <div class="lp-container">
+          <div class="lp-section-head lp-reveal">
+            <p class="lp-eyebrow lp-eyebrow-dark">FEATURES</p>
+            <h2 class="lp-section-title">Everything attendance should already be.</h2>
+            <p class="lp-section-sub">Built for real worksites — not for well-lit office demos.</p>
+          </div>
+          <div class="lp-feature-grid">
+            <article class="lp-card lp-reveal">
+              <span class="lp-card-icon lp-card-icon-navy" data-icon="map-pin"></span>
+              <h3>Location-aware clocking</h3>
+              <p>
+                Clock in only where you should be — site geofences stop buddy punching before it
+                starts.
+              </p>
+            </article>
+            <article class="lp-card lp-reveal">
+              <span class="lp-card-icon lp-card-icon-gold" data-icon="wifi-off"></span>
+              <h3>Works offline, syncs later</h3>
+              <p>
+                Load-shedding or a dead spot? Clocks queue and show <strong>PENDING SYNC</strong> until the
+                server confirms.
+              </p>
+            </article>
+            <article class="lp-card lp-reveal">
+              <span class="lp-card-icon lp-card-icon-navy" data-icon="clock"></span>
+              <h3>Breaks &amp; clock-outs</h3>
+              <p>Start break, end break, clock out — each step recorded and reviewed by the host.</p>
+            </article>
+            <article class="lp-card lp-reveal">
+              <span class="lp-card-icon lp-card-icon-gold" data-icon="calendar-check"></span>
+              <h3>Leave &amp; schedules</h3>
+              <p>Request leave, see balances, and check your published shifts — all in one place.</p>
+            </article>
+            <article class="lp-card lp-reveal">
+              <span class="lp-card-icon lp-card-icon-navy" data-icon="file-text"></span>
+              <h3>Signed timesheets</h3>
+              <p>
+                Accurate attendance flows straight into timesheets that hosts review, sign and get
+                billed on.
+              </p>
+            </article>
+            <article class="lp-card lp-reveal">
+              <span class="lp-card-icon lp-card-icon-gold" data-icon="shield-check"></span>
+              <h3>Secure sign-in</h3>
+              <p>
+                One-time codes by SMS or email keep every clock tied to a real person — audited and
+                traceable.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ HOW IT WORKS TIMELINE ============ -->
+      <section class="lp-section lp-how" id="how">
+        <div class="lp-container">
+          <div class="lp-section-head lp-reveal">
+            <p class="lp-eyebrow lp-eyebrow-light">HOW IT WORKS</p>
+            <h2 class="lp-section-title">From clock-in to clock-out.</h2>
+            <p class="lp-section-sub">Five honest steps — no spreadsheets, no WhatsApp forwards.</p>
+          </div>
+          <div class="lp-timeline" id="lpTimeline">
+            <div class="lp-timeline-spine"><span class="lp-timeline-progress"></span></div>
+            <ol class="lp-timeline-list">
+              <li class="lp-step lp-reveal">
+                <span class="lp-step-node"><span data-icon="log-in"></span></span>
+                <div class="lp-step-body">
+                  <h3>Sign in</h3>
+                  <p>A one-time code by SMS or email confirms it's really you.</p>
+                </div>
+              </li>
+              <li class="lp-step lp-reveal">
+                <span class="lp-step-node"><span data-icon="fingerprint"></span></span>
+                <div class="lp-step-body">
+                  <h3>Clock in at the site</h3>
+                  <p>Location is checked against the site geofence, then the clock is running.</p>
+                </div>
+              </li>
+              <li class="lp-step lp-reveal">
+                <span class="lp-step-node"><span data-icon="coffee"></span></span>
+                <div class="lp-step-body">
+                  <h3>Work, breaks, done</h3>
+                  <p>Start break, end break, clock out — each moment is captured, even offline.</p>
+                </div>
+              </li>
+              <li class="lp-step lp-reveal">
+                <span class="lp-step-node"><span data-icon="user-check"></span></span>
+                <div class="lp-step-body">
+                  <h3>Host reviews</h3>
+                  <p>Attendance is reviewed, corrections are rare, and the timesheet is approval-signed.</p>
+                </div>
+              </li>
+              <li class="lp-step lp-reveal">
+                <span class="lp-step-node"><span data-icon="check-circle-2"></span></span>
+                <div class="lp-step-body">
+                  <h3>Settled &amp; billed</h3>
+                  <p>The signed timesheet flows to billing and payroll — one clean source of truth.</p>
+                </div>
+              </li>
+            </ol>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ WHO IT'S FOR ============ -->
+      <section class="lp-section lp-audience" id="audience">
+        <div class="lp-container">
+          <div class="lp-section-head lp-reveal">
+            <p class="lp-eyebrow lp-eyebrow-dark">WHO IT'S FOR</p>
+            <h2 class="lp-section-title">Built around the people doing the work.</h2>
+          </div>
+          <div class="lp-audience-grid">
+            <article class="lp-card lp-card-tone lp-reveal">
+              <span class="lp-card-icon lp-card-icon-navy" data-icon="hard-hat"></span>
+              <h3>Contracted teams</h3>
+              <p>
+                Clock in on your own phone with a code — no paper sheets, no waiting for a supervisor
+                to scribble your name.
+              </p>
+            </article>
+            <article class="lp-card lp-card-tone lp-reveal">
+              <span class="lp-card-icon lp-card-icon-gold" data-icon="building-2"></span>
+              <h3>Hosts &amp; clients</h3>
+              <p>
+                See who is on site right now, review attendance and approve timesheets in minutes —
+                from anywhere.
+              </p>
+            </article>
+            <article class="lp-card lp-card-tone lp-reveal">
+              <span class="lp-card-icon lp-card-icon-navy" data-icon="briefcase"></span>
+              <h3>Staffing agencies</h3>
+              <p>
+                One dashboard across every host and site. Accurate attendance, cleaner billing, fewer
+                disputes.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ DISTRIBUTED / LOW CONNECTIVITY ============ -->
+      <section class="lp-section lp-distributed" id="distributed">
+        <div class="lp-container lp-distributed-inner">
+          <div class="lp-distributed-copy lp-reveal">
+            <p class="lp-eyebrow lp-eyebrow-dark">BUILT FOR THE REAL WORLD</p>
+            <h2 class="lp-section-title">Wherever your teams work. However weak the signal.</h2>
+            <p class="lp-section-sub">
+              Clock-Kit runs across South Africa's worksites — warehouses, factories, logistics hubs,
+              construction, retail and facilities. If your team has a phone, your timesheet stays
+              accurate.
+            </p>
+            <ul class="lp-distributed-list">
+              <li><span data-icon="check"></span>Clock-ins queue offline and sync when you're back</li>
+              <li><span data-icon="check"></span>Server time is authoritative — client clocks stay honest</li>
+              <li><span data-icon="check"></span>Low data, no app install, works in any browser</li>
+            </ul>
+          </div>
+          <div class="lp-distributed-visual lp-reveal">
+            <div class="lp-map">
+              <svg viewBox="0 0 640 400" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+                <path class="lp-map-ring" d="M40 200 m0 -150 a150 150 0 0 1 0 300" />
+                <path class="lp-map-ring" d="M40 200 m0 -230 a230 230 0 0 1 0 460" />
+                <path class="lp-map-ring" d="M320 200 m0 -230 a230 230 0 0 1 0 460" />
+                <path class="lp-map-ring" d="M600 200 m0 -150 a150 150 0 0 1 0 300" />
+                <path class="lp-map-ring" d="M320 200 m0 -120 a120 120 0 0 1 0 240" />
+                <g class="lp-map-links">
+                  <path d="M120 70 L300 60" />
+                  <path d="M300 60 L340 200" />
+                  <path d="M120 70 L120 330" />
+                  <path d="M120 330 L300 330" />
+                  <path d="M300 330 L340 200" />
+                </g>
+                <g class="lp-map-dots">
+                  <circle cx="120" cy="70" r="6" />
+                  <circle cx="300" cy="60" r="5" />
+                  <circle cx="340" cy="200" r="7" />
+                  <circle cx="120" cy="330" r="6" />
+                  <circle cx="300" cy="330" r="5" />
+                </g>
+              </svg>
+              <span class="lp-map-label lp-map-label-a">Johannesburg</span>
+              <span class="lp-map-label lp-map-label-b">Cape Town</span>
+              <span class="lp-map-label lp-map-label-c">Durban</span>
+              <span class="lp-map-label lp-map-label-d">Gqeberha</span>
+            </div>
+            <div class="lp-pending-card">
+              <div class="lp-pending-head">
+                <span data-icon="wifi-off"></span>
+                <span>Offline — queued</span>
+              </div>
+              <p class="lp-pending-line">Clock-out at 15:47 queued</p>
+              <span class="lp-chip lp-chip-break"><span class="lp-chip-dot" aria-hidden="true"></span>PENDING SYNC</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ OLD WAY VS CLOCK-KIT ============ -->
+      <section class="lp-section lp-compare" id="compare">
+        <div class="lp-container">
+          <div class="lp-section-head lp-reveal">
+            <p class="lp-eyebrow lp-eyebrow-light">THE DIFFERENCE</p>
+            <h2 class="lp-section-title">Stop reconciling. Start trusting.</h2>
+          </div>
+          <div class="lp-compare-grid lp-reveal">
+            <div class="lp-compare-col lp-compare-old">
+              <h3 class="lp-compare-head">
+                <span class="lp-compare-x" data-icon="x"></span> The old way
+              </h3>
+              <ul class="lp-compare-list">
+                <li><span data-icon="x"></span>Paper sign-in sheets that go "missing"</li>
+                <li><span data-icon="x"></span>WhatsApp messages rewritten at month-end</li>
+                <li><span data-icon="x"></span>Buddy punching nobody can prove</li>
+                <li><span data-icon="x"></span>Timesheet disputes over a few minutes</li>
+              </ul>
+            </div>
+            <div class="lp-compare-col lp-compare-new">
+              <h3 class="lp-compare-head">
+                <span class="lp-compare-check" data-icon="check"></span> With Clock-Kit
+              </h3>
+              <ul class="lp-compare-list">
+                <li><span data-icon="check"></span>Every clock timestamped by the server</li>
+                <li><span data-icon="check"></span>Offline-safe, PENDING SYNC until confirmed</li>
+                <li><span data-icon="check"></span>Geofence + one-time codes tie clocks to people</li>
+                <li><span data-icon="check"></span>Timesheets hosts review, sign and trust</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ PRICING ============ -->
+      <section class="lp-section lp-pricing" id="pricing">
+        <div class="lp-container">
+          <div class="lp-section-head lp-reveal">
+            <p class="lp-eyebrow lp-eyebrow-dark">PRICING</p>
+            <h2 class="lp-section-title">Simple plans. Honest numbers.</h2>
+            <p class="lp-section-sub">
+              We'll craft pricing around your headcount and sites — tell us what you need.
+            </p>
+          </div>
+          <div class="lp-pricing-grid">
+            <article class="lp-price lp-reveal">
+              <h3>Starter</h3>
+              <p class="lp-price-rate">Request pricing</p>
+              <ul class="lp-price-list">
+                <li>Up to 25 active candidates</li>
+                <li>Clocking with location &amp; codes</li>
+                <li>Host review &amp; timesheets</li>
+                <li>Email support</li>
+              </ul>
+              <a class="lp-btn lp-btn-primary lp-js-demo" href="%BASE_URL%login.html">Request pricing</a>
+            </article>
+            <article class="lp-price lp-price-pop lp-reveal">
+              <p class="lp-price-pop-tag">POPULAR</p>
+              <h3>Growth</h3>
+              <p class="lp-price-rate">Request pricing</p>
+              <ul class="lp-price-list">
+                <li>Unlimited candidates</li>
+                <li>Everything in Starter</li>
+                <li>Schedules, leave &amp; approvals</li>
+                <li>Billing-ready signed timesheets</li>
+                <li>Priority WhatsApp support</li>
+              </ul>
+              <a class="lp-btn lp-btn-gold lp-js-demo" href="%BASE_URL%login.html">Request pricing</a>
+            </article>
+            <article class="lp-price lp-reveal">
+              <h3>Enterprise</h3>
+              <p class="lp-price-rate">Let's talk</p>
+              <ul class="lp-price-list">
+                <li>Multi-agency &amp; multi-host rollouts</li>
+                <li>SSO &amp; advanced policies</li>
+                <li>Onboarding &amp; staff training</li>
+                <li>Dedicated account manager</li>
+              </ul>
+              <a class="lp-btn lp-btn-primary lp-js-demo" href="%BASE_URL%login.html">Talk to us</a>
+            </article>
+          </div>
+          <p class="lp-pricing-note lp-reveal">
+            <span data-icon="message-circle"></span>
+            All plans start with a guided onboarding call — no contracts locked in until it works for
+            you.
+          </p>
+        </div>
+      </section>
+
+      <!-- ============ TRUST ============ -->
+      <section class="lp-section lp-trust" id="trust">
+        <div class="lp-container">
+          <div class="lp-trust-grid">
+            <div class="lp-trust-item lp-reveal">
+              <span class="lp-trust-icon" data-icon="server"></span>
+              <h3>Server-authoritative time</h3>
+              <p>Client clocks never call the shots. The server's timestamp is the one that counts.</p>
+            </div>
+            <div class="lp-trust-item lp-reveal">
+              <span class="lp-trust-icon" data-icon="shield-check"></span>
+              <h3>Identity &amp; geofences</h3>
+              <p>One-time codes and site perimeters make "that wasn't me" a thing of the past.</p>
+            </div>
+            <div class="lp-trust-item lp-reveal">
+              <span class="lp-trust-icon" data-icon="file-check"></span>
+              <h3>Audit-ready</h3>
+              <p>Corrections, reviews and approvals are recorded. No silent edits.</p>
+            </div>
+            <div class="lp-trust-item lp-reveal">
+              <span class="lp-trust-icon" data-icon="map-pin"></span>
+              <h3>Made in South Africa</h3>
+              <p>By Re-EL Technologies — designed for local realities like load-shedding and data caps.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ FAQ ============ -->
+      <section class="lp-section lp-faq" id="faq">
+        <div class="lp-container lp-container-narrow">
+          <div class="lp-section-head lp-reveal">
+            <p class="lp-eyebrow lp-eyebrow-dark">FAQ</p>
+            <h2 class="lp-section-title">Questions, answered.</h2>
+          </div>
+          <div class="lp-faq-list lp-reveal">
+            <details class="lp-faq">
+              <summary>Do my workers need a smartphone or an app?</summary>
+              <p>
+                A phone with any browser is enough — there's no app store download. Workers sign in
+                with a one-time code by SMS or email and the clock-in page loads like a website.
+              </p>
+            </details>
+            <details class="lp-faq">
+              <summary>What happens when there's load-shedding or no signal?</summary>
+              <p>
+                Clock-actions are saved on the device and shown as <strong>PENDING SYNC</strong> until the
+                moment goes through to the server. Nothing is guessed and nothing is lost.
+              </p>
+            </details>
+            <details class="lp-faq">
+              <summary>Now would you prevent buddy punching?</summary>
+              <p>
+                Clocks are tied to a signed-in person, site geofences limit where a clock-in can
+                happen, and the server records the authoritative time for every action.
+              </p>
+            </details>
+            <details class="lp-faq">
+              <summary>Can workers clock in for each other?</summary>
+              <p>
+                No. Each clock belongs to a verified session, and anything that looks unusual is
+                visible to the host and the agency for review — with corrections tracked.
+              </p>
+            </details>
+            <details class="lp-faq">
+              <summary>How do timesheets and billing work?</summary>
+              <p>
+                Reviewed attendance rolls straight into a timesheet the host signs. Signed timesheets
+                become the basis for billing — one clean, dispute-free source of truth.
+              </p>
+            </details>
+            <details class="lp-faq">
+              <summary>How do we get started?</summary>
+              <p>
+                Message us on WhatsApp and we'll set up a guided onboarding call. Most teams are
+                clocking in within a week.
+              </p>
+            </details>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ ENQUIRY → WHATSAPP ============ -->
+      <section class="lp-section lp-enquiry" id="enquiry">
+        <div class="lp-container">
+          <div class="lp-enquiry-card lp-reveal">
+            <div class="lp-enquiry-copy">
+              <p class="lp-enquiry-label"><span data-icon="message-circle"></span> NO OBLIGATION</p>
+              <h2 class="lp-section-title">Tell us about your workforce.</h2>
+              <p class="lp-section-sub">
+                Fill this in and we'll open WhatsApp with your enquiry ready to send — or just tap the
+                floating button and chat.
+              </p>
+            </div>
+            <form class="lp-form" id="lpEnquiryForm" novalidate>
+              <label class="lp-field">
+                <span>Your name</span>
+                <input type="text" name="name" autocomplete="name" required placeholder="Thabo Mokoena" />
+              </label>
+              <label class="lp-field">
+                <span>Company</span>
+                <input type="text" name="company" autocomplete="organization" placeholder="ABC Staffing" />
+              </label>
+              <div class="lp-field-row">
+                <label class="lp-field">
+                  <span>You are a…</span>
+                  <select name="who" required>
+                    <option value="" selected disabled>Choose…</option>
+                    <option>Staffing agency</option>
+                    <option>Host / client</option>
+                    <option>Employer</option>
+                    <option>Other</option>
+                  </select>
+                </label>
+                <label class="lp-field">
+                  <span>Workers</span>
+                  <select name="size">
+                    <option value="" selected disabled>Choose…</option>
+                    <option>1–25</option>
+                    <option>26–100</option>
+                    <option>101–500</option>
+                    <option>500+</option>
+                  </select>
+                </label>
+              </div>
+              <div class="lp-field-row">
+                <label class="lp-field">
+                  <span>Phone / WhatsApp</span>
+                  <input type="tel" name="phone" autocomplete="tel" placeholder="081 386 4024" />
+                </label>
+                <label class="lp-field">
+                  <span>Email</span>
+                  <input type="email" name="email" autocomplete="email" placeholder="you@company.co.za" />
+                </label>
+              </div>
+              <label class="lp-field">
+                <span>Tell us about your needs</span>
+                <textarea name="message" rows="3" placeholder="Sites, shifts, current headaches…"></textarea>
+              </label>
+              <button class="lp-btn lp-btn-gold lp-btn-block" type="submit">
+                Send via WhatsApp <span class="lp-btn-arrow" data-icon="arrow-right"></span>
+              </button>
+              <p class="lp-form-note">Opens WhatsApp with your message ready — no chat lost in a form.</p>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ FINAL CTA ============ -->
+      <section class="lp-cta" id="cta">
+        <div class="lp-container lp-cta-inner">
+          <div class="lp-cta-copy lp-reveal">
+            <p class="lp-eyebrow lp-eyebrow-gold">READY WHEN YOU ARE</p>
+            <h2 class="lp-cta-title">Every minute counts.<br />Start counting yours.</h2>
+            <div class="lp-hero-ctas lp-reveal">
+              <a
+                class="lp-btn lp-btn-gold"
+                href="https://wa.me/27813864024?text=Hi%20Clock-Kit%2C%20I%27d%20like%20a%20demo."
+                target="_blank"
+                rel="noopener"
+                data-icon-wrap="message-circle"
+              >
+                <span data-icon="message-circle"></span> Chat on WhatsApp
+              </a>
+              <a class="lp-btn lp-btn-light" href="%BASE_URL%login.html">Sign in to Clock-Kit</a>
+            </div>
+          </div>
+          <div class="lp-cta-clock" aria-hidden="true">
+            <span class="lp-cta-analog" id="lpCtaAnalog">
+              <span class="lp-cta-tick lp-cta-tick-a"></span>
+              <span class="lp-cta-tick lp-cta-tick-b"></span>
+              <span class="lp-cta-tick lp-cta-tick-c"></span>
+              <span class="lp-cta-tick lp-cta-tick-d"></span>
+              <i class="lp-cta-hand lp-cta-hand-h" id="lpCtaHour"></i>
+              <i class="lp-cta-hand lp-cta-hand-m" id="lpCtaMinute"></i>
+            </span>
+            <p id="lpCtaTime">--:--</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- ============ FOOTER ============ -->
+    <footer class="lp-footer" id="contact">
+      <div class="lp-container lp-footer-grid">
+        <div class="lp-footer-col lp-footer-brand">
+          <div class="lp-footer-lockup" aria-label="Clock-Kit">
+            <span class="lp-brand-tile">
+              <img
+                src="%BASE_URL%assets/logo/clock-kit-icon.svg"
+                alt=""
+                width="26"
+                height="26"
+              />
+            </span>
+            <img
+              src="%BASE_URL%assets/logo/clock-kit-text.svg"
+              alt="Clock-Kit"
+              class="lp-brand-wordmark"
+              width="104"
+              height="24"
+            />
+          </div>
+          <p>Click it. While you clock it.</p>
+          <p class="lp-footer-legal">© 2026 Re-EL Technologies</p>
+        </div>
+        <div class="lp-footer-col">
+          <h4>Product</h4>
+          <a href="%BASE_URL%login.html">Sign in</a>
+          <a href="%BASE_URL%candidate/index.html">Candidate</a>
+          <a href="%BASE_URL%host/index.html">Host</a>
+          <a href="%BASE_URL%organisation/index.html">Organisation</a>
+        </div>
+        <div class="lp-footer-col">
+          <h4>Explore</h4>
+          <a href="#showcase">Product tour</a>
+          <a href="#features">Features</a>
+          <a href="#how">How it works</a>
+          <a href="#pricing">Pricing</a>
+        </div>
+        <div class="lp-footer-col">
+          <h4>Legal</h4>
+          <a href="%BASE_URL%terms.html">Terms</a>
+          <a href="%BASE_URL%privacy.html">Privacy</a>
+          <a href="%BASE_URL%faq.html">FAQ</a>
+          <a href="%BASE_URL%support.html">Support</a>
+        </div>
+        <div class="lp-footer-col">
+          <h4>Contact</h4>
+          <a href="https://wa.me/27813864024" target="_blank" rel="noopener" data-icon-wrap="message-circle">
+            <span data-icon="message-circle"></span> 081 386 4024
+          </a>
+          <a href="https://re-el-branding.rf.gd" target="_blank" rel="noopener" aria-label="Re-EL Branding">
+            <span data-icon="globe"></span> re-el-branding.rf.gd
+          </a>
+        </div>
+      </div>
+    </footer>
+
+    <a
+      class="lp-whatsapp"
+      href="https://wa.me/27813864024?text=Hi%20Clock-Kit%2C%20I%27d%20like%20to%20know%20more."
+      target="_blank"
+      rel="noopener"
+      aria-label="Chat with Clock-Kit on WhatsApp"
+    >
+      <span class="lp-whatsapp-label">Chat with us</span>
+      <span class="lp-whatsapp-icon" data-icon="message-circle"></span>
+    </a>
+
+    <script type="module" src="%BASE_URL%src/js/home.js"></script>
   </body>
 </html>
