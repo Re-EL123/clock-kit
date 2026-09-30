@@ -176,10 +176,6 @@ const TAB_PANELS = {
     url: 'organisation — dashboard',
     caption: 'Agencies watch every site, every timesheet, every claim — live.',
   },
-  admin: {
-    url: 'platform — system overview',
-    caption: 'Platform administrators keep the whole Clock-Kit healthy.',
-  },
 };
 
 function shotFor(tab) {
@@ -288,6 +284,18 @@ function initEnquiry() {
   });
 }
 
+function initHeroVideo() {
+  const video = document.getElementById('lpHeroVideo');
+  if (!video) return;
+  if (reducedMotion()) {
+    video.pause();
+    return;
+  }
+  const play = () => video.play().catch(() => {});
+  if (video.readyState >= 2) play();
+  else video.addEventListener('loadedmetadata', play, { once: true });
+}
+
 function init() {
   hydrateIcons();
   startHeroClock();
@@ -298,6 +306,7 @@ function init() {
   initTimeline();
   initTabs();
   initEnquiry();
+  initHeroVideo();
 }
 
 if (document.readyState === 'loading') {

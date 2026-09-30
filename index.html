@@ -60,6 +60,19 @@
     <main>
       <!-- ============ HERO ============ -->
       <header class="lp-hero" id="home">
+        <video
+          class="lp-hero-video"
+          src="%BASE_URL%assets/videos/clock-kit-hero.mp4"
+          muted
+          loop
+          playsinline
+          webkit-playsinline
+          preload="metadata"
+          aria-hidden="true"
+          tabindex="-1"
+          id="lpHeroVideo"
+        ></video>
+        <div class="lp-hero-shade" aria-hidden="true"></div>
         <div class="lp-hero-grid" aria-hidden="true"></div>
         <div class="lp-container lp-hero-inner">
           <div class="lp-hero-copy">
@@ -208,7 +221,6 @@
             <button class="lp-tab" role="tab" aria-selected="false" data-tab="organisation">
               Organisation
             </button>
-            <button class="lp-tab" role="tab" aria-selected="false" data-tab="admin">Platform</button>
           </div>
 
           <div class="lp-browser lp-reveal">
@@ -238,13 +250,6 @@
                 data-panel="organisation"
                 src="%BASE_URL%assets/screens/organisation-dashboard.png"
                 alt="Clock-Kit organisation dashboard with stats and timesheets"
-                loading="lazy"
-              />
-              <img
-                class="lp-shot"
-                data-panel="admin"
-                src="%BASE_URL%assets/screens/admin-dashboard.png"
-                alt="Clock-Kit platform admin dashboard"
                 loading="lazy"
               />
             </div>

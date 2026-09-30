@@ -313,6 +313,26 @@
     linear-gradient(160deg, #1b2c52 0%, #21396a 45%, #14213d 100%);
 }
 
+.lp-hero-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.32;
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+.lp-hero-shade {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(60rem 40rem at 85% -10%, rgba(245, 191, 72, 0.12), transparent 55%),
+    linear-gradient(90deg, rgba(16, 28, 54, 0.94) 6%, rgba(16, 28, 54, 0.62) 45%, rgba(16, 28, 54, 0.42) 100%);
+}
+
 .lp-hero-grid {
   position: absolute;
   inset: 0;
@@ -1270,6 +1290,10 @@
   color: #dce2ef;
 }
 
+.lp-compare-new .lp-compare-list li {
+  color: #374355;
+}
+
 .lp-compare-list .lp-iv {
   flex: 0 0 auto;
   margin-top: 3px;
@@ -1691,7 +1715,7 @@
   font-size: 0.8rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #5f7296;
+  color: #7d92b8;
 }
 
 .lp-footer-col a {
@@ -1732,7 +1756,7 @@
 
 .lp-footer-legal {
   font-size: 0.8rem !important;
-  color: #5f7296;
+  color: #7d92b8;
 }
 
 /* ============ WhatsApp float ============ */
