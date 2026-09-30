@@ -297,6 +297,34 @@
   width: 100%;
 }
 
+/* Anchor buttons otherwise inherit the section colour (`.lp a`);
+   keep them legible regardless of where they sit. */
+.lp a.lp-btn-gold,
+.lp .lp-btn-gold,
+.lp a.lp-btn-light,
+.lp .lp-btn-light,
+.lp a.lp-whatsapp,
+.lp .lp-whatsapp {
+  color: var(--ck-navy);
+}
+
+.lp a.lp-btn-primary,
+.lp .lp-btn-primary,
+.lp a.lp-btn-ghost,
+.lp .lp-btn-ghost {
+  color: #fff;
+}
+
+.lp a.lp-nav-cta,
+.lp .lp-nav-cta {
+  color: var(--ck-gold);
+}
+
+.lp a.lp-nav-cta:hover,
+.lp .lp-nav-cta:hover {
+  color: var(--ck-navy);
+}
+
 .lp-btn-arrow {
   display: inline-flex;
 }
